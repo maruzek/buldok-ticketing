@@ -1,21 +1,6 @@
-#!/usr/bin/env php
-<?php
+#!/usr/bin/zsh
 
-use App\Kernel;
-use Symfony\Bundle\FrameworkBundle\Console\Application;
+cd "$(dirname "$(which "$0")")/.." # Exit if cd fails
 
-if (!is_dir(dirname(__DIR__).'/vendor')) {
-    throw new LogicException('Dependencies are missing. Try running "composer install".');
-}
-
-if (!is_file(dirname(__DIR__).'/vendor/autoload_runtime.php')) {
-    throw new LogicException('Symfony Runtime is missing. Try running "composer require symfony/runtime".');
-}
-
-require_once dirname(__DIR__).'/vendor/autoload_runtime.php';
-
-return function (array $context) {
-    $kernel = new Kernel($context['APP_ENV'], (bool) $context['APP_DEBUG']);
-
-    return new Application($kernel);
-};
+# Execute the command using the absolute path
+docker exec -it buldok_webserver bin/console-php "$@"
