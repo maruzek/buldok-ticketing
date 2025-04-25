@@ -1,0 +1,68 @@
+services:
+  webserver:
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile
+    container_name: buldok_webserver
+    ports:
+      - "8080:80"
+    environment:
+      APACHE_DOCUMENT_ROOT: /var/www/html/public
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - db
+    networks:
+      - buldok-network
+
+  node:
+    build:
+      context: ./frontend
+    container_name: buldok_node
+    working_dir: /app
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - buldok-network
+
+  db:
+    image: postgres:14
+    container_name: buldok_db
+    environment:
+      POSTGRES_DB: buldok
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - buldok-network
+
+  pgadmin:
+    image: dpage/pgadmin4:9.2
+    container_name: buldok_pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.cz
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - 5050:80
+    # volumes:
+    #   - pgadmin:/var/lib/pgadmin
+    volumes:
+      - pgadmindata:/var/lib/pgadmin
+
+    depends_on:
+      - db
+    networks:
+      - buldok-network
+
+networks:
+  buldok-network:
+
+volumes:
+  pgdata:
+  pgadmindata:
