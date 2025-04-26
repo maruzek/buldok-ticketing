@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router";
 
 const LoginIndexPage = () => {
   const handleLoginSubmit = (e: React.SyntheticEvent) => {
@@ -52,7 +53,7 @@ const LoginIndexPage = () => {
                 <div className="text-sm">
                   <a
                     href="#"
-                    className="font-semibold text-indigo-600 hover:text-indigo-500"
+                    className="font-semibold text-lime-700 hover:text-lime-600"
                   >
                     Zapomenuté heslo
                   </a>
@@ -71,20 +72,17 @@ const LoginIndexPage = () => {
             </div>
 
             <div>
-              <button
-                type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-              >
+              <button type="submit" className="btn-lime w-full mb-3">
                 Sign in
               </button>
             </div>
           </form>
-          <a
-            href="#"
-            className="font-semibold text-indigo-600 hover:text-indigo-500 mt-20 text-center text-sm/6"
+          <Link
+            to="/register"
+            className="font-semibold text-lime-700 hover:text-lime-600 text-center text-sm/6"
           >
             Registrace
-          </a>
+          </Link>
         </div>
       </div>
     </>

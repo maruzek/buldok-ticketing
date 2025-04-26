@@ -19,12 +19,23 @@ const CreateMatch = () => {
     { value: "2025", label: "2025" },
   ];
 
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: any) => {
     // Format date to DD.MM.YYYY for submission
-    data.matchDate = data.matchDate
-      ? data.matchDate.toLocaleDateString("cs-CZ")
-      : "";
-    console.log(data);
+
+    // console.log(data);
+    try {
+      const res = await fetch("http://localhost:8080/api/match/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      const resData = await res.json();
+      console.log(resData);
+    } catch (error) {
+      console.error("Error creating match:", error);
+    }
   };
 
   return (
