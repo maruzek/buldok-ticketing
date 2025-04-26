@@ -23,7 +23,7 @@ class Purchase
 
     #[ORM\ManyToOne(inversedBy: 'purchases')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Matches $match_id = null;
+    private ?Game $match_id = null;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $purchased_at = null;
@@ -68,12 +68,12 @@ class Purchase
         return $this;
     }
 
-    public function getMatchId(): ?Matches
+    public function getMatchId(): ?Game
     {
         return $this->match_id;
     }
 
-    public function setMatchId(?Matches $match_id): static
+    public function setMatchId(?Game $match_id): static
     {
         $this->match_id = $match_id;
 
