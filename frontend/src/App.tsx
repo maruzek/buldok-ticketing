@@ -7,6 +7,7 @@ import UserList from "./components/admin/UserList";
 import CreateMatch from "./components/admin/CreateMatch";
 import EditUser from "./components/admin/EditUser";
 import Ticketing from "./pages/Ticketing";
+import UserMatchList from "./pages/UserMatchList";
 
 function App() {
   return (
@@ -26,7 +27,10 @@ function App() {
             {/* <Route path="create" element={<h1>Create User</h1>} /> */}
           </Route>
         </Route>
-        <Route path="app" element={<Ticketing />} />
+        <Route path="app">
+          <Route index element={<UserMatchList />} />
+          <Route path="ticketing/:matchID" element={<Ticketing />} />
+        </Route>
         <Route path="*" element={<h1>404</h1>} />
       </Routes>
     </BrowserRouter>
