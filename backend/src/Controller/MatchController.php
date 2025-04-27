@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Game;
+use App\Repository\GameRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use PhpParser\Node\Expr\Match_;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -72,9 +73,9 @@ final class MatchController extends AbstractController
     }
 
     #[Route('/list', name: 'list_match', methods: ['GET'])]
-    public function listMatch(EntityManagerInterface $em): JsonResponse
+    public function listMatch(GameRepository $gameRepository): JsonResponse
     {
-        $matches = $em->getRepository(Game::class)->findAll();
+        $matches = $gameRepository->findAllMatches();
 
         $matchList = [];
         foreach ($matches as $match) {

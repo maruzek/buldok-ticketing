@@ -1,37 +1,46 @@
 import { Trash2, UserCog } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
-const UserList = () => {
+import { User } from "../../types/User";
+import { UserEditStatus } from "../../types/UserEditStatus";
+
+type UserListProps = {
+  userEdit: UserEditStatus | null;
+};
+
+const UserList = ({ userEdit }: UserListProps) => {
   // Dummy data for users
-  const users = [
-    {
-      id: 1,
-      email: "jan.novak@email.cz",
-      fullName: "Jan Novák",
-      roles: ["ADMIN", "USER"],
-      entrance: "Hlavní vchod",
-      createdAt: "2024-04-01 10:15:00",
-    },
-    {
-      id: 2,
-      email: "eva.svobodova@email.cz",
-      fullName: "Eva Svobodová",
-      roles: ["USER"],
-      entrance: "Vedlejší vchod",
-      createdAt: "2024-03-15 09:30:00",
-    },
-    {
-      id: 3,
-      email: "petr.kral@email.cz",
-      fullName: "Petr Král",
-      roles: ["USER"],
-      entrance: "Zadní vchod",
-      createdAt: "2024-02-20 14:45:00",
-    },
-  ];
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    // Fetch users from the server
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:8080/api/admin/users/all"
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch users");
+        }
+        const data = await response.json();
+        setUsers(data);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   return (
     <div>
+      {userEdit?.status == "ok" && (
+        <div className="form-success-box">{userEdit.message}</div>
+      )}
+      {userEdit?.status == "error" && (
+        <div className="form-error-box">{userEdit.message}</div>
+      )}
       <div className="table-none md:table-fixed w-full p-5 bg-white rounded-xl">
         <table className="table-auto w-full border border-gray-200 rounded-lg overflow-hidden">
           <thead className="bg-gray-100">
@@ -56,7 +65,7 @@ const UserList = () => {
                 <td className="px-4 py-2">{user.fullName}</td>
                 <td className="px-4 py-2">{user.roles.join(", ")}</td>
                 <td className="px-4 py-2">{user.entrance}</td>
-                <td className="px-4 py-2">{user.createdAt}</td>
+                <td className="px-4 py-2">{user.registeredAt}</td>
                 <td className="px-4 py-2 flex gap-2">
                   <Link
                     to={`/admin/users/${user.id}/edit`}

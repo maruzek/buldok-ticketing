@@ -40,6 +40,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Purchase::class, mappedBy: 'sold_by')]
     private Collection $purchases;
 
+    #[ORM\Column]
+    private ?bool $verified = null;
+
+    #[ORM\Column]
+    private ?\DateTimeImmutable $registered_at = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $fullName = null;
+
     public function __construct()
     {
         $this->purchases = new ArrayCollection();
@@ -146,6 +155,42 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $purchase->setSoldBy(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isVerified(): ?bool
+    {
+        return $this->verified;
+    }
+
+    public function setVerified(bool $verified): static
+    {
+        $this->verified = $verified;
+
+        return $this;
+    }
+
+    public function getRegisteredAt(): ?\DateTimeImmutable
+    {
+        return $this->registered_at;
+    }
+
+    public function setRegisteredAt(\DateTimeImmutable $registered_at): static
+    {
+        $this->registered_at = $registered_at;
+
+        return $this;
+    }
+
+    public function getFullName(): ?string
+    {
+        return $this->fullName;
+    }
+
+    public function setFullName(string $fullName): static
+    {
+        $this->fullName = $fullName;
 
         return $this;
     }

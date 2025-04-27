@@ -31,3 +31,15 @@ html {
 .btn-lime {
   @apply bg-lime-500 hover:bg-lime-600 text-white font-semibold py-2 px-4 rounded transition-colors cursor-pointer;
 }
+
+.btn-disabled {
+  @apply bg-gray-500  text-white font-semibold py-2 px-4 rounded cursor-wait;
+}
+
+.form-error-box {
+  @apply bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md relative mb-4;
+}
+
+.form-success-box {
+  @apply bg-green-100 text-green-700 p-4 mb-4 rounded-md;
+}

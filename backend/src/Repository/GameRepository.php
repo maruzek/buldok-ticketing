@@ -16,6 +16,15 @@ class GameRepository extends ServiceEntityRepository
         parent::__construct($registry, Game::class);
     }
 
+    // List all matches order by date from the most recent
+    public function findAllMatches(): array
+    {
+        return $this->createQueryBuilder('g')
+            ->orderBy('g.played_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return Game[] Returns an array of Game objects
     //     */
