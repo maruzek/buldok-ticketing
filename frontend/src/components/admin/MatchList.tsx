@@ -1,4 +1,4 @@
-import { Trash2, UserCog } from "lucide-react";
+import { Circle, Dot, Trash2, UserCog } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { MatchEditStatus } from "../../types/MatchEditStatus";
@@ -30,6 +30,7 @@ const MatchList = ({ matchCreateStatus }: MatchListProps) => {
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
+        console.log(data);
         setMatches(data);
       } catch (error) {
         console.error("Error fetching matches:", error);
@@ -75,7 +76,18 @@ const MatchList = ({ matchCreateStatus }: MatchListProps) => {
                 <td className="px-4 py-2">{match.id}</td>
                 <td className="px-4 py-2">{match.rival}</td>
                 <td className="px-4 py-2">{match.playedAt}</td>
-                <td className="px-4 py-2">{match.status}</td>
+                <td className="px-4 py-2">
+                  <span
+                    className={`${
+                      match.status === "Otevřený"
+                        ? "bg-green-300 text-green-800"
+                        : "bg-red-500 text-red-700"
+                    } p-1 px-2 pr-3 rounded-4xl flex items-center justify-center grow-0 w-30`}
+                  >
+                    <Dot className="m-0 p-0" size={30} />
+                    {match.status}
+                  </span>
+                </td>
                 <td className="px-4 py-2">{match.description}</td>
                 <td className="px-4 py-2 flex gap-2">
                   <Link

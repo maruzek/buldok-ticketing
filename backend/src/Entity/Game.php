@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\MatchStatus;
 use App\Repository\GameRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -22,6 +23,9 @@ class Game
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $played_at = null;
+
+    #[ORM\Column(length: 15)]
+    private ?MatchStatus $status = null;
 
     public function getId(): ?int
     {
@@ -60,6 +64,18 @@ class Game
     public function setPlayedAt(\DateTimeInterface $played_at): static
     {
         $this->played_at = $played_at;
+
+        return $this;
+    }
+
+    public function getStatus(): ?MatchStatus
+    {
+        return $this->status;
+    }
+
+    public function setStatus(MatchStatus $status): static
+    {
+        $this->status = $status;
 
         return $this;
     }
