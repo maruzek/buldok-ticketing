@@ -1,14 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Spinner from "../Spinner";
 import { Link } from "react-router";
-import { Settings, Trash2, UserCog } from "lucide-react";
-
-// Define Entrance type
-type Entrance = {
-  id: number;
-  name: string;
-  location?: string | null;
-};
+import { Settings, Trash2 } from "lucide-react";
+import { Entrance } from "../../types/Entrance";
 
 const EntranceList = () => {
   // component state
@@ -20,10 +14,13 @@ const EntranceList = () => {
   useEffect(() => {
     const fetchEntrances = async () => {
       try {
-        const res = await fetch("http://localhost:8080/api/admin/entrance/all");
+        const res = await fetch(
+          "http://localhost:8080/api/admin/entrances/all"
+        );
         if (!res.ok) throw new Error("Failed to fetch entrances");
         const data: Entrance[] = await res.json();
         setEntrances(data);
+        console.log(data);
       } catch (err) {
         setError((err as Error).message);
       } finally {
@@ -49,8 +46,9 @@ const EntranceList = () => {
           <thead className="bg-gray-100">
             <tr>
               <th className="px-4 py-2 text-left">ID</th>
-              <th className="px-4 py-2 text-left">Name</th>
-              <th className="px-4 py-2 text-left">Location</th>
+              <th className="px-4 py-2 text-left">Název</th>
+              <th className="px-4 py-2 text-left">Lokace</th>
+              <th className="px-4 py-2 text-left">Pokladníci</th>
               <th className="px-4 py-2 text-left">Akce</th>
             </tr>
           </thead>
@@ -63,9 +61,15 @@ const EntranceList = () => {
                 <td className="px-4 py-2">{ent.id}</td>
                 <td className="px-4 py-2">{ent.name}</td>
                 <td className="px-4 py-2">{ent.location || "-"}</td>
+                <td>
+                  {/* {ent.users &&
+                    ent.users.map((user) => (
+                      <span>{`${user.fullName}, `}</span>
+                    ))} */}
+                </td>
                 <td className="px-4 py-2 flex items-center ">
                   <Link
-                    to={`/admin/entrances/${ent.id}`}
+                    to={`/admin/entrances/${ent.id}/edit`}
                     className="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded text-xs cursor-pointer"
                   >
                     <Settings className="w-5 h-5" />

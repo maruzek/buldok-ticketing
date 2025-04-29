@@ -1,8 +1,8 @@
 import { useForm, Controller, FieldValues } from "react-hook-form";
 import DatePicker, { registerLocale } from "react-datepicker";
-import cs from "date-fns/locale/cs";
+import { cs } from "date-fns/locale/cs";
 import "react-datepicker/dist/react-datepicker.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MatchEditStatus } from "../../types/MatchEditStatus";
 import { useNavigate } from "react-router";
 
@@ -21,10 +21,27 @@ const CreateMatch = ({ onCreateMatch }: CreateMatchProps) => {
     setError,
     formState: { errors, isSubmitting, isSubmitSuccessful },
   } = useForm();
-  // const [entrances, setEntrances] = useState<any[]>([]);
+
+  const [entrances, setEntrances] = useState<any[]>([]);
 
   useEffect(() => {
-    // Fetch Users for entrances
+    const fetchEntrances = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:8080/api/admin/entrances/all"
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch entrances");
+        }
+        const data = await response.json();
+        setEntrances(data);
+        console.log(data);
+      } catch (error) {
+        console.error("Error fetching entrances:", error);
+      }
+    };
+
+    fetchEntrances();
   }, [watch]);
 
   const navigate = useNavigate();
@@ -125,6 +142,7 @@ const CreateMatch = ({ onCreateMatch }: CreateMatchProps) => {
             </span>
           )}
         </div>
+
         <button
           type="submit"
           className={`${isSubmitting ? "btn-disabled" : "btn-lime"} w-full`}

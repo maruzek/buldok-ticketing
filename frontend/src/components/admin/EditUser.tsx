@@ -7,7 +7,7 @@ import { User } from "../../types/User";
 import Spinner from "../Spinner";
 import { UserEditStatus } from "../../types/UserEditStatus";
 
-type UserData = Omit<User, "registeredAt" | "entrance">;
+type UserData = Omit<User, "registeredAt">;
 
 type EditUserProps = {
   onUserSave: (status: UserEditStatus) => void;
@@ -33,7 +33,7 @@ const EditUser = ({ onUserSave }: EditUserProps) => {
       try {
         setIsLoading(true);
         const response = await fetch(
-          `http://localhost:8080/api/admin/users/${userID}`
+          `http://localhost:8080/api/admin/users/user/${userID}`
         );
         if (!response.ok) {
           throw new Error("Failed to fetch user");
@@ -79,8 +79,9 @@ const EditUser = ({ onUserSave }: EditUserProps) => {
     }
 
     try {
+      console.log(editedUser);
       const response = await fetch(
-        `http://localhost:8080/api/admin/users/${userID}`,
+        `http://localhost:8080/api/admin/users/user/${userID}`,
         {
           method: "PUT",
           headers: {
@@ -118,7 +119,7 @@ const EditUser = ({ onUserSave }: EditUserProps) => {
   };
 
   return (
-    <div className="bg-white p-8 max-w-md mx-auto rounded-xl shadow-md space-y-6">
+    <div className="form-page-card">
       {isLoading && (
         <div className="flex justify-center items-center h-full">
           <Spinner />

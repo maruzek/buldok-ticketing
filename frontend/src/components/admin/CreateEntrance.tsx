@@ -11,7 +11,7 @@ const CreateEntrance = () => {
   const onSubmit = async (data: FieldValues) => {
     try {
       const res = await fetch(
-        "http://localhost:8080/api/admin/entrance/create",
+        "http://localhost:8080/api/admin/entrances/create",
         {
           method: "POST",
           headers: {
@@ -31,8 +31,8 @@ const CreateEntrance = () => {
         throw new Error("Failed to create entrance");
       }
 
-      const resData = await res.json();
-      console.log(resData);
+      // const resData = await res.json();
+      // TODO: navigate back to list
     } catch (error) {
       console.error("Error creating entrance:", error);
     }

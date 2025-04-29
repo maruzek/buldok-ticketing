@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Repository\EntranceRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -22,7 +23,7 @@ final class UserController extends AbstractController
                 'id' => $user->getId(),
                 'email' => $user->getEmail(),
                 'roles' => $user->getRoles(),
-                'registeredAt' => $user->getRegisteredAt()->format('d.n.Y H:i:s'),
+                'registeredAt' => $user->getRegisteredAt()->format('d.n.Y H:i'),
                 'fullName' => $user->getFullName(),
             ];
         }
@@ -30,7 +31,7 @@ final class UserController extends AbstractController
         return $this->json($userData, JsonResponse::HTTP_OK);
     }
 
-    #[Route('/{id}', name: 'get_by_id', methods: ['GET'])]
+    #[Route('/user/{id}', name: 'get_by_id', methods: ['GET'])]
     public function getById(int $id, UserRepository $userRepository): JsonResponse
     {
         $user = $userRepository->findOneBy(['id' => $id]);
@@ -46,13 +47,17 @@ final class UserController extends AbstractController
             'roles' => $user->getRoles(),
             'fullName' => $user->getFullName(),
             'verified' => $user->isVerified(),
+            'entrance' => $user->getEntrance() ? [
+                'id' => $user->getEntrance()->getId(),
+                'name' => $user->getEntrance()->getName(),
+            ] : null,
         ];
 
         return $this->json($userData, JsonResponse::HTTP_OK);
     }
 
-    #[Route('/{id}', name: 'edit_by_id', methods: ['PUT'])]
-    public function editById(int $id, UserRepository $userRepository, Request $request, EntityManagerInterface $em): JsonResponse
+    #[Route('/user/{id}', name: 'edit_by_id', methods: ['PUT'])]
+    public function editById(int $id, UserRepository $userRepository, Request $request, EntityManagerInterface $em, EntranceRepository $entranceRepository): JsonResponse
     {
         if (json_last_error() !== JSON_ERROR_NONE) {
             return $this->json([
@@ -69,14 +74,17 @@ final class UserController extends AbstractController
             ], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $newRoles = $data['roles'];
+        $newRoles = $data['roles'] ?? [];
 
         if (!in_array("ROLE_USER", $newRoles)) {
             $newRoles += ['ROLE_USER'];
         }
 
+        $oldEntrance = $user->getEntrance();
+
         $user->setRoles($newRoles ?? $user->getRoles());
         $user->setVerified($data['verified'] ?? $user->isVerified());
+        $user->setEntrance($entranceRepository->findOneBy(['id' => $data['entrance']]) ?? $user->getEntrance());
 
         try {
             $em->persist($user);
@@ -84,6 +92,7 @@ final class UserController extends AbstractController
         } catch (\Exception $e) {
             return $this->json([
                 'error' => 'Error updating user',
+                'message' => $e->getMessage(),
             ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -96,6 +105,10 @@ final class UserController extends AbstractController
             'roles' => $user->getRoles(),
             'fullName' => $user->getFullName(),
             'verified' => $user->isVerified(),
+            'entrance' => $user->getEntrance() ? [
+                'id' => $user->getEntrance()->getId(),
+                'name' => $user->getEntrance()->getName(),
+            ] : null,
         ];
 
         return $this->json([
@@ -105,7 +118,7 @@ final class UserController extends AbstractController
         ], JsonResponse::HTTP_OK);
     }
 
-    #[Route('/search', name: 'all', methods: ['GET'])]
+    #[Route('/search', name: 'searchUser', methods: ['GET'])]
     public function searchUser(UserRepository $userRepository, Request $request): JsonResponse
     {
         $query = $request->query->get('q');
@@ -126,5 +139,29 @@ final class UserController extends AbstractController
         }
 
         return $this->json($userData, JsonResponse::HTTP_OK);
+    }
+
+    #[Route('/user/{id}/remove-entrance', name: 'remove_entrance', methods: ['PUT'])]
+    public function removeEntrance(int $id, UserRepository $userRepository, EntityManagerInterface $em): JsonResponse
+    {
+        $user = $userRepository->find($id);
+
+        if (!$user) {
+            return $this->json(['error' => 'User not found'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $user->setEntrance(null);
+
+        try {
+            $em->persist($user);
+            $em->flush();
+        } catch (\Exception $e) {
+            return $this->json([
+                'error' => 'Failed to remove entrance',
+                'message' => $e->getMessage(),
+            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return $this->json(['status' => 'OK'], JsonResponse::HTTP_OK);
     }
 }

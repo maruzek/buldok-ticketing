@@ -43,3 +43,7 @@ html {
 .form-success-box {
   @apply bg-green-100 text-green-700 p-4 mb-4 rounded-md;
 }
+
+.form-page-card {
+  @apply bg-white p-8 max-w-md mx-auto rounded-md shadow-md space-y-6;
+}

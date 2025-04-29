@@ -15,6 +15,7 @@ import { UserEditStatus } from "./types/UserEditStatus";
 import EntranceList from "./components/admin/EntranceList";
 import CreateEntrance from "./components/admin/CreateEntrance";
 import { MatchEditStatus } from "./types/MatchEditStatus";
+import EditEntrance from "./components/admin/EditEntrance";
 
 function App() {
   const [userEditStatus, setUserEditStatus] = useState<UserEditStatus | null>(
@@ -53,8 +54,8 @@ function App() {
           </Route>
           <Route path="entrances">
             <Route index element={<EntranceList />} />
+            <Route path=":entranceID/edit" element={<EditEntrance />} />
             <Route path="create" element={<CreateEntrance />} />
-            {/* <Route path="create" element={<h1>Create User</h1>} /> */}
           </Route>
         </Route>
         <Route path="app">

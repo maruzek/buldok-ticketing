@@ -140,7 +140,7 @@ const Register = () => {
           </div>
           <button
             type="submit"
-            className={isSubmitting ? "bg-gray-500" : "btn-lime"}
+            className={isSubmitting ? "btn-disabled" : "btn-lime"}
           >
             Registrovat se
           </button>

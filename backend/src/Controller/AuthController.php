@@ -76,12 +76,14 @@ final class AuthController extends AbstractController
         $user->setVerified(false);
         $user->setRegisteredAt(new \DateTimeImmutable());
 
+
         try {
             $em->persist($user);
             $em->flush();
         } catch (\Exception $e) {
             return $this->json([
                 'error' => 'An error occurred while saving the user',
+                'exception' => $e->getMessage(),
             ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
 
