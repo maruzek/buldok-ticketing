@@ -5,12 +5,12 @@ import { useNavigate, useParams } from "react-router";
 
 import { User } from "../../types/User";
 import Spinner from "../Spinner";
-import { UserEditStatus } from "../../types/UserEditStatus";
+import { EditStatus } from "../../types/EditStatus";
 
 type UserData = Omit<User, "registeredAt">;
 
 type EditUserProps = {
-  onUserSave: (status: UserEditStatus) => void;
+  onUserSave: (status: EditStatus) => void;
 };
 
 const EditUser = ({ onUserSave }: EditUserProps) => {

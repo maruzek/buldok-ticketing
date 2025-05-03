@@ -1,4 +1,4 @@
-export type UserEditStatus = {
+export type EditStatus = {
   status: string;
   message: string;
 };

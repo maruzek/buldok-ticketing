@@ -119,7 +119,7 @@ final class EntranceController extends AbstractController
     }
 
     #[Route('/entrance/{id}', name: 'edit_by_id', methods: ['PUT'])]
-    public function editById(int $id, EntranceRepository $entranceRepository, Request $request): JsonResponse
+    public function editById(int $id, EntranceRepository $entranceRepository, Request $request, EntityManagerInterface $em): JsonResponse
     {
         $entrance = $entranceRepository->findOneBy(['id' => $id]);
 
@@ -139,6 +139,15 @@ final class EntranceController extends AbstractController
 
         $entrance->setName($data['name'] ?? $entrance->getName());
         $entrance->setLocation($data['location'] ?? $entrance->getLocation());
+
+        try {
+            $em->flush();
+        } catch (\Exception $e) {
+            return $this->json([
+                'error' => 'Failed to update entrance',
+                'message' => $e->getMessage(),
+            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
 
         return $this->json([
             'message' => 'Entrance updated successfully',

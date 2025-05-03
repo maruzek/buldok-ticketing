@@ -11,20 +11,21 @@ import UserMatchList from "./pages/UserMatchList";
 import NotFound from "./pages/errors/NotFound";
 import Register from "./pages/Register";
 import { useState } from "react";
-import { UserEditStatus } from "./types/UserEditStatus";
+import { EditStatus } from "./types/EditStatus";
 import EntranceList from "./components/admin/EntranceList";
 import CreateEntrance from "./components/admin/CreateEntrance";
-import { MatchEditStatus } from "./types/MatchEditStatus";
+// import { MatchEditStatus } from "./types/MatchEditStatus";
 import EditEntrance from "./components/admin/EditEntrance";
+import EditMatch from "./components/admin/EditMatch";
 
 function App() {
-  const [userEditStatus, setUserEditStatus] = useState<UserEditStatus | null>(
+  const [userEditStatus, setUserEditStatus] = useState<EditStatus | null>(null);
+  const [matchEditStatus, setMatchEditStatus] = useState<EditStatus | null>(
     null
   );
-  const [matchEditStatus, setMatchEditStatus] =
-    useState<MatchEditStatus | null>(null);
-  const [matchCreateStatus, setMatchCreateStatus] =
-    useState<MatchEditStatus | null>(null);
+  const [matchCreateStatus, setMatchCreateStatus] = useState<EditStatus | null>(
+    null
+  );
 
   // TODO: zamyslet se nad nutnosti app, nebo rovou jit na ticketing
   return (
@@ -42,6 +43,10 @@ function App() {
             <Route
               path="create"
               element={<CreateMatch onCreateMatch={setMatchCreateStatus} />}
+            />
+            <Route
+              path=":matchID/edit"
+              element={<EditMatch onEditMatch={setMatchCreateStatus} />}
             />
           </Route>
           <Route path="users">

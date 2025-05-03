@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
 import { User } from "../../types/User";
-import { UserEditStatus } from "../../types/UserEditStatus";
+import { EditStatus } from "../../types/EditStatus";
 
 type UserListProps = {
-  userEdit: UserEditStatus | null;
+  userEdit: EditStatus | null;
 };
 
 const UserList = ({ userEdit }: UserListProps) => {

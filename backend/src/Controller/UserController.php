@@ -87,7 +87,6 @@ final class UserController extends AbstractController
         $user->setEntrance($entranceRepository->findOneBy(['id' => $data['entrance']]) ?? $user->getEntrance());
 
         try {
-            $em->persist($user);
             $em->flush();
         } catch (\Exception $e) {
             return $this->json([
@@ -153,7 +152,6 @@ final class UserController extends AbstractController
         $user->setEntrance(null);
 
         try {
-            $em->persist($user);
             $em->flush();
         } catch (\Exception $e) {
             return $this->json([
