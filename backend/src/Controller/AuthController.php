@@ -3,30 +3,72 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 #[Route('/api/auth',  name: 'api_auth_')]
 final class AuthController extends AbstractController
 {
-    #[Route('/login', name: 'login', methods: ['POST'])]
-    public function login(Request $request): JsonResponse
-    {
-        $data = $request->request->all();
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/LoginController.php',
-            'req' => $data
+    // #[Route('/login', name: 'login', methods: ['POST'])]
+    // public function login(#[CurrentUser] ?User $user, Request $request): JsonResponse
+    // {
+    //     // $data = json_decode($request->getContent(), true);
+    //     // if (json_last_error() !== JSON_ERROR_NONE) {
+    //     //     return $this->json([
+    //     //         'error' => 'Invalid JSON',
+    //     //     ], JsonResponse::HTTP_BAD_REQUEST);
+    //     // }
 
-        ]);
-    }
+    //     // if (!isset($data['email'])) {
+    //     //     return $this->json([
+    //     //         'error' => 'Username is required',
+    //     //     ], JsonResponse::HTTP_BAD_REQUEST);
+    //     // }
+
+    //     // if (!isset($data['password'])) {
+    //     //     return $this->json([
+    //     //         'error' => 'Password is required',
+    //     //     ], JsonResponse::HTTP_BAD_REQUEST);
+    //     // }
+    //     // if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+    //     //     return $this->json([
+    //     //         'error' => 'Invalid email format',
+    //     //     ], JsonResponse::HTTP_BAD_REQUEST);
+    //     // }
+
+    //     // $user = $userRepository->findOneBy(['email' => $data['email']]);
+    //     // if (!$user) {
+    //     //     return $this->json([
+    //     //         'error' => 'User not found',
+    //     //     ], JsonResponse::HTTP_NOT_FOUND);
+    //     // }
+
+    //     // if (null === $user) {
+    //     //     return $this->json([
+    //     //         'message' => 'missing credentials',
+    //     //         'req' => json_decode($request->getContent(), true),
+    //     //     ], JsonResponse::HTTP_UNAUTHORIZED);
+    //     // }
+
+
+
+
+    //     // return $this->json([
+    //     //     'message' => 'Welcome to your new controller!',
+    //     //     'path' => 'src/Controller/LoginController.php'
+
+    //     // ]);
+    // }
 
     #[Route('/register', name: 'register', methods: ['POST'])]
-    public function register(Request $request, UserPasswordHasherInterface $hasher, EntityManagerInterface $em): JsonResponse
+    public function register(Request $request, UserPasswordHasherInterface $hasher, EntityManagerInterface $em, UserRepository $userRepository): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
@@ -66,7 +108,11 @@ final class AuthController extends AbstractController
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        // TODO: Check if the email already exists in the database
+        if ($userRepository->findOneBy(['email' => $data['email']])) {
+            return $this->json([
+                'error' => 'Email already exists',
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
 
         $user = new User();
         $user->setEmail($data['email']);
@@ -88,9 +134,15 @@ final class AuthController extends AbstractController
         }
 
         return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/LoginController.php',
-            'req' => $data
-        ]);
+            'message' => 'User registered successfully',
+            'user' => [
+                'id' => $user->getId(),
+                'email' => $user->getEmail(),
+                'fullName' => $user->getFullName(),
+                'roles' => $user->getRoles(),
+                'verified' => $user->isVerified(),
+                'registeredAt' => $user->getRegisteredAt()->format('Y-m-d H:i:s'),
+            ],
+        ], JsonResponse::HTTP_CREATED);
     }
 }

@@ -163,4 +163,23 @@ final class MatchController extends AbstractController
             'status' => $match->getStatus(),
         ], JsonResponse::HTTP_OK);
     }
+
+    #[Route('/users-matches', name: 'users_matches', methods: ['GET'])]
+    public function getUsersMatches(GameRepository $gameRepository): JsonResponse
+    {
+        $matches = $gameRepository->findAllMatches();
+
+        $matchList = [];
+        foreach ($matches as $match) {
+            $matchList[] = [
+                'id' => $match->getId(),
+                'rival' => $match->getRival(),
+                'playedAt' => $match->getPlayedAt()->format('d.m.Y H:i'),
+                'description' => $match->getDescription(),
+                'status' => $match->getStatus(),
+            ];
+        }
+
+        return $this->json($matchList, JsonResponse::HTTP_OK);
+    }
 }

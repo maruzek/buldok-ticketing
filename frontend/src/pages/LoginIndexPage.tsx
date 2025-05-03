@@ -1,10 +1,53 @@
 import React from "react";
 import { Link } from "react-router";
+import { FieldValues, useForm } from "react-hook-form";
+import useAuth from "../hooks/useAuth";
 
 const LoginIndexPage = () => {
-  const handleLoginSubmit = (e: React.SyntheticEvent) => {
-    e.preventDefault();
-    console.log("submit");
+  const { login } = useAuth();
+
+  const {
+    register,
+    handleSubmit,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting, isSubmitSuccessful },
+  } = useForm();
+
+  const onSubmit = async (data: FieldValues) => {
+    try {
+      const res = await fetch("http://localhost:8080/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (res.status === 401) {
+        setError("root", {
+          type: "server",
+          message: "Nesprávné uživatelské jméno nebo heslo.",
+        });
+        return;
+      }
+
+      if (!res.ok) {
+        setError("root", {
+          type: "server",
+          message:
+            "Nastala chyba při přihlašování. Zkuste to prosím znovu později, nebo se obraťte na administrátora.",
+        });
+        return;
+      }
+
+      const responseData = await res.json();
+      clearErrors("root");
+      // login(responseData.refreshToken, responseData.user);
+      console.log(responseData);
+    } catch (error) {
+      console.error("Error during login:", error);
+    }
   };
 
   return (
@@ -22,57 +65,56 @@ const LoginIndexPage = () => {
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-          <form className="space-y-6" onSubmit={handleLoginSubmit}>
+          {errors.root && (
+            <div className="form-error-box">
+              <h3 className="text-sm font-medium text-red-800">
+                {errors.root.message}
+              </h3>
+            </div>
+          )}
+          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm/6 font-medium text-gray-900"
-              >
+              <label htmlFor="email" className="text-sm/6">
                 Email
               </label>
-              <div className="mt-2">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                />
-              </div>
+              <input
+                id="email"
+                type="email"
+                {...register("email", { required: true })}
+                autoComplete="email"
+                className="form-input"
+              />
             </div>
 
             <div>
               <div className="flex items-center justify-between">
-                <label
-                  htmlFor="password"
-                  className="block text-sm/6 font-medium text-gray-900"
-                >
+                <label htmlFor="password" className="text-sm/6">
                   Heslo
                 </label>
-                <div className="text-sm">
-                  <a
-                    href="#"
-                    className="font-semibold text-lime-700 hover:text-lime-600"
-                  >
-                    Zapomenuté heslo
-                  </a>
-                </div>
+                <a
+                  href="#"
+                  className="text-sm font-semibold text-lime-700 hover:text-lime-600"
+                >
+                  Zapomenuté heslo
+                </a>
               </div>
-              <div className="mt-2">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  autoComplete="current-password"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                />
-              </div>
+
+              <input
+                id="password"
+                type="password"
+                {...register("password", { required: true })}
+                autoComplete="password"
+                className="form-input"
+              />
             </div>
 
             <div>
-              <button type="submit" className="btn-lime w-full mb-3">
+              <button
+                type="submit"
+                className={`${
+                  isSubmitting ? "btn-disabled" : "btn-lime"
+                } w-full`}
+              >
                 Sign in
               </button>
             </div>
