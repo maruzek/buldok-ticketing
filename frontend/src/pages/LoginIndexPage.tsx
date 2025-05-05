@@ -43,7 +43,7 @@ const LoginIndexPage = () => {
 
       const responseData = await res.json();
       clearErrors("root");
-      // login(responseData.refreshToken, responseData.user);
+      login(responseData.refresh_token, responseData.user);
       console.log(responseData);
     } catch (error) {
       console.error("Error during login:", error);
