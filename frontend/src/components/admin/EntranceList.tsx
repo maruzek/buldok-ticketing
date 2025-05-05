@@ -3,44 +3,48 @@ import Spinner from "../Spinner";
 import { Link } from "react-router";
 import { Settings, Trash2 } from "lucide-react";
 import { Entrance } from "../../types/Entrance";
+import useApi from "../../hooks/useApi";
+import { EditStatus } from "../../types/EditStatus";
 
-const EntranceList = () => {
-  // component state
+type EntranceListProps = {
+  entranceStatus: EditStatus | null;
+};
+
+const EntranceList = ({ entranceStatus }: EntranceListProps) => {
   const [entrances, setEntrances] = useState<Entrance[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // const [error, setError] = useState<string | null>(null);
+  const { fetchData, error, isLoading } = useApi();
 
   // fetch entrances on mount
   useEffect(() => {
     const fetchEntrances = async () => {
       try {
-        const res = await fetch(
-          "http://localhost:8080/api/admin/entrances/all"
-        );
-        if (!res.ok) throw new Error("Failed to fetch entrances");
-        const data: Entrance[] = await res.json();
+        const data = await fetchData<Entrance[]>("/admin/entrances/all", {
+          method: "GET",
+        });
         setEntrances(data);
-        console.log(data);
       } catch (err) {
-        setError((err as Error).message);
-      } finally {
-        setLoading(false);
+        console.log(err);
+        // setError((err as Error).message);
       }
     };
     fetchEntrances();
-  }, []);
+  }, [fetchData]);
 
-  if (loading)
+  if (isLoading)
     return (
       <div className="flex justify-center h-screen bg-white w-full pt-20">
         <Spinner />
       </div>
     );
-  if (error) return <div className="text-red-500">{error}</div>;
 
   return (
     <div className=" w-full p-5 bg-white rounded-xl">
       <h2 className="text-lg font-bold mb-4">Entrances</h2>
+      {error && <div className="form-error-box">{error}</div>}
+      {entranceStatus?.status == "ok" && (
+        <div className="form-success-box">{entranceStatus.message}</div>
+      )}
       <div className="table-none md:table-fixed">
         <table className="table-auto w-full border border-gray-200 rounded-lg overflow-hidden">
           <thead className="bg-gray-100">
@@ -62,10 +66,12 @@ const EntranceList = () => {
                 <td className="px-4 py-2">{ent.name}</td>
                 <td className="px-4 py-2">{ent.location || "-"}</td>
                 <td>
-                  {/* {ent.users &&
-                    ent.users.map((user) => (
-                      <span>{`${user.fullName}, `}</span>
-                    ))} */}
+                  {ent.users &&
+                    ent.users.map((user, i) => {
+                      if (i > 0)
+                        return <span key={user.id}>, {user.email}</span>;
+                      return <span key={user.id}>{user.email}</span>;
+                    })}
                 </td>
                 <td className="px-4 py-2 flex items-center ">
                   <Link

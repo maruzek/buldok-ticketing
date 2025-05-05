@@ -14,9 +14,9 @@ import { useState } from "react";
 import { EditStatus } from "./types/EditStatus";
 import EntranceList from "./components/admin/EntranceList";
 import CreateEntrance from "./components/admin/CreateEntrance";
-// import { MatchEditStatus } from "./types/MatchEditStatus";
 import EditEntrance from "./components/admin/EditEntrance";
 import EditMatch from "./components/admin/EditMatch";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   const [userEditStatus, setUserEditStatus] = useState<EditStatus | null>(null);
@@ -26,48 +26,62 @@ function App() {
   const [matchCreateStatus, setMatchCreateStatus] = useState<EditStatus | null>(
     null
   );
+  const [entranceEditStatus, setEntranceEditStatus] =
+    useState<EditStatus | null>(null);
 
   // TODO: zamyslet se nad nutnosti app, nebo rovou jit na ticketing
   return (
     <BrowserRouter>
       <Routes>
         <Route index element={<LoginIndexPage />} />
-        <Route path="about" element={<h1>About</h1>} />
-        <Route path="admin" element={<Dashboard />}>
-          <Route index element={<AdminBasicInfo />} />
-          <Route path="matches">
-            <Route
-              index
-              element={<MatchList matchCreateStatus={matchCreateStatus} />}
-            />
-            <Route
-              path="create"
-              element={<CreateMatch onCreateMatch={setMatchCreateStatus} />}
-            />
-            <Route
-              path=":matchID/edit"
-              element={<EditMatch onEditMatch={setMatchCreateStatus} />}
-            />
-          </Route>
-          <Route path="users">
-            <Route index element={<UserList userEdit={userEditStatus} />} />
-            <Route
-              path=":userID/edit"
-              element={<EditUser onUserSave={setUserEditStatus} />}
-            />
-            {/* <Route path="create" element={<h1>Create User</h1>} /> */}
-          </Route>
-          <Route path="entrances">
-            <Route index element={<EntranceList />} />
-            <Route path=":entranceID/edit" element={<EditEntrance />} />
-            <Route path="create" element={<CreateEntrance />} />
-          </Route>
-        </Route>
-        <Route path="app">
-          <Route index element={<UserMatchList />} />
-          <Route path="ticketing/:matchID" element={<Ticketing />} />
-        </Route>
         <Route path="register" element={<Register />} />
+        <Route element={<ProtectedRoute allowedRoles={["ROLE_ADMIN"]} />}>
+          <Route path="admin" element={<Dashboard />}>
+            <Route index element={<AdminBasicInfo />} />
+            <Route path="matches">
+              <Route
+                index
+                element={<MatchList matchCreateStatus={matchCreateStatus} />}
+              />
+              <Route
+                path="create"
+                element={<CreateMatch onCreateMatch={setMatchCreateStatus} />}
+              />
+              <Route
+                path=":matchID/edit"
+                element={<EditMatch onEditMatch={setMatchCreateStatus} />}
+              />
+            </Route>
+            <Route path="users">
+              <Route index element={<UserList userEdit={userEditStatus} />} />
+              <Route
+                path=":userID/edit"
+                element={<EditUser onUserSave={setUserEditStatus} />}
+              />
+              {/* <Route path="create" element={<h1>Create User</h1>} /> */}
+            </Route>
+            <Route path="entrances">
+              <Route
+                index
+                element={<EntranceList entranceStatus={entranceEditStatus} />}
+              />
+              <Route path=":entranceID/edit" element={<EditEntrance />} />
+              <Route
+                path="create"
+                element={
+                  <CreateEntrance onEntranceCreate={setEntranceEditStatus} />
+                }
+              />
+            </Route>
+          </Route>
+        </Route>
+        <Route element={<ProtectedRoute allowedRoles={["ROLE_USER"]} />}>
+          <Route path="app">
+            <Route index element={<UserMatchList />} />
+            <Route path="ticketing/:matchID" element={<Ticketing />} />
+          </Route>
+        </Route>
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

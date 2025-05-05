@@ -1,50 +1,97 @@
-import React from "react";
-import { Link } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { FieldValues, useForm } from "react-hook-form";
 import useAuth from "../hooks/useAuth";
+import { useEffect, useState } from "react";
+import useApi from "../hooks/useApi";
+import { User } from "../types/User";
 
 const LoginIndexPage = () => {
-  const { login } = useAuth();
+  const { login, auth } = useAuth();
+  const navigate = useNavigate();
+  const { fetchData, error: apiError } = useApi();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [paramMessage, setParamMessage] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     setError,
     clearErrors,
-    formState: { errors, isSubmitting, isSubmitSuccessful },
+    formState: { errors, isSubmitting },
   } = useForm();
 
+  useEffect(() => {
+    const reason = searchParams.get("reason");
+    if (reason === "unauthenticated") {
+      setParamMessage("Byli jste odhlášeni. Přihlašte se prosím znovu.");
+    } else if (reason === null) {
+      setParamMessage(null);
+    }
+  }, [searchParams, navigate]);
+
+  useEffect(() => {
+    console.log("apiError: ", apiError);
+    if (auth.user) {
+      if (auth.user.roles.includes("ROLE_ADMIN")) {
+        navigate("/admin");
+      } else {
+        navigate("/app");
+      }
+    }
+  }, [auth.user, navigate, apiError]);
+
   const onSubmit = async (data: FieldValues) => {
+    setSearchParams({});
+
     try {
-      const res = await fetch("http://localhost:8080/api/auth/login", {
+      // const res = await fetch("http://localhost:8080/api/auth/login", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   credentials: "include",
+      //   body: JSON.stringify(data),
+      // });
+
+      const responseData = await fetchData<{ user: User }>("/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(data),
       });
 
-      if (res.status === 401) {
-        setError("root", {
-          type: "server",
-          message: "Nesprávné uživatelské jméno nebo heslo.",
-        });
-        return;
-      }
+      // if (res.status === 401) {
+      //   setError("root", {
+      //     type: "server",
+      //     message:
+      //       "Nesprávné uživatelské jméno nebo heslo, nebo vašemu účtu chybí ověření od správce.",
+      //   });
+      //   return;
+      // }
 
-      if (!res.ok) {
+      // if (!res.ok) {
+      //   setError("root", {
+      //     type: "server",
+      //     message:
+      //       "Nastala chyba při přihlašování. Zkuste to prosím znovu později, nebo se obraťte na administrátora.",
+      //   });
+      //   return;
+      // }
+
+      // const responseData = await res.json();
+      if (responseData?.user === null) {
         setError("root", {
           type: "server",
           message:
-            "Nastala chyba při přihlašování. Zkuste to prosím znovu později, nebo se obraťte na administrátora.",
+            "Nesprávné uživatelské jméno nebo heslo, nebo vašemu účtu chybí ověření od správce.",
         });
         return;
       }
-
-      const responseData = await res.json();
       clearErrors("root");
-      login(responseData.refresh_token, responseData.user);
-      console.log(responseData);
+      login(responseData.user);
+      if (responseData.user.roles.includes("ROLE_ADMIN")) {
+        navigate("/admin");
+      } else {
+        navigate("/app");
+      }
     } catch (error) {
       console.error("Error during login:", error);
     }
@@ -69,6 +116,19 @@ const LoginIndexPage = () => {
             <div className="form-error-box">
               <h3 className="text-sm font-medium text-red-800">
                 {errors.root.message}
+              </h3>
+            </div>
+          )}
+
+          {apiError && (
+            <div className="form-error-box">
+              <h3 className="text-sm font-medium text-red-800">{apiError}</h3>
+            </div>
+          )}
+          {paramMessage && (
+            <div className="form-error-box">
+              <h3 className="text-sm font-medium text-red-800">
+                {paramMessage}
               </h3>
             </div>
           )}

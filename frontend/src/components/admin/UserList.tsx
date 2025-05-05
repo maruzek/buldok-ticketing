@@ -4,34 +4,41 @@ import { Link } from "react-router";
 
 import { User } from "../../types/User";
 import { EditStatus } from "../../types/EditStatus";
+import useApi from "../../hooks/useApi";
+import Spinner from "../Spinner";
 
 type UserListProps = {
   userEdit: EditStatus | null;
 };
 
 const UserList = ({ userEdit }: UserListProps) => {
-  // Dummy data for users
+  const { fetchData, isLoading } = useApi();
+
   const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
-    // Fetch users from the server
-    const fetchUsers = async () => {
+    const loadUsers = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:8080/api/admin/users/all"
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch users");
-        }
-        const data = await response.json();
-        setUsers(data);
+        const fetchedUsers = await fetchData<User[]>("/admin/users/all", {
+          method: "GET",
+        });
+        setUsers(fetchedUsers);
       } catch (error) {
         console.error("Error fetching users:", error);
+        setUsers([]);
       }
     };
 
-    fetchUsers();
-  }, []);
+    loadUsers();
+  }, [fetchData]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-full bg-white rounded-md">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -64,7 +71,7 @@ const UserList = ({ userEdit }: UserListProps) => {
                 <td className="px-4 py-2">{user.email}</td>
                 <td className="px-4 py-2">{user.fullName}</td>
                 <td className="px-4 py-2">{user.roles.join(", ")}</td>
-                <td className="px-4 py-2">{user.entrance}</td>
+                <td className="px-4 py-2">{user?.entrance?.name}</td>
                 <td className="px-4 py-2">{user.registeredAt}</td>
                 <td className="px-4 py-2 flex gap-2">
                   <Link

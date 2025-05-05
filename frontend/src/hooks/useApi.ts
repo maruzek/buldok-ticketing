@@ -13,7 +13,7 @@ const useApi = (): ApiHook => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { logout } = useAuth();
+  const { logout, auth } = useAuth();
 
   const fetchData = useCallback(
     async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
@@ -21,7 +21,7 @@ const useApi = (): ApiHook => {
       setError(null);
 
       try {
-        const response: Response = await fetch(`${BASE_URL}${endpoint}`, {
+        const fetchOptions: RequestInit = {
           ...options,
           headers: {
             "Content-Type": "application/json",
@@ -29,12 +29,30 @@ const useApi = (): ApiHook => {
             ...options.headers,
           },
           credentials: "include",
-        });
+        };
+        const response: Response = await fetch(
+          `${BASE_URL}${endpoint}`,
+          fetchOptions
+        );
 
         if (response.status === 401) {
           setError("Byli jste odhlášeni. Přihlašte se prosím znovu.");
+          let err = new Error(
+            "Byli jste odhlášeni. Přihlašte se prosím znovu."
+          );
+
+          if (!auth.user) {
+            setError("Nesprávný email nebo heslo.");
+            err = new Error("Nesprávný email nebo heslo.");
+          }
+
           logout();
-          throw new Error("Byli jste odhlášeni. Přihlašte se prosím znovu.");
+          throw err;
+        }
+
+        if (response.status === 403) {
+          setError("Nemáte oprávnění k této akci.");
+          throw new Error("Nemáte oprávnění k této akci.");
         }
 
         if (!response.ok) {
@@ -59,7 +77,7 @@ const useApi = (): ApiHook => {
         } else if (typeof err === "string") {
           message = err;
         } else {
-          message = "An unknown error occurred during the API request.";
+          message = "Nastala neznámá chyba.";
         }
 
         console.error("API Hook Error:", message);
@@ -70,7 +88,7 @@ const useApi = (): ApiHook => {
         setIsLoading(false);
       }
     },
-    [logout]
+    [logout, auth.user]
   );
 
   return { fetchData, isLoading, error };

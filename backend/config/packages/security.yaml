@@ -31,11 +31,11 @@ security:
     api:
       pattern: ^/api
       stateless: true
-      entry_point: jwt
+      # entry_point: jwt
       jwt: ~
-      refresh_jwt:
-        provider: app_user_provider
-        check_path: /api/auth/refresh
+      # refresh_jwt:
+      #   provider: app_user_provider
+      #   check_path: /api/auth/refresh
 
     # login:
     #   pattern: ^/api/auth/login$
@@ -72,9 +72,10 @@ security:
   # Easy way to control access for large sections of your site
   # Note: Only the *first* access control that matches will be used
   access_control:
-    - { path: ^/api/auth/(login|token/refresh), roles: PUBLIC_ACCESS }
-    - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }
-    - { path: ^/api, roles: PUBLIC_ACCESS }
+    - { path: ^/api, methods: [OPTIONS], roles: PUBLIC_ACCESS }
+    - { path: ^/api/auth/(login|logout), roles: PUBLIC_ACCESS }
+    - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+    - { path: ^/api/auth, roles: ROLE_ADMIN }
 
 when@test:
   security:

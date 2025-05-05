@@ -35,7 +35,6 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   const logout = useCallback(async () => {
-    localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
     setAuth({ user: null });
 
@@ -44,14 +43,13 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("refreshToken")}`,
         },
+        credentials: "include",
       });
 
       if (!response.ok) {
         throw new Error("Logout failed");
       }
-      console.log("Logout successful");
     } catch (error) {
       console.error("Error during logout:", error);
     }

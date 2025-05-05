@@ -9,6 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/admin/users', name: 'api_users_')]
 final class UserController extends AbstractController
@@ -80,11 +81,29 @@ final class UserController extends AbstractController
             $newRoles += ['ROLE_USER'];
         }
 
-        $oldEntrance = $user->getEntrance();
+        /** @var User|null $authUser */
+        $authUser = $this->getUser();
+
+        if (in_array("ROLE_ADMIN", $user->getRoles()) && !in_array("ROLE_ADMIN", $newRoles) && $user->getId() == $authUser->getId()) {
+            return $this->json([
+                'error' => 'Cannot remove admin role from yourself',
+                'message' => 'Nemůžete odebrat roli admina sami sobě',
+            ], JsonResponse::HTTP_FORBIDDEN);
+        }
+
+        $newEntrance = null;
+
+        if ($data['entrance']) {
+            $newEntrance = $entranceRepository->findOneBy(['id' => $data['entrance']['id']]);
+        } else if ($data['entrance'] === null && $user->getEntrance()) {
+            $newEntrance = $user->getEntrance();
+        } else {
+            $newEntrance = null;
+        }
 
         $user->setRoles($newRoles ?? $user->getRoles());
         $user->setVerified($data['verified'] ?? $user->isVerified());
-        $user->setEntrance($entranceRepository->findOneBy(['id' => $data['entrance']]) ?? $user->getEntrance());
+        $user->setEntrance($newEntrance);
 
         try {
             $em->flush();
@@ -94,9 +113,6 @@ final class UserController extends AbstractController
                 'message' => $e->getMessage(),
             ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-
-        // $user->setRoles(['ROLE_USER']);
 
         $userData = [
             'id' => $user->getId(),

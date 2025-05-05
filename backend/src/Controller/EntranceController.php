@@ -80,7 +80,7 @@ final class EntranceController extends AbstractController
                 'id' => $entrance->getId(),
                 'name' => $entrance->getName(),
                 'location' => $entrance->getLocation(),
-                'users' => $entrance->getUsers(),
+                'users' => $users,
             ];
         }
 

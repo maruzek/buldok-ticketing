@@ -7,4 +7,5 @@ export type User = {
   roles: string[];
   entrance: Entrance | null;
   registeredAt: string;
+  verified: boolean;
 };

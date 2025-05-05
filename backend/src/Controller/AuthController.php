@@ -145,4 +145,12 @@ final class AuthController extends AbstractController
             ],
         ], JsonResponse::HTTP_CREATED);
     }
+
+    #[Route('/logout', name: 'logout', methods: ['POST'])]
+    public function logout(): JsonResponse
+    {
+        return $this->json([
+            'message' => 'Logged out successfully',
+        ]);
+    }
 }

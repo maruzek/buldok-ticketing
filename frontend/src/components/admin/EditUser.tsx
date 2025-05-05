@@ -6,6 +6,7 @@ import { useNavigate, useParams } from "react-router";
 import { User } from "../../types/User";
 import Spinner from "../Spinner";
 import { EditStatus } from "../../types/EditStatus";
+import useApi from "../../hooks/useApi";
 
 type UserData = Omit<User, "registeredAt">;
 
@@ -25,32 +26,49 @@ const EditUser = ({ onUserSave }: EditUserProps) => {
 
   const { userID } = useParams<{ userID: string }>();
   const [editedUser, setEditedUser] = useState<UserData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const { fetchData, error, isLoading } = useApi();
 
   useEffect(() => {
     const fetchUser = async () => {
+      // try {
+      //   setIsLoading(true);
+      //   const response = await fetch(
+      //     `http://localhost:8080/api/admin/users/user/${userID}`
+      //   );
+      //   if (!response.ok) {
+      //     throw new Error("Failed to fetch user");
+      //   }
+      //   const data = await response.json();
+      //   setEditedUser(data);
+      //   setValue("verified", data.verified);
+      //   setValue("admin", data.roles.includes("ROLE_ADMIN"));
+      // } catch (error) {
+      //   console.error("Error fetching user:", error);
+      // } finally {
+      //   setIsLoading(false);
+      // }
+
       try {
-        setIsLoading(true);
-        const response = await fetch(
-          `http://localhost:8080/api/admin/users/user/${userID}`
+        const userData = await fetchData<UserData>(
+          `/admin/users/user/${userID}`,
+          {
+            method: "GET",
+          }
         );
-        if (!response.ok) {
-          throw new Error("Failed to fetch user");
-        }
-        const data = await response.json();
-        setEditedUser(data);
-        setValue("verified", data.verified);
-        setValue("admin", data.roles.includes("ROLE_ADMIN"));
+        setEditedUser(userData);
+        setValue("verified", userData.verified);
+        setValue("admin", userData.roles.includes("ROLE_ADMIN"));
       } catch (error) {
         console.error("Error fetching user:", error);
-      } finally {
-        setIsLoading(false);
+
+        setEditedUser(null);
       }
     };
 
     fetchUser();
-  }, [userID, setValue]);
+  }, [userID, setValue, fetchData]);
 
   const onSubmit = async (data: FieldValues) => {
     if (!editedUser) {
@@ -92,29 +110,33 @@ const EditUser = ({ onUserSave }: EditUserProps) => {
             roles: newRoles,
             verified: data.verified,
           }),
+          credentials: "include",
         }
       );
 
       if (!response.ok) {
+        const errorData = await response.json();
+        const err = `Nastala chyba při aktualizaci uživatele. ${errorData.message}`;
         setError("root", {
           type: "server",
-          message: "Nastala chyba při aktualizaci uživatele.",
+          message: err,
         });
-        throw new Error("Failed to update user");
+        throw new Error(err);
       }
 
-      // const result = await response.json();
       onUserSave({
         status: "ok",
         message: `Uživatel ${editedUser.fullName} byl úspěšně upraven!`,
       });
       navigate("/admin/users");
-    } catch (error) {
-      setError("root", {
-        type: "server",
-        message: "Nastala chyba při aktualizaci uživatele.",
-      });
-      console.error("Error updating user:", error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError("root", {
+          type: "server",
+          message: error?.message as string,
+        });
+        console.error("Error updating user:", error?.message as string);
+      }
     }
   };
 
