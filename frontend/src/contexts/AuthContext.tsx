@@ -21,15 +21,35 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
 });
 
+const isValidUser = (obj: any): obj is User => {
+  return (
+    obj &&
+    typeof obj === "object" &&
+    "id" in obj &&
+    "email" in obj &&
+    Array.isArray(obj.roles)
+  );
+};
+
 const AuthProvider = ({ children }: AuthProviderProps) => {
   const [auth, setAuth] = useState<AuthState>((): AuthState => {
     const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      if (isValidUser(parsedUser)) {
+        return { user: parsedUser };
+      }
+    }
     return {
-      user: storedUser ? JSON.parse(storedUser) : null,
+      user: null,
     };
   });
 
   const login = useCallback((user: User) => {
+    if (!isValidUser(user)) {
+      console.error("Invalid user object:", user);
+      return;
+    }
     localStorage.setItem("user", JSON.stringify(user));
     setAuth({ user: user });
   }, []);
