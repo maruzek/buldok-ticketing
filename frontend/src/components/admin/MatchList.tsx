@@ -1,8 +1,9 @@
-import { Circle, Dot, Trash2, UserCog } from "lucide-react";
+import { Dot, Trash2, UserCog } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { MatchEditStatus } from "../../types/MatchEditStatus";
 import Spinner from "../Spinner";
+import useApi from "../../hooks/useApi";
 
 interface Match {
   id: number;
@@ -18,28 +19,49 @@ type MatchListProps = {
 };
 
 const MatchList = ({ matchCreateStatus }: MatchListProps) => {
-  const [matches, setMatches] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [matches, setMatches] = useState<Match[]>([]);
+  // const [isLoading, setIsLoading] = useState(false);
+
+  const { fetchData, isLoading } = useApi();
 
   useEffect(() => {
     const fetchMatches = async () => {
-      setIsLoading(true);
+      // setIsLoading(true);
+      // try {
+      //   const response = await fetch(
+      //     "http://localhost:8080/api/admin/match/list",
+      //     {
+      //       method: "GET",
+      //       headers: {
+      //         "Content-Type": "application/json",
+      //         Accept: "application/json",
+      //       },
+      //       credentials: "include",
+      //     }
+      //   );
+      //   if (!response.ok) {
+      //     throw new Error("Network response was not ok");
+      //   }
+      //   const data = await response.json();
+      //   console.log(data);
+      //   setMatches(data);
+      // } catch (error) {
+      //   console.error("Error fetching matches:", error);
+      // } finally {
+      //   setIsLoading(false);
+      // }
+
       try {
-        const response = await fetch("http://localhost:8080/api/match/list");
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        const data = await response.json();
-        console.log(data);
+        const data = await fetchData<Match[]>("/admin/match/list", {
+          method: "GET",
+        });
         setMatches(data);
       } catch (error) {
         console.error("Error fetching matches:", error);
-      } finally {
-        setIsLoading(false);
       }
     };
     fetchMatches();
-  }, []);
+  }, [fetchData]);
 
   if (isLoading)
     return (

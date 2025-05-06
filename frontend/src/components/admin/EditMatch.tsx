@@ -1,9 +1,12 @@
 import DatePicker, { registerLocale } from "react-datepicker";
 import { useForm, FieldValues, Controller } from "react-hook-form";
 import { cs } from "date-fns/locale/cs";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { EditStatus } from "../../types/EditStatus";
+import useApi from "../../hooks/useApi";
+import { Match } from "../../types/Match";
+import Spinner from "../Spinner";
 
 registerLocale("cs", cs);
 
@@ -12,6 +15,7 @@ type EditMatchProps = {
 };
 
 const EditMatch = ({ onEditMatch }: EditMatchProps) => {
+  const [isLoading, setIsLoading] = useState(false);
   const {
     register,
     handleSubmit,
@@ -23,61 +27,103 @@ const EditMatch = ({ onEditMatch }: EditMatchProps) => {
 
   const { matchID } = useParams<{ matchID: string }>();
   const navigate = useNavigate();
+  const { fetchData } = useApi();
 
   useEffect(() => {
     const fetchMatch = async () => {
+      // try {
+      //   const response = await fetch(
+      //     `http://localhost:8080/api/match/${matchID}`
+      //   );
+      //   if (!response.ok) {
+      //     setError("root", {
+      //       type: "server",
+      //       message: "Nastala chyba při načítání zápasu.",
+      //     });
+      //     throw new Error("Failed to fetch match");
+      //   }
+      //   const data = await response.json();
+      //   // setEditedMatch(data);
+      //   setValue("rival", data.rival);
+      //   setValue("matchDate", new Date(data.playedAt.date));
+      //   setValue("description", data.description);
+      // } catch (error) {
+      //   console.error("Error fetching match:", error);
+      // }
+
       try {
-        const response = await fetch(
-          `http://localhost:8080/api/match/${matchID}`
-        );
-        if (!response.ok) {
-          setError("root", {
-            type: "server",
-            message: "Nastala chyba při načítání zápasu.",
-          });
-          throw new Error("Failed to fetch match");
-        }
-        const data = await response.json();
-        // setEditedMatch(data);
+        setIsLoading(true);
+        const data = await fetchData<Match>(`/admin/match/${matchID}`, {
+          method: "GET",
+        });
+        console.log(data);
         setValue("rival", data.rival);
         setValue("matchDate", new Date(data.playedAt.date));
         setValue("description", data.description);
+        setValue("status", data.status);
       } catch (error) {
         console.error("Error fetching match:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchMatch();
-  }, [matchID, setValue, setError]);
+  }, [matchID, setValue, setError, fetchData]);
 
   const onSubmit = async (data: FieldValues) => {
+    // try {
+    //   const res = await fetch(`http://localhost:8080/api/match/${matchID}`, {
+    //     method: "PUT",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //     body: JSON.stringify(data),
+    //   });
+
+    //   if (!res.ok) {
+    //     setError("root", {
+    //       type: "server",
+    //       message:
+    //         "Nastala chyba při aktualizaci zápasu, zkuste to prosím znovu později.",
+    //     });
+    //     console.log(await res.json());
+    //     throw new Error("Failed to create entrance");
+    //   }
+
+    //   onEditMatch({
+    //     status: "ok",
+    //     message: `Zápas proti ${data.rival} úspěšně upraven`,
+    //   });
+    //   navigate("/admin/matches");
+    // } catch (error) {
+    //   console.error("Error creating entrance:", error);
+    // }
+
     try {
-      const res = await fetch(`http://localhost:8080/api/match/${matchID}`, {
+      const res = await fetchData<Match>(`/admin/match/${matchID}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(data),
       });
 
-      if (!res.ok) {
-        setError("root", {
-          type: "server",
-          message:
-            "Nastala chyba při aktualizaci zápasu, zkuste to prosím znovu později.",
-        });
-        console.log(await res.json());
-        throw new Error("Failed to create entrance");
-      }
-
       onEditMatch({
         status: "ok",
-        message: `Zápas proti ${data.rival} úspěšně upraven`,
+        message: `Zápas proti ${res.rival} úspěšně upraven`,
       });
       navigate("/admin/matches");
     } catch (error) {
       console.error("Error creating entrance:", error);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-full">
+        <h1 className="text-2xl font-bold">
+          <Spinner />
+        </h1>
+      </div>
+    );
+  }
 
   return (
     <div className="form-page-card">

@@ -13,10 +13,10 @@ use Symfony\Component\Routing\Attribute\Route;
 
 //TODO: refactor controller to match admin structure
 // TODO: Automatically Fetching Objects (EntityValueResolver)
-#[Route('/api/match', name: 'app_match_')]
+// #[Route('/api/match', name: 'app_match_')]
 final class MatchController extends AbstractController
 {
-    #[Route('/create', name: 'create_match', methods: ['POST'])]
+    #[Route('/api/admin/match/create', name: 'create', methods: ['POST'])]
     public function createMatch(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -67,7 +67,7 @@ final class MatchController extends AbstractController
         ], JsonResponse::HTTP_CREATED);
     }
 
-    #[Route('/list', name: 'list_match', methods: ['GET'])]
+    #[Route('/api/admin/match/list', name: 'list_match', methods: ['GET'])]
     public function listMatch(GameRepository $gameRepository): JsonResponse
     {
         $matches = $gameRepository->findAllMatches();
@@ -86,7 +86,7 @@ final class MatchController extends AbstractController
         return $this->json($matchList, JsonResponse::HTTP_OK);
     }
 
-    #[Route('/{id}', name: 'get_match', methods: ['GET'])]
+    #[Route('/api/admin/match/{id}', name: 'get_match', methods: ['GET'])]
     public function getMatchById(int $id, GameRepository $gameRepository): JsonResponse
     {
         $match = $gameRepository->find($id);
@@ -106,7 +106,7 @@ final class MatchController extends AbstractController
         ], JsonResponse::HTTP_OK);
     }
 
-    #[Route('/{id}', name: 'edit_match', methods: ['PUT'])]
+    #[Route('/api/admin/match/{id}', name: 'edit_match', methods: ['PUT'])]
     public function editMatchById(int $id, GameRepository $gameRepository, Request $request, EntityManagerInterface $em): JsonResponse
     {
         $match = $gameRepository->find($id);

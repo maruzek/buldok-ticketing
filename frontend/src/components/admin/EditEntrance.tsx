@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react";
 import { FieldValues, useForm } from "react-hook-form";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { Entrance } from "../../types/Entrance";
 import Spinner from "../Spinner";
 import { XCircle } from "lucide-react";
 import { useDebounce } from "react-use";
 import { User } from "../../types/User";
+import useApi from "../../hooks/useApi";
+import { EditStatus } from "../../types/EditStatus";
 
-const EditEntrance = () => {
+type EditEntranceProps = {
+  onEntranceEdit: (status: EditStatus) => void;
+};
+
+const EditEntrance = ({ onEntranceEdit }: EditEntranceProps) => {
   const {
     register,
     handleSubmit,
@@ -20,6 +26,9 @@ const EditEntrance = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const { entranceID } = useParams<{ entranceID: string }>();
+
+  const { fetchData } = useApi();
+  const navigate = useNavigate();
 
   const [userSearchResults, setUserSearchResults] = useState<User[]>([]);
   const [userList, setUserList] = useState<User[]>([]);
@@ -36,22 +45,40 @@ const EditEntrance = () => {
     }
 
     const fetchEntrance = async () => {
+      // try {
+      //   setIsLoading(true);
+      //   const response = await fetch(
+      //     `http://localhost:8080/api/admin/entrances/entrance/${entranceID}`
+      //   );
+
+      //   if (!response.ok) {
+      //     setError("root", {
+      //       type: "faker",
+      //       message: "Nastala chyba při načítání vstupu.",
+      //     });
+      //     throw new Error("Failed to fetch entrance");
+      //   }
+
+      //   const data = await response.json();
+      //   console.log(data);
+      //   setEditedEntrance(data);
+      //   setUserList(data.users);
+      //   setValue("name", data.name);
+      //   setValue("location", data.location);
+      // } catch (error) {
+      //   console.error("Error fetching entrance:", error);
+      // } finally {
+      //   setIsLoading(false);
+      // }
+
       try {
         setIsLoading(true);
-        const response = await fetch(
-          `http://localhost:8080/api/admin/entrances/entrance/${entranceID}`
+        const data = await fetchData<Entrance>(
+          `/admin/entrances/entrance/${entranceID}`,
+          {
+            method: "GET",
+          }
         );
-
-        if (!response.ok) {
-          setError("root", {
-            type: "faker",
-            message: "Nastala chyba při načítání vstupu.",
-          });
-          throw new Error("Failed to fetch entrance");
-        }
-
-        const data = await response.json();
-        console.log(data);
         setEditedEntrance(data);
         setUserList(data.users);
         setValue("name", data.name);
@@ -63,35 +90,58 @@ const EditEntrance = () => {
       }
     };
     fetchEntrance();
-  }, [entranceID, setError, setValue]);
+  }, [entranceID, fetchData, setError, setValue]);
 
   useDebounce(
     () => {
       if (userSearchQuery && userSearchQuery.length > 2) {
         const fetchUser = async () => {
+          // try {
+          //   const response = await fetch(
+          //     `http://localhost:8080/api/admin/users/search?q=${userSearchQuery}`,
+          //     {
+          //       method: "GET",
+          //       headers: {
+          //         "Content-Type": "application/json",
+          //       },
+          //       credentials: "include",
+          //     }
+          //   );
+          //   if (!response.ok) {
+          //     setError("user", {
+          //       type: "server",
+          //       message: "Uživatel nenalezen.",
+          //     });
+          //     return;
+          //   }
+          //   const data = await response.json();
+          //   console.log(data);
+          //   setUserSearchResults(data);
+          // } catch (error) {
+          //   console.error("Error fetching user:", error);
+          // }
+
+          // PROČ TO K**** NEFUNGUJE
           try {
-            const response = await fetch(
-              `http://localhost:8080/api/admin/users/search?q=${userSearchQuery}`
+            const data = await fetchData<User[]>(
+              `/admin/users/search?q=${userSearchQuery}`,
+              {
+                method: "GET",
+              }
             );
-            if (!response.ok) {
-              setError("user", {
-                type: "server",
-                message: "Uživatel nenalezen.",
-              });
-              return;
-            }
-            const data = await response.json();
             console.log(data);
-            setUserSearchResults(data);
+            setUserSearchResults(data || []);
           } catch (error) {
             console.error("Error fetching user:", error);
           }
         };
         fetchUser();
+      } else {
+        setUserSearchResults([]);
       }
     },
     1000,
-    [userSearchQuery]
+    [userSearchQuery, fetchData]
   );
 
   const onSubmit = async (data: FieldValues) => {
@@ -104,90 +154,146 @@ const EditEntrance = () => {
       return;
     }
 
+    // try {
+    //   const response = await fetch(
+    //     `http://localhost:8080/api/admin/entrances/entrance/${entranceID}`,
+    //     {
+    //       method: "PUT",
+    //       headers: {
+    //         "Content-Type": "application/json",
+    //       },
+    //       body: JSON.stringify({
+    //         ...editedEntrance,
+    //         name: data.name,
+    //         location: data.location,
+    //       }),
+    //     }
+    //   );
+
+    //   if (!response.ok) {
+    //     setError("root", {
+    //       type: "server",
+    //       message: "Nastala chyba při aktualizaci vstupu.",
+    //     });
+    //     throw new Error("Failed to update entrance");
+    //   }
+
+    //   const resData = await response.json();
+    //   console.log(resData);
+    // } catch (error) {
+    //   console.error("Error updating entrance:", error);
+    // }
+
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/admin/entrances/entrance/${entranceID}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...editedEntrance,
-            name: data.name,
-            location: data.location,
-          }),
-        }
-      );
+      await fetchData<Entrance>(`/admin/entrances/entrance/${entranceID}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          ...editedEntrance,
+          name: data.name,
+          location: data.location,
+        }),
+      });
 
-      if (!response.ok) {
-        setError("root", {
-          type: "server",
-          message: "Nastala chyba při aktualizaci vstupu.",
-        });
-        throw new Error("Failed to update entrance");
-      }
-
-      const resData = await response.json();
-      console.log(resData);
+      onEntranceEdit({
+        status: "ok",
+        message: `Vstup ${data.name} byl úspěšně upraven.`,
+      });
+      navigate("/admin/entrances");
     } catch (error) {
+      setError("root", {
+        type: "server",
+        message: "Nastala chyba při aktualizaci vstupu.",
+      });
       console.error("Error updating entrance:", error);
     }
   };
 
   const handleUserAdd = async (user: User) => {
+    setUserList((prev) => [...prev, user]);
+    setUserSearchResults((prev) => prev.filter((u) => u.id !== user.id));
+    // try {
+    //   const response = await fetch(
+    //     `http://localhost:8080/api/admin/users/user/${user.id}`,
+    //     {
+    //       method: "PUT",
+    //       headers: {
+    //         "Content-Type": "application/json",
+    //       },
+    //       credentials: "include",
+    //       body: JSON.stringify({
+    //         entrance: editedEntrance,
+    //       }),
+    //     }
+    //   );
+
+    //   if (!response.ok) {
+    //     setError("user", {
+    //       type: "server",
+    //       message: "Nastala chyba při přidávání uživatele.",
+    //     });
+    //     setUserList((prev) => prev.filter((u) => u.id !== user.id));
+    //     throw new Error("Failed to add user");
+    //   }
+
+    //   const data = await response.json();
+    //   console.log(data);
+    // } catch (error) {
+    //   console.error("Error adding user:", error);
+    // }
+
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/admin/users/user/${user.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            entrance: entranceID,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        setError("user", {
-          type: "server",
-          message: "Nastala chyba při přidávání uživatele.",
-        });
-        setUserList((prev) => prev.filter((u) => u.id !== user.id));
-        throw new Error("Failed to add user");
-      }
-
-      const data = await response.json();
-      console.log(data);
+      await fetchData<User>(`/admin/users/user/${user.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          entrance: editedEntrance,
+        }),
+      });
     } catch (error) {
+      setError("user", {
+        type: "server",
+        message: "Nastala chyba při přidávání uživatele.",
+      });
+      setUserList((prev) => prev.filter((u) => u.id !== user.id));
       console.error("Error adding user:", error);
     }
   };
 
   const handleUserRemove = async (user: User) => {
+    // try {
+    //   const response = await fetch(
+    //     `http://localhost:8080/api/admin/users/user/${user.id}/remove-entrance`,
+    //     {
+    //       method: "PUT",
+    //       headers: {
+    //         "Content-Type": "application/json",
+    //       },
+    //       credentials: "include",
+    //     }
+    //   );
+
+    //   if (!response.ok) {
+    //     setError("user", {
+    //       type: "server",
+    //       message: "Nastala chyba při odebírání uživatele.",
+    //     });
+    //     throw new Error("Failed to remove user");
+    //   }
+
+    //   setRemovedUser(user);
+    // } catch (error) {
+    //   console.error("Error removing user:", error);
+    // }
+
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/admin/users/user/${user.id}/remove-entrance`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        setError("user", {
-          type: "server",
-          message: "Nastala chyba při odebírání uživatele.",
-        });
-        throw new Error("Failed to remove user");
-      }
-
+      await fetchData<User>(`/admin/users/user/${user.id}/remove-entrance`, {
+        method: "PUT",
+      });
       setRemovedUser(user);
     } catch (error) {
+      setError("user", {
+        type: "server",
+        message: "Nastala chyba při odebírání uživatele.",
+      });
       console.error("Error removing user:", error);
     }
   };
@@ -295,10 +401,6 @@ const EditEntrance = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        setUserList((prev) => [...prev, user]);
-                        setUserSearchResults((prev) =>
-                          prev.filter((u) => u.id !== user.id)
-                        );
                         handleUserAdd(user);
                       }}
                       className="btn-lime"

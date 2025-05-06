@@ -28,7 +28,7 @@ const EditUser = ({ onUserSave }: EditUserProps) => {
   const [editedUser, setEditedUser] = useState<UserData | null>(null);
   // const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const { fetchData, error, isLoading } = useApi();
+  const { fetchData, isLoading } = useApi();
 
   useEffect(() => {
     const fetchUser = async () => {

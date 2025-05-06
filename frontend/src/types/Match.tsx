@@ -2,5 +2,10 @@ export type Match = {
   id: number;
   rival: string;
   description: string;
-  playedAt: Date;
+  playedAt: {
+    date: string;
+    timezone_type: string;
+    timezone: string;
+  };
+  status: string;
 };

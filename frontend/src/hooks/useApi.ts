@@ -30,6 +30,7 @@ const useApi = (): ApiHook => {
           },
           credentials: "include",
         };
+
         const response: Response = await fetch(
           `${BASE_URL}${endpoint}`,
           fetchOptions

@@ -2,14 +2,15 @@ import { useForm, Controller, FieldValues } from "react-hook-form";
 import DatePicker, { registerLocale } from "react-datepicker";
 import { cs } from "date-fns/locale/cs";
 import "react-datepicker/dist/react-datepicker.css";
-import { useEffect, useState } from "react";
-import { MatchEditStatus } from "../../types/MatchEditStatus";
 import { useNavigate } from "react-router";
+import useApi from "../../hooks/useApi";
+import { Match } from "../../types/Match";
+import { EditStatus } from "../../types/EditStatus";
 
 registerLocale("cs", cs);
 
 type CreateMatchProps = {
-  onCreateMatch: (status: MatchEditStatus) => void;
+  onCreateMatch: (status: EditStatus) => void;
 };
 
 const CreateMatch = ({ onCreateMatch }: CreateMatchProps) => {
@@ -17,63 +18,59 @@ const CreateMatch = ({ onCreateMatch }: CreateMatchProps) => {
     register,
     handleSubmit,
     control,
-    watch,
-    setError,
-    formState: { errors, isSubmitting, isSubmitSuccessful },
+    formState: { errors, isSubmitting },
   } = useForm();
 
-  const [entrances, setEntrances] = useState<any[]>([]);
-
-  useEffect(() => {
-    const fetchEntrances = async () => {
-      try {
-        const response = await fetch(
-          "http://localhost:8080/api/admin/entrances/all"
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch entrances");
-        }
-        const data = await response.json();
-        setEntrances(data);
-        console.log(data);
-      } catch (error) {
-        console.error("Error fetching entrances:", error);
-      }
-    };
-
-    fetchEntrances();
-  }, [watch]);
+  const { fetchData } = useApi();
 
   const navigate = useNavigate();
 
   const onSubmit = async (data: FieldValues) => {
+    // try {
+    //   const res = await fetch("http://localhost:8080/api/match/create", {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //     body: JSON.stringify(data),
+    //   });
+
+    //   if (!res.ok) {
+    //     const errorData = await res.json();
+    //     console.error("Error creating match:", errorData);
+    //     setError("root", {
+    //       type: "manual",
+    //       message: errorData.message || "Chyba při vytváření zápasu",
+    //     });
+    //     return;
+    //   }
+
+    //   const resData = await res.json();
+    //   onCreateMatch({
+    //     status: "ok",
+    //     message: `Zápas proti ${data.rival} úspěšně vytvořen`,
+    //     matchId: resData.matchId,
+    //   });
+    //   navigate("/admin/matches");
+    //   console.log(resData);
+    // } catch (error) {
+    //   console.error("Error creating match:", error);
+    // }
+
     try {
-      const res = await fetch("http://localhost:8080/api/match/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      const resData = await fetchData<{ message: string; match: Match }>(
+        "/admin/match/create",
+        {
+          method: "POST",
+          body: JSON.stringify(data),
+        }
+      );
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        console.error("Error creating match:", errorData);
-        setError("root", {
-          type: "manual",
-          message: errorData.message || "Chyba při vytváření zápasu",
-        });
-        return;
-      }
-
-      const resData = await res.json();
       onCreateMatch({
         status: "ok",
-        message: `Zápas proti ${data.rival} úspěšně vytvořen`,
-        matchId: resData.matchId,
+        message: `Zápas proti ${resData.match.rival} úspěšně vytvořen`,
       });
       navigate("/admin/matches");
-      console.log(resData);
     } catch (error) {
       console.error("Error creating match:", error);
     }

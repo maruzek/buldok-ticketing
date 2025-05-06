@@ -65,7 +65,12 @@ function App() {
                 index
                 element={<EntranceList entranceStatus={entranceEditStatus} />}
               />
-              <Route path=":entranceID/edit" element={<EditEntrance />} />
+              <Route
+                path=":entranceID/edit"
+                element={
+                  <EditEntrance onEntranceEdit={setEntranceEditStatus} />
+                }
+              />
               <Route
                 path="create"
                 element={

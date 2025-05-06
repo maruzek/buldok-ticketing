@@ -9,11 +9,9 @@ import {
   Ticket,
   Users,
 } from "lucide-react";
-import useAuth from "../hooks/useAuth";
 
 const Dashboard = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { user } = useAuth();
 
   const toggleDropdown = () => {
     setIsDropdownOpen((prev) => !prev);
