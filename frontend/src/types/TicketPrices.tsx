@@ -1,4 +1,4 @@
 export type TicketPrices = {
-  fullTicketPrice: number;
-  halfTicketPrice: number;
+  fullTicket: number;
+  halfTicket: number;
 };

@@ -19,11 +19,11 @@ class Purchase
     private ?User $sold_by = null;
 
     #[ORM\ManyToOne(inversedBy: 'purchases')]
-    private ?Entrance $entrance_id = null;
+    private ?Entrance $entrance = null;
 
     #[ORM\ManyToOne(inversedBy: 'purchases')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Game $match_id = null;
+    private ?Game $match = null;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $purchased_at = null;
@@ -31,7 +31,7 @@ class Purchase
     /**
      * @var Collection<int, PurchaseItem>
      */
-    #[ORM\OneToMany(targetEntity: PurchaseItem::class, mappedBy: 'purchase_id', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: PurchaseItem::class, mappedBy: 'purchase', orphanRemoval: true)]
     private Collection $purchaseItems;
 
     public function __construct()
@@ -56,26 +56,26 @@ class Purchase
         return $this;
     }
 
-    public function getEntranceId(): ?Entrance
+    public function getEntrance(): ?Entrance
     {
-        return $this->entrance_id;
+        return $this->entrance;
     }
 
-    public function setEntranceId(?Entrance $entrance_id): static
+    public function setEntrance(?Entrance $entrance): static
     {
-        $this->entrance_id = $entrance_id;
+        $this->entrance = $entrance;
 
         return $this;
     }
 
-    public function getMatchId(): ?Game
+    public function getMatch(): ?Game
     {
-        return $this->match_id;
+        return $this->match;
     }
 
-    public function setMatchId(?Game $match_id): static
+    public function setMatch(?Game $match): static
     {
-        $this->match_id = $match_id;
+        $this->match = $match;
 
         return $this;
     }

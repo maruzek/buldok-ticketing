@@ -15,8 +15,8 @@ class PurchaseItem
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'purchaseItems')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Purchase $purchase_id = null;
+    #[ORM\JoinColumn(name: 'purchase_id', nullable: false)]
+    private ?Purchase $purchase = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
@@ -25,6 +25,9 @@ class PurchaseItem
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     private ?string $price_at_purchase = null;
 
+    #[ORM\Column]
+    private ?int $quantity = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -32,12 +35,12 @@ class PurchaseItem
 
     public function getPurchaseId(): ?Purchase
     {
-        return $this->purchase_id;
+        return $this->purchase;
     }
 
-    public function setPurchaseId(?Purchase $purchase_id): static
+    public function setPurchaseId(?Purchase $purchase): static
     {
-        $this->purchase_id = $purchase_id;
+        $this->purchase = $purchase;
 
         return $this;
     }
@@ -62,6 +65,18 @@ class PurchaseItem
     public function setPriceAtPurchase(string $price_at_purchase): static
     {
         $this->price_at_purchase = $price_at_purchase;
+
+        return $this;
+    }
+
+    public function getQuantity(): ?int
+    {
+        return $this->quantity;
+    }
+
+    public function setQuantity(int $quantity): static
+    {
+        $this->quantity = $quantity;
 
         return $this;
     }

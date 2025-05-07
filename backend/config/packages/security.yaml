@@ -73,7 +73,7 @@ security:
   # Note: Only the *first* access control that matches will be used
   access_control:
     - { path: ^/api, methods: [OPTIONS], roles: PUBLIC_ACCESS }
-    - { path: ^/api/auth/(login|logout), roles: PUBLIC_ACCESS }
+    - { path: ^/api/auth/(login|logout|register), roles: PUBLIC_ACCESS }
     - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
     - { path: ^/api/auth, roles: ROLE_ADMIN }
 

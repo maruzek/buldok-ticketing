@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Enum\MatchStatus;
 use App\Repository\GameRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -26,6 +28,18 @@ class Game
 
     #[ORM\Column(length: 15)]
     private ?MatchStatus $status = null;
+
+    // /**
+    //  * @var Collection<int, Purchase>
+    //  */
+    // #[ORM\OneToMany(targetEntity: Purchase::class, mappedBy: 'match', cascade: ['persist', 'remove'])]
+    // private Collection $purchases;
+
+    // public function __construct()
+    // {
+    //     $this->purchases = new ArrayCollection();
+    // }
+
 
     public function getId(): ?int
     {
@@ -79,4 +93,34 @@ class Game
 
         return $this;
     }
+
+    // /**
+    //  * @return Collection<int, Purchase>
+    //  */
+    // public function getPurchases(): Collection
+    // {
+    //     return $this->purchases;
+    // }
+
+    // public function addPurchase(Purchase $purchase): static
+    // {
+    //     if (!$this->purchases->contains($purchase)) {
+    //         $this->purchases->add($purchase);
+    //         $purchase->setMatch($this); // Ensure the owning side is set
+    //     }
+
+    //     return $this;
+    // }
+
+    // public function removePurchase(Purchase $purchase): static
+    // {
+    //     if ($this->purchases->removeElement($purchase)) {
+    //         // Set the owning side to null (unless already changed)
+    //         if ($purchase->getMatch() === $this) {
+    //             $purchase->setMatch(null);
+    //         }
+    //     }
+
+    //     return $this;
+    // }
 }

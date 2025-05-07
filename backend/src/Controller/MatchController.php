@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Game;
+use App\Entity\Purchase;
 use App\Enum\MatchStatus;
 use App\Repository\GameRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -10,6 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 //TODO: refactor controller to match admin structure
 // TODO: Automatically Fetching Objects (EntityValueResolver)
@@ -87,7 +89,7 @@ final class MatchController extends AbstractController
     }
 
     #[Route('/api/match/{id}', name: 'get_match', methods: ['GET'])]
-    public function getMatchById(int $id, GameRepository $gameRepository): JsonResponse
+    public function getMatchById(int $id, GameRepository $gameRepository, SerializerInterface $serializer): JsonResponse
     {
         $match = $gameRepository->find($id);
 
@@ -96,6 +98,39 @@ final class MatchController extends AbstractController
                 'error' => 'Match not found',
             ], JsonResponse::HTTP_NOT_FOUND);
         }
+
+        if ($match->getStatus() === MatchStatus::FINISHED && !in_array("ROLE_ADMIN", $this->getUser()->getRoles())) {
+            return $this->json([
+                'error' => 'Match is canceleddd',
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        /*
+        $purchasesWithDetails = $purchaseRepository->findPurchasesWithDetailsByMatch($match, $this->getUser());
+
+        // Serialize the purchases with a circular reference handler
+        $jsonContent = $serializer->serialize($purchasesWithDetails, 'json', [
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
+        
+        */
+
+        // $purchases = [];
+
+        // /** @var Purchase $purchase */
+        // foreach ($match->getPurchases() as $purchase) {
+        //     $purchases[] = [
+        //         'id' => $purchase->getId(),
+        //         $purchase->getEntrance() ? 'entrance' => [
+        //             'id' => $purchase->getEntrance()->getId(),
+        //             'name' => $purchase->getEntrance()->getName(),
+        //         ] : null,
+        //         'purchasedAt' => $purchase->getPurchasedAt()->format('d.m.Y H:i'),
+
+        //     ];
+        // }
 
         return $this->json([
             'id' => $match->getId(),

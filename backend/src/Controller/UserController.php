@@ -77,9 +77,7 @@ final class UserController extends AbstractController
 
         $newRoles = $data['roles'] ?? [];
 
-        if (!in_array("ROLE_USER", $newRoles)) {
-            $newRoles += ['ROLE_USER'];
-        }
+
 
         /** @var User|null $authUser */
         $authUser = $this->getUser();
@@ -89,6 +87,10 @@ final class UserController extends AbstractController
                 'error' => 'Cannot remove admin role from yourself',
                 'message' => 'Nemůžete odebrat roli admina sami sobě',
             ], JsonResponse::HTTP_FORBIDDEN);
+        }
+
+        if (!in_array("ROLE_USER", $newRoles)) {
+            $newRoles += ['ROLE_USER'];
         }
 
         $newEntrance = null;
@@ -172,6 +174,44 @@ final class UserController extends AbstractController
         } catch (\Exception $e) {
             return $this->json([
                 'error' => 'Failed to remove entrance',
+                'message' => $e->getMessage(),
+            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return $this->json(['status' => 'OK'], JsonResponse::HTTP_OK);
+    }
+
+    #[Route('/user/{id}/change-entrance', name: 'change_entrance', methods: ['PUT'])]
+    public function changeEntrance(int $id, UserRepository $userRepository, EntranceRepository $entranceRepository, EntityManagerInterface $em, Request $request): JsonResponse
+    {
+        $user = $userRepository->find($id);
+
+        if (!$user) {
+            return $this->json([
+                'error' => 'User not found',
+                'message' => 'Uživatel nenalezen'
+            ], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        if (!isset($data['entranceID'])) {
+            return $this->json(['error' => 'Entrance ID is required'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $entrance = $entranceRepository->find($data['entranceID']);
+
+        if (!$entrance) {
+            return $this->json(['error' => 'Entrance not found'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $user->setEntrance($entrance);
+
+        try {
+            $em->flush();
+        } catch (\Exception $e) {
+            return $this->json([
+                'error' => 'Failed to change entrance',
                 'message' => $e->getMessage(),
             ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }

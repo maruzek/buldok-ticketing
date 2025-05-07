@@ -45,32 +45,6 @@ const EditEntrance = ({ onEntranceEdit }: EditEntranceProps) => {
     }
 
     const fetchEntrance = async () => {
-      // try {
-      //   setIsLoading(true);
-      //   const response = await fetch(
-      //     `http://localhost:8080/api/admin/entrances/entrance/${entranceID}`
-      //   );
-
-      //   if (!response.ok) {
-      //     setError("root", {
-      //       type: "faker",
-      //       message: "Nastala chyba při načítání vstupu.",
-      //     });
-      //     throw new Error("Failed to fetch entrance");
-      //   }
-
-      //   const data = await response.json();
-      //   console.log(data);
-      //   setEditedEntrance(data);
-      //   setUserList(data.users);
-      //   setValue("name", data.name);
-      //   setValue("location", data.location);
-      // } catch (error) {
-      //   console.error("Error fetching entrance:", error);
-      // } finally {
-      //   setIsLoading(false);
-      // }
-
       try {
         setIsLoading(true);
         const data = await fetchData<Entrance>(
@@ -96,32 +70,6 @@ const EditEntrance = ({ onEntranceEdit }: EditEntranceProps) => {
     () => {
       if (userSearchQuery && userSearchQuery.length > 2) {
         const fetchUser = async () => {
-          // try {
-          //   const response = await fetch(
-          //     `http://localhost:8080/api/admin/users/search?q=${userSearchQuery}`,
-          //     {
-          //       method: "GET",
-          //       headers: {
-          //         "Content-Type": "application/json",
-          //       },
-          //       credentials: "include",
-          //     }
-          //   );
-          //   if (!response.ok) {
-          //     setError("user", {
-          //       type: "server",
-          //       message: "Uživatel nenalezen.",
-          //     });
-          //     return;
-          //   }
-          //   const data = await response.json();
-          //   console.log(data);
-          //   setUserSearchResults(data);
-          // } catch (error) {
-          //   console.error("Error fetching user:", error);
-          // }
-
-          // PROČ TO K**** NEFUNGUJE
           try {
             const data = await fetchData<User[]>(
               `/admin/users/search?q=${userSearchQuery}`,
@@ -154,36 +102,6 @@ const EditEntrance = ({ onEntranceEdit }: EditEntranceProps) => {
       return;
     }
 
-    // try {
-    //   const response = await fetch(
-    //     `http://localhost:8080/api/admin/entrances/entrance/${entranceID}`,
-    //     {
-    //       method: "PUT",
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //       },
-    //       body: JSON.stringify({
-    //         ...editedEntrance,
-    //         name: data.name,
-    //         location: data.location,
-    //       }),
-    //     }
-    //   );
-
-    //   if (!response.ok) {
-    //     setError("root", {
-    //       type: "server",
-    //       message: "Nastala chyba při aktualizaci vstupu.",
-    //     });
-    //     throw new Error("Failed to update entrance");
-    //   }
-
-    //   const resData = await response.json();
-    //   console.log(resData);
-    // } catch (error) {
-    //   console.error("Error updating entrance:", error);
-    // }
-
     try {
       await fetchData<Entrance>(`/admin/entrances/entrance/${entranceID}`, {
         method: "PUT",
@@ -211,41 +129,12 @@ const EditEntrance = ({ onEntranceEdit }: EditEntranceProps) => {
   const handleUserAdd = async (user: User) => {
     setUserList((prev) => [...prev, user]);
     setUserSearchResults((prev) => prev.filter((u) => u.id !== user.id));
-    // try {
-    //   const response = await fetch(
-    //     `http://localhost:8080/api/admin/users/user/${user.id}`,
-    //     {
-    //       method: "PUT",
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //       },
-    //       credentials: "include",
-    //       body: JSON.stringify({
-    //         entrance: editedEntrance,
-    //       }),
-    //     }
-    //   );
-
-    //   if (!response.ok) {
-    //     setError("user", {
-    //       type: "server",
-    //       message: "Nastala chyba při přidávání uživatele.",
-    //     });
-    //     setUserList((prev) => prev.filter((u) => u.id !== user.id));
-    //     throw new Error("Failed to add user");
-    //   }
-
-    //   const data = await response.json();
-    //   console.log(data);
-    // } catch (error) {
-    //   console.error("Error adding user:", error);
-    // }
-
+    setUserSearchQuery("");
     try {
-      await fetchData<User>(`/admin/users/user/${user.id}`, {
+      await fetchData(`/admin/users/user/${user.id}/change-entrance`, {
         method: "PUT",
         body: JSON.stringify({
-          entrance: editedEntrance,
+          entranceID: editedEntrance?.id,
         }),
       });
     } catch (error) {
@@ -259,31 +148,6 @@ const EditEntrance = ({ onEntranceEdit }: EditEntranceProps) => {
   };
 
   const handleUserRemove = async (user: User) => {
-    // try {
-    //   const response = await fetch(
-    //     `http://localhost:8080/api/admin/users/user/${user.id}/remove-entrance`,
-    //     {
-    //       method: "PUT",
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //       },
-    //       credentials: "include",
-    //     }
-    //   );
-
-    //   if (!response.ok) {
-    //     setError("user", {
-    //       type: "server",
-    //       message: "Nastala chyba při odebírání uživatele.",
-    //     });
-    //     throw new Error("Failed to remove user");
-    //   }
-
-    //   setRemovedUser(user);
-    // } catch (error) {
-    //   console.error("Error removing user:", error);
-    // }
-
     try {
       await fetchData<User>(`/admin/users/user/${user.id}/remove-entrance`, {
         method: "PUT",
@@ -385,6 +249,7 @@ const EditEntrance = ({ onEntranceEdit }: EditEntranceProps) => {
               onChange={(e) => {
                 setUserSearchQuery(e.target.value);
               }}
+              value={userSearchQuery}
             />
           </div>
 

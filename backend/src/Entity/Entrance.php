@@ -24,7 +24,7 @@ class Entrance
     /**
      * @var Collection<int, Purchase>
      */
-    #[ORM\OneToMany(targetEntity: Purchase::class, mappedBy: 'entrance_id')]
+    #[ORM\OneToMany(targetEntity: Purchase::class, mappedBy: 'entrance')]
     private Collection $purchases;
 
     /**

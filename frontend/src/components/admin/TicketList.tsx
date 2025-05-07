@@ -38,8 +38,8 @@ const TicketList = () => {
           method: "GET",
         });
         console.log(data);
-        setValue("fullTicket", data.fullTicketPrice);
-        setValue("halfTicket", data.halfTicketPrice);
+        setValue("fullTicket", data.fullTicket);
+        setValue("halfTicket", data.halfTicket);
       } catch (error) {
         console.error("Error fetching ticket prices:", error);
         setError("root", {
@@ -61,8 +61,8 @@ const TicketList = () => {
         {
           method: "PUT",
           body: JSON.stringify({
-            fullTicketPrice: data.fullTicket,
-            halfTicketPrice: data.halfTicket,
+            fullTicket: data.fullTicket,
+            halfTicket: data.halfTicket,
           }),
         }
       );
