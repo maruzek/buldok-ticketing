@@ -17,6 +17,7 @@ import CreateEntrance from "./components/admin/CreateEntrance";
 import EditEntrance from "./components/admin/EditEntrance";
 import EditMatch from "./components/admin/EditMatch";
 import ProtectedRoute from "./components/ProtectedRoute";
+import TicketList from "./components/admin/TicketList";
 
 function App() {
   const [userEditStatus, setUserEditStatus] = useState<EditStatus | null>(null);
@@ -77,6 +78,9 @@ function App() {
                   <CreateEntrance onEntranceCreate={setEntranceEditStatus} />
                 }
               />
+            </Route>
+            <Route path="tickets">
+              <Route index element={<TicketList />} />
             </Route>
           </Route>
         </Route>

@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\PurchaseItemRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PurchaseItemRepository::class)]
@@ -20,6 +21,9 @@ class PurchaseItem
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
     private ?TicketType $ticket_type = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    private ?string $price_at_purchase = null;
 
     public function getId(): ?int
     {
@@ -46,6 +50,18 @@ class PurchaseItem
     public function setTicketType(?TicketType $ticket_type): static
     {
         $this->ticket_type = $ticket_type;
+
+        return $this;
+    }
+
+    public function getPriceAtPurchase(): ?string
+    {
+        return $this->price_at_purchase;
+    }
+
+    public function setPriceAtPurchase(string $price_at_purchase): static
+    {
+        $this->price_at_purchase = $price_at_purchase;
 
         return $this;
     }
