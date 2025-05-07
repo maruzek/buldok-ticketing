@@ -1,11 +1,47 @@
 import { ArrowLeft, EllipsisVertical } from "lucide-react";
 import Header from "../components/app/Header";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PurchaseModal from "../components/app/PurchaseModal";
 import { Link } from "react-router";
+import { Match } from "../types/Match";
+import useApi from "../hooks/useApi";
+import useAuth from "../hooks/useAuth";
 
 const Ticketing = () => {
   const [showModal, setShowModal] = useState(false);
+  const [match, setMatch] = useState<Match | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { fetchData } = useApi();
+  const { auth } = useAuth();
+
+  useEffect(() => {
+    const fetchMatch = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchData<Match>("/match/1", {
+          method: "GET",
+        });
+        setMatch(data);
+        console.log(data);
+      } catch (error) {
+        console.error("Error fetching match:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    console.log(auth);
+    fetchMatch();
+  }, [fetchData, auth]);
+
+  if (!match && !isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <h1 className="text-2xl font-bold">Zápas nenalezen</h1>
+        <p className="text-gray-500">Zkontrolujte prosím vaše připojení.</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -21,14 +57,22 @@ const Ticketing = () => {
                 <ArrowLeft /> Zpět
               </span>
             </Link>
-            <h1 className="text-xl font-bold">Buldoci - SK Slavia Praha</h1>
-            <p className="text-gray-500 font-bold text-sm">11.5.2025</p>
+            <h1 className="text-xl font-bold">Buldoci - {match?.rival}</h1>
+            <p className="text-gray-500 font-bold text-sm">
+              {new Date(match?.playedAt.date).toLocaleDateString("cs-CZ", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
             <p className="text-gray-500 font-bold text-sm mt-5">
-              Vstup 1 - Brana
+              {auth.user?.entrance?.name}
             </p>
             <h3 className="font-bold text-3xl">350 Kc</h3>
             <button
-              className="w-full font-bold bg-green-200 hover:bg-green-200 rounded-md p-2 mt-5"
+              className="w-full font-bold bg-green-200 hover:bg-green-200 rounded-md p-2 mt-5 cursor-pointer"
               onClick={() => setShowModal(true)}
             >
               Zaznamenat nákup

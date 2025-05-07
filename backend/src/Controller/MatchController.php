@@ -86,7 +86,7 @@ final class MatchController extends AbstractController
         return $this->json($matchList, JsonResponse::HTTP_OK);
     }
 
-    #[Route('/api/admin/match/{id}', name: 'get_match', methods: ['GET'])]
+    #[Route('/api/match/{id}', name: 'get_match', methods: ['GET'])]
     public function getMatchById(int $id, GameRepository $gameRepository): JsonResponse
     {
         $match = $gameRepository->find($id);

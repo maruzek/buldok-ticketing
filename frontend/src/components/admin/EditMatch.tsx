@@ -53,7 +53,7 @@ const EditMatch = ({ onEditMatch }: EditMatchProps) => {
 
       try {
         setIsLoading(true);
-        const data = await fetchData<Match>(`/admin/match/${matchID}`, {
+        const data = await fetchData<Match>(`/match/${matchID}`, {
           method: "GET",
         });
         console.log(data);

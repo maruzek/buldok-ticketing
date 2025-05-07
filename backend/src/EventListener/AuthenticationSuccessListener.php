@@ -23,13 +23,23 @@ class AuthenticationSuccessListener
         }
         $data = $event->getData();
 
+        $entrance = null;
+
+        if ($user->getEntrance()) {
+            $entrance = array(
+                'id' => $user->getEntrance()->getId(),
+                'name' => $user->getEntrance()->getName(),
+                'location' => $user->getEntrance()->getLocation(),
+            );
+        }
+
         $data['user'] = array(
             'roles' => $user->getRoles(),
             'id' => $user->getId(),
             'email' => $user->getUserIdentifier(),
             'fullName' => $user->getFullName(),
             'verified' => $user->isVerified(),
-            'entranceId' => $user->getEntrance() ? $user->getEntrance()->getId() : null,
+            'entrance' => $entrance,
             'registrationDate' => $user->getRegisteredAt()->format('Y-m-d H:i:s'),
         );
 

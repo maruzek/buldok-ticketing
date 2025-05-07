@@ -9,9 +9,12 @@ import {
   Ticket,
   Users,
 } from "lucide-react";
+import useAuth from "../hooks/useAuth";
 
 const Dashboard = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const { logout } = useAuth();
 
   const toggleDropdown = () => {
     setIsDropdownOpen((prev) => !prev);
@@ -119,7 +122,12 @@ const Dashboard = () => {
                   <li className="p-2 hover:bg-green-100 cursor-pointer">
                     Settings
                   </li>
-                  <li className="p-2 hover:bg-green-100 cursor-pointer">
+                  <li
+                    className="p-2 hover:bg-green-100 cursor-pointer"
+                    onClick={() => {
+                      logout();
+                    }}
+                  >
                     Sign Out
                   </li>
                 </ul>

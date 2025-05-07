@@ -5,14 +5,7 @@ type PurchaseModalProps = {
 };
 
 const PurchaseModal = ({ onModalToggle }: PurchaseModalProps) => {
-  const {
-    register,
-    handleSubmit,
-    control,
-    getValues,
-    watch,
-    formState: { errors, isSubmitting, isSubmitSuccessful },
-  } = useForm();
+  const { register, getValues, watch } = useForm();
 
   const fullTicketsValue = watch("fullTickets", 0);
   const halfTicketsValue = watch("halfTickets", 0);
@@ -30,14 +23,13 @@ const PurchaseModal = ({ onModalToggle }: PurchaseModalProps) => {
         <header className="h-8 p-5 bg-gray-50 w-full flex justify-between items-center  rounded-md">
           <h3 className="font-bold text-sm">Přidat nákup</h3>
           <button
-            className=" text-gray-500 hover:text-gray-700"
+            className=" text-gray-500 hover:text-gray-700 cursor-pointer"
             onClick={() => onModalToggle(false)}
             aria-label="Zavřít"
           >
-            ×
+            &times;
           </button>
         </header>
-        {/* Modal content goes here */}
         <main className="p-5">
           <div className="flex flex-row justify-center gap-2 mb-4">
             <div className="flex flex-col justify-center items-center bg-green-300 p-3 rounded-md">
@@ -104,7 +96,7 @@ const PurchaseModal = ({ onModalToggle }: PurchaseModalProps) => {
             </div>
             <button
               type="submit"
-              className="w-full bg-lime-500 text-white font-bold py-2 rounded-md hover:bg-lime-600 transition duration-200"
+              className="w-full bg-lime-500 text-white font-bold py-2 rounded-md hover:bg-lime-600 transition duration-200 cursor-pointer"
               onClick={() => {
                 console.log(getValues());
                 onModalToggle(false);
@@ -114,7 +106,7 @@ const PurchaseModal = ({ onModalToggle }: PurchaseModalProps) => {
             </button>
             <button
               type="button"
-              className="w-full bg-red-500 text-white font-bold py-2 rounded-md hover:bg-red-600 transition duration-200"
+              className="w-full bg-red-500 text-white font-bold py-2 rounded-md hover:bg-red-600 transition duration-200 cursor-pointer"
               onClick={() => {
                 onModalToggle(false);
               }}
