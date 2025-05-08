@@ -1,17 +1,20 @@
 import { FieldValues, useForm } from "react-hook-form";
 import { TicketPrices } from "../../types/TicketPrices";
 import useApi from "../../hooks/useApi";
+import { PurchaseHistory } from "../../types/PurchaseHistory";
 
 type PurchaseModalProps = {
   onModalToggle: (arg0: boolean) => void;
-  matchID: string;
+  matchID: string | undefined;
   ticketPrices: TicketPrices | null;
+  onHistoryUpdate: (data: PurchaseHistory) => void;
 };
 
 const PurchaseModal = ({
   onModalToggle,
   matchID,
   ticketPrices,
+  onHistoryUpdate,
 }: PurchaseModalProps) => {
   const { register, watch, handleSubmit } = useForm();
 
@@ -27,7 +30,7 @@ const PurchaseModal = ({
         return;
       }
 
-      const response = await fetchData(`/purchase/mark`, {
+      const response = await fetchData<PurchaseHistory>(`/purchase/mark`, {
         method: "POST",
         body: JSON.stringify({
           fullTickets: data.fullTickets,
@@ -35,8 +38,13 @@ const PurchaseModal = ({
           matchID: matchID,
         }),
       });
-      console.log(response);
-      // onModalToggle(false);
+      if (!response) {
+        console.error("Failed to purchase tickets");
+        return;
+      }
+      console.log("response: ", response);
+      onHistoryUpdate(response);
+      onModalToggle(false);
     } catch (error) {
       console.error("Error purchasing tickets:", error);
     }

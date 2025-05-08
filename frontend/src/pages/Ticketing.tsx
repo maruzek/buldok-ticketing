@@ -1,4 +1,4 @@
-import { ArrowLeft, EllipsisVertical } from "lucide-react";
+import { ArrowLeft, EllipsisVertical, XCircle } from "lucide-react";
 import Header from "../components/app/Header";
 import { useEffect, useState } from "react";
 import PurchaseModal from "../components/app/PurchaseModal";
@@ -8,38 +8,40 @@ import useApi from "../hooks/useApi";
 import useAuth from "../hooks/useAuth";
 import Spinner from "../components/Spinner";
 import { TicketPrices } from "../types/TicketPrices";
+import { PurchaseHistory } from "../types/PurchaseHistory";
 
 const Ticketing = () => {
   const [showModal, setShowModal] = useState(false);
   const [match, setMatch] = useState<Match | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [ticketPrices, setTicketPrices] = useState<TicketPrices | null>(null);
-  const [historyData, setHistoryData] = useState([]);
+  const [historyData, setHistoryData] = useState<PurchaseHistory[] | null>([]);
+  const [notification, setNotification] = useState<string | null>(null);
 
   const { fetchData } = useApi();
   const { auth } = useAuth();
   const { matchID } = useParams<{ matchID: string }>();
 
   useEffect(() => {
-    const fetchMatch = async () => {
+    const fetchInitialData = async () => {
       try {
         setIsLoading(true);
         const matchData = await fetchData<Match>(`/match/${matchID}`, {
           method: "GET",
         });
         setMatch(matchData);
-        console.log(matchData);
+
+        if (!matchData) {
+          console.error("Failed to fetch match data.");
+          setMatch(null);
+          setIsLoading(false);
+          return;
+        }
 
         const ticketPrices = await fetchData<TicketPrices>("/ticket-prices", {
           method: "GET",
         });
         setTicketPrices(ticketPrices);
-
-        const hitory = await fetchData(`/purchase/match/${matchID}/all`, {
-          method: "GET",
-        });
-        setHistoryData(hitory);
-        console.log(hitory);
       } catch (error) {
         console.error("Error fetching match:", error);
         setMatch(null);
@@ -47,8 +49,66 @@ const Ticketing = () => {
         setIsLoading(false);
       }
     };
-    fetchMatch();
-  }, [fetchData, auth, matchID]);
+    fetchInitialData();
+  }, [fetchData, matchID]);
+
+  useEffect(() => {
+    if (!match) {
+      return;
+    }
+    const fetchHistory = async () => {
+      try {
+        const hitory = await fetchData<PurchaseHistory[]>(
+          `/purchase/match/${matchID}/all`,
+          {
+            method: "GET",
+          }
+        );
+        setHistoryData(hitory);
+        console.log(hitory);
+      } catch (error) {
+        console.error("Error fetching purchase history:", error);
+      }
+    };
+
+    fetchHistory();
+  }, [match, fetchData, matchID]);
+
+  const handleUpdateHistory = (newPurchase: PurchaseHistory) => {
+    setHistoryData((prev: PurchaseHistory[] | null) => {
+      const currentHistory = prev || [];
+      // console.log(currentHistory);
+      // console.log(newPurchase);
+      console.log("new history", [newPurchase, ...currentHistory]);
+      return [newPurchase, ...currentHistory];
+    });
+  };
+
+  const handleDeletePurchase = async (purchaseID: number) => {
+    const removedPurchase = historyData?.find((item) => item.id === purchaseID);
+    if (confirm(`Opravdu chcete smazat nákup?`)) {
+      try {
+        setHistoryData((prev) =>
+          prev ? prev.filter((item) => item.id !== purchaseID) : null
+        );
+        await fetchData(`/purchase/${purchaseID}`, {
+          method: "DELETE",
+        });
+        setNotification("Nákup byl úspěšně smazán.");
+        setTimeout(() => {
+          setNotification(null);
+        }, 2000);
+      } catch (error) {
+        console.error("Error deleting purchase:", error);
+        setHistoryData((prev) => {
+          if (prev) {
+            return [...prev, removedPurchase!];
+          }
+          return null;
+        });
+      }
+    }
+  };
 
   if (isLoading) {
     return (
@@ -101,7 +161,18 @@ const Ticketing = () => {
             <p className="text-gray-500 font-bold text-sm mt-5">
               {auth.user?.entrance?.name}
             </p>
-            <h3 className="font-bold text-3xl">350 Kč</h3>
+            <h3 className="font-bold text-3xl">
+              {historyData?.reduce(
+                (acc, cur) =>
+                  acc +
+                  cur.purchaseItems.reduce(
+                    (acc, cur) => acc + Number(cur.price_at_purchase),
+                    0
+                  ),
+                0
+              ) || 0}
+              {" Kč"}
+            </h3>
             <button
               className="w-full font-bold bg-green-200 hover:bg-green-200 rounded-md p-2 mt-5 cursor-pointer"
               onClick={() => setShowModal(true)}
@@ -117,76 +188,58 @@ const Ticketing = () => {
               }}
               matchID={matchID}
               ticketPrices={ticketPrices}
+              onHistoryUpdate={handleUpdateHistory}
             />
           )}
           <h4 className="font-semibold text-xl mt-4">Historie nákupů</h4>
-          <div className="w-full">
-            {}
-            {/* <div className="flex flex-row justify-between items-center p-3 rounded-md">
-              <div className="flex flex-col">
-                <p className="text-2xl font-bold mb-0">200 Kč</p>
-                <span className="text-gray-500 text-sm mt-0">2x plná</span>
-                <span className="text-gray-500 text-sm mt-0">2x poloviční</span>
-              </div>
-              <EllipsisVertical className="text-gray-700" />
+          {notification && (
+            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mt-5">
+              <span className="block sm:inline">{notification}</span>
             </div>
-            <div className="flex flex-row justify-between items-center bg-green-50 p-3 rounded-md">
-              <div className="flex flex-col">
-                <p className="text-2xl font-bold mb-0">200 Kč</p>
-                <span className="text-gray-500 text-sm mt-0">2x plná</span>
-                <span className="text-gray-500 text-sm mt-0">2x poloviční</span>
-              </div>
-              <EllipsisVertical className="text-gray-700" />
+          )}
+          {historyData?.length === 0 ? (
+            <div className="w-full mt-5">
+              <Spinner />
             </div>
-            <div className="flex flex-row justify-between items-center p-3 rounded-md">
-              <div className="flex flex-col">
-                <p className="text-2xl font-bold mb-0">200 Kč</p>
-                <span className="text-gray-500 text-sm mt-0">2x plná</span>
-                <span className="text-gray-500 text-sm mt-0">2x poloviční</span>
-              </div>
-              <EllipsisVertical className="text-gray-700" />
+          ) : (
+            <div className="w-full">
+              {historyData?.map((purchase, i) => (
+                <div
+                  key={purchase.id}
+                  className={`flex flex-row justify-between items-center p-3 rounded-md mb-2 ${
+                    i % 2 === 0 ? "bg-green-50" : "bg-white"
+                  }`}
+                >
+                  <div className="flex flex-col">
+                    <p className="text-2xl font-bold mb-0">
+                      {purchase.purchaseItems.reduce(
+                        (acc, cur) => acc + Number(cur.price_at_purchase),
+                        0
+                      )}{" "}
+                      Kč
+                    </p>
+                    {purchase.purchaseItems.map((item) => (
+                      <span
+                        key={item.id}
+                        className="text-gray-500 text-sm mt-0"
+                      >
+                        {item.quantity}x{" "}
+                        {item.ticket_type.name == "fullTicket"
+                          ? "plná"
+                          : "poloviční"}
+                      </span>
+                    ))}
+                  </div>
+                  {/* <EllipsisVertical className="text-gray-700" /> */}
+                  <XCircle
+                    className="text-red-500 hover:text-red-800 transition ease-in-out cursor-pointer"
+                    onClick={() => handleDeletePurchase(purchase.id as number)}
+                    aria-label="Smazat nákup"
+                  />
+                </div>
+              )) || <p>Žádné nákupy</p>}
             </div>
-            <div className="flex flex-row justify-between items-center bg-green-50 p-3 rounded-md">
-              <div className="flex flex-col">
-                <p className="text-2xl font-bold mb-0">200 Kč</p>
-                <span className="text-gray-500 text-sm mt-0">2x plná</span>
-                <span className="text-gray-500 text-sm mt-0">2x poloviční</span>
-              </div>
-              <EllipsisVertical className="text-gray-700" />
-            </div>
-            <div className="flex flex-row justify-between items-center bg-green-50 p-3 rounded-md">
-              <div className="flex flex-col">
-                <p className="text-2xl font-bold mb-0">200 Kč</p>
-                <span className="text-gray-500 text-sm mt-0">2x plná</span>
-                <span className="text-gray-500 text-sm mt-0">2x poloviční</span>
-              </div>
-              <EllipsisVertical className="text-gray-700" />
-            </div>
-            <div className="flex flex-row justify-between items-center bg-green-50 p-3 rounded-md">
-              <div className="flex flex-col">
-                <p className="text-2xl font-bold mb-0">200 Kč</p>
-                <span className="text-gray-500 text-sm mt-0">2x plná</span>
-                <span className="text-gray-500 text-sm mt-0">2x poloviční</span>
-              </div>
-              <EllipsisVertical className="text-gray-700" />
-            </div>
-            <div className="flex flex-row justify-between items-center bg-green-50 p-3 rounded-md">
-              <div className="flex flex-col">
-                <p className="text-2xl font-bold mb-0">200 Kč</p>
-                <span className="text-gray-500 text-sm mt-0">2x plná</span>
-                <span className="text-gray-500 text-sm mt-0">2x poloviční</span>
-              </div>
-              <EllipsisVertical className="text-gray-700" />
-            </div>
-            <div className="flex flex-row justify-between items-center bg-green-50 p-3 rounded-md">
-              <div className="flex flex-col">
-                <p className="text-2xl font-bold mb-0">200 Kč</p>
-                <span className="text-gray-500 text-sm mt-0">2x plná</span>
-                <span className="text-gray-500 text-sm mt-0">2x poloviční</span>
-              </div>
-              <EllipsisVertical className="text-gray-700" />
-            </div> */}
-          </div>
+          )}
         </main>
       </div>
     </>
