@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: GameRepository::class)]
 class Game
@@ -15,30 +16,34 @@ class Game
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['game:admin_dashboard'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['game:admin_dashboard'])]
     private ?string $rival = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $description = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Groups(['game:admin_dashboard'])]
     private ?\DateTimeInterface $played_at = null;
 
     #[ORM\Column(length: 15)]
     private ?MatchStatus $status = null;
 
-    // /**
-    //  * @var Collection<int, Purchase>
-    //  */
-    // #[ORM\OneToMany(targetEntity: Purchase::class, mappedBy: 'match', cascade: ['persist', 'remove'])]
-    // private Collection $purchases;
+    /**
+     * @var Collection<int, Purchase>
+     */
+    #[ORM\OneToMany(targetEntity: Purchase::class, mappedBy: 'match', cascade: ['persist', 'remove'])]
+    #[Groups(['game:admin_dashboard'])]
+    private Collection $purchases;
 
-    // public function __construct()
-    // {
-    //     $this->purchases = new ArrayCollection();
-    // }
+    public function __construct()
+    {
+        $this->purchases = new ArrayCollection();
+    }
 
 
     public function getId(): ?int
@@ -94,33 +99,33 @@ class Game
         return $this;
     }
 
-    // /**
-    //  * @return Collection<int, Purchase>
-    //  */
-    // public function getPurchases(): Collection
-    // {
-    //     return $this->purchases;
-    // }
+    /**
+     * @return Collection<int, Purchase>
+     */
+    public function getPurchases(): Collection
+    {
+        return $this->purchases;
+    }
 
-    // public function addPurchase(Purchase $purchase): static
-    // {
-    //     if (!$this->purchases->contains($purchase)) {
-    //         $this->purchases->add($purchase);
-    //         $purchase->setMatch($this); // Ensure the owning side is set
-    //     }
+    public function addPurchase(Purchase $purchase): static
+    {
+        if (!$this->purchases->contains($purchase)) {
+            $this->purchases->add($purchase);
+            $purchase->setMatch($this); // Ensure the owning side is set
+        }
 
-    //     return $this;
-    // }
+        return $this;
+    }
 
-    // public function removePurchase(Purchase $purchase): static
-    // {
-    //     if ($this->purchases->removeElement($purchase)) {
-    //         // Set the owning side to null (unless already changed)
-    //         if ($purchase->getMatch() === $this) {
-    //             $purchase->setMatch(null);
-    //         }
-    //     }
+    public function removePurchase(Purchase $purchase): static
+    {
+        if ($this->purchases->removeElement($purchase)) {
+            // Set the owning side to null (unless already changed)
+            if ($purchase->getMatch() === $this) {
+                $purchase->setMatch(null);
+            }
+        }
 
-    //     return $this;
-    // }
+        return $this;
+    }
 }

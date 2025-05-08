@@ -31,26 +31,6 @@ const EditMatch = ({ onEditMatch }: EditMatchProps) => {
 
   useEffect(() => {
     const fetchMatch = async () => {
-      // try {
-      //   const response = await fetch(
-      //     `http://localhost:8080/api/match/${matchID}`
-      //   );
-      //   if (!response.ok) {
-      //     setError("root", {
-      //       type: "server",
-      //       message: "Nastala chyba při načítání zápasu.",
-      //     });
-      //     throw new Error("Failed to fetch match");
-      //   }
-      //   const data = await response.json();
-      //   // setEditedMatch(data);
-      //   setValue("rival", data.rival);
-      //   setValue("matchDate", new Date(data.playedAt.date));
-      //   setValue("description", data.description);
-      // } catch (error) {
-      //   console.error("Error fetching match:", error);
-      // }
-
       try {
         setIsLoading(true);
         const data = await fetchData<Match>(`/match/${matchID}`, {
@@ -58,7 +38,7 @@ const EditMatch = ({ onEditMatch }: EditMatchProps) => {
         });
         console.log(data);
         setValue("rival", data.rival);
-        setValue("matchDate", new Date(data.playedAt.date));
+        setValue("matchDate", new Date(data.playedAt));
         setValue("description", data.description);
         setValue("status", data.status);
       } catch (error) {

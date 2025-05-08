@@ -231,4 +231,33 @@ final class MatchController extends AbstractController
 
         return $this->json($matchList, JsonResponse::HTTP_OK);
     }
+
+    #[Route('/api/admin/matches/last-active-match', name: 'last_active_match', methods: ['GET'])]
+    public function getLastActiveMatch(GameRepository $gameRepository, SerializerInterface $serializer): JsonResponse
+    {
+        $match = $gameRepository->findLastActiveMatch();
+
+        if (!$match) {
+            return $this->json([
+                'error' => 'No active matches found',
+            ], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $match = $serializer->serialize($match, 'json', [
+            'groups' => ['game:admin_dashboard', 'purchase:admin_game_summary'],
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
+
+        return JsonResponse::fromJsonString($match, JsonResponse::HTTP_OK);
+
+        // return $this->json([
+        //     'id' => $match->getId(),
+        //     'rival' => $match->getRival(),
+        //     'playedAt' => $match->getPlayedAt(),
+        //     'description' => $match->getDescription(),
+        //     'status' => $match->getStatus(),
+        // ], JsonResponse::HTTP_OK);
+    }
 }

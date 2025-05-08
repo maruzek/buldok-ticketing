@@ -14,13 +14,14 @@ class Purchase
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['purchase:read'])]
+    #[Groups(['purchase:read', 'purchase:admin_game_summary'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'purchases')]
     private ?User $sold_by = null;
 
     #[ORM\ManyToOne(inversedBy: 'purchases')]
+    #[Groups(['purchase:admin_game_summary'])]
     private ?Entrance $entrance = null;
 
     #[ORM\ManyToOne(inversedBy: 'purchases')]
@@ -28,14 +29,14 @@ class Purchase
     private ?Game $match = null;
 
     #[ORM\Column]
-    #[Groups(['purchase:read'])]
+    #[Groups(['purchase:read', 'purchase:admin_game_summary'])]
     private ?\DateTimeImmutable $purchased_at = null;
 
     /**
      * @var Collection<int, PurchaseItem>
      */
     #[ORM\OneToMany(targetEntity: PurchaseItem::class, mappedBy: 'purchase', orphanRemoval: true)]
-    #[Groups(['purchase:read'])]
+    #[Groups(['purchase:read', 'purchase:admin_game_summary'])]
     private Collection $purchaseItems;
 
     public function __construct()

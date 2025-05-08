@@ -25,6 +25,17 @@ class GameRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function findLastActiveMatch(): Game
+    {
+        return $this->createQueryBuilder('g')
+            ->andWhere('g.status = :status')
+            ->setParameter('status', 'Otevřený')
+            ->orderBy('g.played_at', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     //    /**
     //     * @return Game[] Returns an array of Game objects
     //     */

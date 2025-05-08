@@ -13,11 +13,11 @@ class TicketType
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['purchase:read', 'purchase_item:read'])]
+    #[Groups(['purchase:read', 'purchase_item:read', 'purchase:admin_game_summary'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 50)]
-    #[Groups(['purchase:read', 'purchase_item:read'])]
+    #[Groups(['purchase:read', 'purchase_item:read', 'purchase:admin_game_summary'])]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 0)]
