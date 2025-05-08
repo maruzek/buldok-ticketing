@@ -21,8 +21,14 @@ use Symfony\Component\Serializer\SerializerInterface;
 final class PurchaseController extends AbstractController
 {
     #[Route('/mark', name: 'mark', methods: ['POST'])]
-    public function mark(Request $request, TicketTypeRepository $ticketTypeRepository, EntityManagerInterface $em, GameRepository $gameRepository): JsonResponse
-    {
+    public function mark(
+        Request $request,
+        TicketTypeRepository $ticketTypeRepository,
+        EntityManagerInterface $em,
+        GameRepository $gameRepository,
+        PurchaseRepository $purchaseRepository,
+        SerializerInterface $serializer
+    ): JsonResponse {
         $data = json_decode($request->getContent(), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
@@ -33,6 +39,20 @@ final class PurchaseController extends AbstractController
 
         /** @var User|null $authUser */
         $authUser = $this->getUser();
+
+        if (!$authUser || !$authUser->getEntrance()) {
+            return $this->json(['error' => 'Uživatel nenalezen nebo nemá definovaný vchod'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $fullTicketsCount = $data['fullTickets'] ?? 0;
+        $halfTicketsCount = $data['halfTickets'] ?? 0;
+
+        if ($fullTicketsCount < 0 || $halfTicketsCount < 0) {
+            return $this->json([
+                'error' => 'Invalid ticket count',
+                'message' => 'Vadné počty vstupenek',
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
 
         $purchase = new Purchase();
         $purchase->setEntrance($authUser->getEntrance());
@@ -46,16 +66,25 @@ final class PurchaseController extends AbstractController
         $fullTicketItems->setPriceAtPurchase((float)$ticketTypeRepository->findOneBy(['name' => 'fullTicket'])->getPrice() * $data['fullTickets']);
         $fullTicketItems->setQuantity($data['fullTickets']);
         $fullTicketItems->setPurchaseId($purchase);
-        $em->persist($fullTicketItems);
+
+        $purchase->addPurchaseItem($fullTicketItems);
+        // $em->persist($fullTicketItems);
 
         $halfTicketItems = new PurchaseItem();
         $halfTicketItems->setTicketType($ticketTypeRepository->findOneBy(['name' => 'halfTicket']));
         $halfTicketItems->setPriceAtPurchase((float)$ticketTypeRepository->findOneBy(['name' => 'halfTicket'])->getPrice() * $data['halfTickets']);
         $halfTicketItems->setQuantity($data['halfTickets']);
         $halfTicketItems->setPurchaseId($purchase);
-        $em->persist($halfTicketItems);
+        // $em->persist($halfTicketItems);
+        $purchase->addPurchaseItem($halfTicketItems);
 
         try {
+            if ($data['fullTickets'] > 0) {
+                $em->persist($fullTicketItems);
+            }
+            if ($data['halfTickets'] > 0) {
+                $em->persist($halfTicketItems);
+            }
             $em->persist($purchase);
             $em->flush();
         } catch (\Exception $e) {
@@ -66,9 +95,16 @@ final class PurchaseController extends AbstractController
         }
 
 
-        return $this->json([
-            'data' => $data,
+        $newPurchase = $purchaseRepository->findLastPurchaseWithDetailsByMatchAndEntrance($gameRepository->findOneBy(['id' => $data['matchID']]), $authUser->getEntrance());
+
+        $jsonContent = $serializer->serialize($newPurchase, 'json', [
+            'groups' => ['purchase:read', 'purchase_item:read'],
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
         ]);
+
+        return JsonResponse::fromJsonString($jsonContent);
     }
 
     #[Route('/match/{id}/all', name: 'match', methods: ['GET'])]
@@ -92,14 +128,51 @@ final class PurchaseController extends AbstractController
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        $purchasesWithDetails = $purchaseRepository->findPurchasesWithDetailsByMatch($match, $this->getUser());
+        /** @var User|null $authUser */
+        $authUser = $this->getUser();
+
+        if (!$authUser || !$authUser->getEntrance()) {
+            return $this->json(['error' => 'Uživatel nenalezen nebo nemá definovaný vchod'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $purchasesWithDetails = $purchaseRepository->findPurchasesWithDetailsByMatchAndEntrance($match, $authUser->getEntrance());
 
         $jsonContent = $serializer->serialize($purchasesWithDetails, 'json', [
+            'groups' => ['purchase:read', 'purchase_item:read'],
             'circular_reference_handler' => function ($object) {
                 return $object->getId();
             },
         ]);
 
         return JsonResponse::fromJsonString($jsonContent);
+    }
+
+    #[Route('/{id}', name: 'delete', methods: ['DELETE'])]
+    public function deletePurchase(
+        PurchaseRepository $purchaseRepository,
+        int $id,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        $purchase = $purchaseRepository->find($id);
+
+        if (!$purchase) {
+            return $this->json([
+                'error' => 'Purchase not found',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        try {
+            $em->remove($purchase);
+            $em->flush();
+        } catch (\Exception $e) {
+            return $this->json([
+                'error' => 'Failed to delete purchase',
+                'message' => $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return $this->json([
+            'message' => 'Nákup byl úspěšně smazán',
+        ], Response::HTTP_OK);
     }
 }

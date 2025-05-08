@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Entrance;
 use App\Entity\Game;
 use App\Entity\Purchase;
 use App\Entity\User;
@@ -19,30 +20,53 @@ class PurchaseRepository extends ServiceEntityRepository
     }
 
     /**
-     * Finds all purchases for a given match, optionally filtered by user.
+     * Finds all purchases for a given match and entrance,
+     * returning purchase info, items, and their ticket types.
      *
      * @param Game $match The match entity
-     * @param User|null $soldBy (Optional) Filter by the user who made the sale
-     * @return Purchase[] Returns an array of Purchase objects with related data eagerly loaded
+     * @param Entrance $entrance The entrance entity to filter by
+     * @return Purchase[] Returns an array of Purchase objects
      */
-    public function findPurchasesWithDetailsByMatch(Game $match, ?User $sold_by = null): array
+    public function findPurchasesWithDetailsByMatchAndEntrance(Game $match, Entrance $entrance): array
     {
         $qb = $this->createQueryBuilder('p') // Purchase
-            ->addSelect('pi', 'tt', 'e')
+            ->addSelect('pi', 'tt')
             ->leftJoin('p.purchaseItems', 'pi')    // ' PurchaseItem
             ->leftJoin('pi.ticket_type', 'tt')      // TicketType
-            ->leftJoin('p.entrance', 'e')          //  Entrance
             ->andWhere('p.match = :matchEntity')
-            ->setParameter('matchEntity', $match);
-
-        if ($sold_by) {
-            $qb->andWhere('p.sold_by = :sold_by')
-                ->setParameter('sold_by', $sold_by);
-        }
+            ->andWhere('p.entrance = :entranceEntity')
+            ->setParameter('matchEntity', $match)
+            ->setParameter('entranceEntity', $entrance);
 
         return $qb->orderBy('p.purchased_at', 'DESC')
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Finds the last added purchase for a given match and entrance,
+     * returning purchase info, items, and their ticket types.
+     *
+     * @param Game $match The match entity
+     * @param Entrance $entrance The entrance entity to filter by
+     * @return Purchase|null Returns the last Purchase object, or null if not found
+     */
+    public function findLastPurchaseWithDetailsByMatchAndEntrance(Game $match, Entrance $entrance): ?Purchase
+    {
+        $qb = $this->createQueryBuilder('p') // Purchase
+            ->addSelect('pi', 'tt')
+            ->leftJoin('p.purchaseItems', 'pi')    // ' PurchaseItem
+            ->leftJoin('pi.ticket_type', 'tt')      // TicketType
+            ->andWhere('p.match = :matchEntity')
+            ->andWhere('p.entrance = :entranceEntity')
+            ->setParameter('matchEntity', $match)
+            ->setParameter('entranceEntity', $entrance);
+
+
+        return $qb->orderBy('p.purchased_at', 'DESC')
+            ->setMaxResults(1) // Limit to one result
+            ->getQuery()
+            ->getOneOrNullResult(); // Get a single result or null
     }
 
     //    /**

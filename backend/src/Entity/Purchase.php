@@ -6,6 +6,7 @@ use App\Repository\PurchaseRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: PurchaseRepository::class)]
 class Purchase
@@ -13,6 +14,7 @@ class Purchase
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['purchase:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'purchases')]
@@ -26,12 +28,14 @@ class Purchase
     private ?Game $match = null;
 
     #[ORM\Column]
+    #[Groups(['purchase:read'])]
     private ?\DateTimeImmutable $purchased_at = null;
 
     /**
      * @var Collection<int, PurchaseItem>
      */
     #[ORM\OneToMany(targetEntity: PurchaseItem::class, mappedBy: 'purchase', orphanRemoval: true)]
+    #[Groups(['purchase:read'])]
     private Collection $purchaseItems;
 
     public function __construct()

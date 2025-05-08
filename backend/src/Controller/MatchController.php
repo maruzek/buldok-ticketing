@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Game;
 use App\Entity\Purchase;
+use App\Entity\User;
 use App\Enum\MatchStatus;
 use App\Repository\GameRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -199,17 +200,30 @@ final class MatchController extends AbstractController
         ], JsonResponse::HTTP_OK);
     }
 
-    #[Route('/users-matches', name: 'users_matches', methods: ['GET'])]
+    #[Route('/api/users-matches', name: 'users_matches', methods: ['GET'])]
     public function getUsersMatches(GameRepository $gameRepository): JsonResponse
     {
-        $matches = $gameRepository->findAllMatches();
+        /** @var User $authUser */
+        $authUser = $this->getUser();
+
+        if (!$authUser || !$authUser->getEntrance()) {
+            return $this->json(['error' => 'Uživatel nenalezen nebo nemá definovaný vchod'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        $matches = $gameRepository->findBy(['status' => MatchStatus::ACTIVE], ['played_at' => 'ASC']);
+
+        if (!$matches) {
+            return $this->json([
+                'error' => 'No matches found',
+            ], JsonResponse::HTTP_NOT_FOUND);
+        }
 
         $matchList = [];
         foreach ($matches as $match) {
             $matchList[] = [
                 'id' => $match->getId(),
                 'rival' => $match->getRival(),
-                'playedAt' => $match->getPlayedAt()->format('d.m.Y H:i'),
+                'playedAt' => $match->getPlayedAt(),
                 'description' => $match->getDescription(),
                 'status' => $match->getStatus(),
             ];

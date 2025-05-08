@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\PurchaseItemRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: PurchaseItemRepository::class)]
 class PurchaseItem
@@ -12,6 +13,7 @@ class PurchaseItem
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['purchase:read', 'purchase_item:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'purchaseItems')]
@@ -20,12 +22,15 @@ class PurchaseItem
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['purchase:read', 'purchase_item:read'])]
     private ?TicketType $ticket_type = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    #[Groups(['purchase:read', 'purchase_item:read'])]
     private ?string $price_at_purchase = null;
 
     #[ORM\Column]
+    #[Groups(['purchase:read', 'purchase_item:read'])]
     private ?int $quantity = null;
 
     public function getId(): ?int

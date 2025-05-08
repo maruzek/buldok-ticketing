@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\TicketTypeRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: TicketTypeRepository::class)]
 class TicketType
@@ -12,12 +13,15 @@ class TicketType
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['purchase:read', 'purchase_item:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(['purchase:read', 'purchase_item:read'])]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 0)]
+    #[Groups(['purchase:read', 'purchase_item:read'])]
     private ?string $price = null;
 
     public function getId(): ?int
