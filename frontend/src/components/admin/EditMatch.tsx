@@ -51,34 +51,6 @@ const EditMatch = ({ onEditMatch }: EditMatchProps) => {
   }, [matchID, setValue, setError, fetchData]);
 
   const onSubmit = async (data: FieldValues) => {
-    // try {
-    //   const res = await fetch(`http://localhost:8080/api/match/${matchID}`, {
-    //     method: "PUT",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify(data),
-    //   });
-
-    //   if (!res.ok) {
-    //     setError("root", {
-    //       type: "server",
-    //       message:
-    //         "Nastala chyba při aktualizaci zápasu, zkuste to prosím znovu později.",
-    //     });
-    //     console.log(await res.json());
-    //     throw new Error("Failed to create entrance");
-    //   }
-
-    //   onEditMatch({
-    //     status: "ok",
-    //     message: `Zápas proti ${data.rival} úspěšně upraven`,
-    //   });
-    //   navigate("/admin/matches");
-    // } catch (error) {
-    //   console.error("Error creating entrance:", error);
-    // }
-
     try {
       const res = await fetchData<Match>(`/admin/match/${matchID}`, {
         method: "PUT",

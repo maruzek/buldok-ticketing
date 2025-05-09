@@ -26,37 +26,6 @@ const CreateMatch = ({ onCreateMatch }: CreateMatchProps) => {
   const navigate = useNavigate();
 
   const onSubmit = async (data: FieldValues) => {
-    // try {
-    //   const res = await fetch("http://localhost:8080/api/match/create", {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify(data),
-    //   });
-
-    //   if (!res.ok) {
-    //     const errorData = await res.json();
-    //     console.error("Error creating match:", errorData);
-    //     setError("root", {
-    //       type: "manual",
-    //       message: errorData.message || "Chyba při vytváření zápasu",
-    //     });
-    //     return;
-    //   }
-
-    //   const resData = await res.json();
-    //   onCreateMatch({
-    //     status: "ok",
-    //     message: `Zápas proti ${data.rival} úspěšně vytvořen`,
-    //     matchId: resData.matchId,
-    //   });
-    //   navigate("/admin/matches");
-    //   console.log(resData);
-    // } catch (error) {
-    //   console.error("Error creating match:", error);
-    // }
-
     try {
       const resData = await fetchData<{ message: string; match: Match }>(
         "/admin/match/create",
@@ -123,9 +92,6 @@ const CreateMatch = ({ onCreateMatch }: CreateMatchProps) => {
             </span>
           )}
         </div>
-        {/* TODO: prirazeni vstupu jednotlivym lidem */}
-
-        <div className="flex flex-col gap-1">{}</div>
 
         <div className="flex flex-col gap-1">
           <label className="font-medium">Popis</label>

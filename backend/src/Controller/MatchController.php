@@ -106,33 +106,6 @@ final class MatchController extends AbstractController
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        /*
-        $purchasesWithDetails = $purchaseRepository->findPurchasesWithDetailsByMatch($match, $this->getUser());
-
-        // Serialize the purchases with a circular reference handler
-        $jsonContent = $serializer->serialize($purchasesWithDetails, 'json', [
-            'circular_reference_handler' => function ($object) {
-                return $object->getId();
-            },
-        ]);
-        
-        */
-
-        // $purchases = [];
-
-        // /** @var Purchase $purchase */
-        // foreach ($match->getPurchases() as $purchase) {
-        //     $purchases[] = [
-        //         'id' => $purchase->getId(),
-        //         $purchase->getEntrance() ? 'entrance' => [
-        //             'id' => $purchase->getEntrance()->getId(),
-        //             'name' => $purchase->getEntrance()->getName(),
-        //         ] : null,
-        //         'purchasedAt' => $purchase->getPurchasedAt()->format('d.m.Y H:i'),
-
-        //     ];
-        // }
-
         return $this->json([
             'id' => $match->getId(),
             'rival' => $match->getRival(),
@@ -251,13 +224,5 @@ final class MatchController extends AbstractController
         ]);
 
         return JsonResponse::fromJsonString($match, JsonResponse::HTTP_OK);
-
-        // return $this->json([
-        //     'id' => $match->getId(),
-        //     'rival' => $match->getRival(),
-        //     'playedAt' => $match->getPlayedAt(),
-        //     'description' => $match->getDescription(),
-        //     'status' => $match->getStatus(),
-        // ], JsonResponse::HTTP_OK);
     }
 }

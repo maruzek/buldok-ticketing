@@ -51,9 +51,6 @@ const Dashboard = () => {
     setIsSidebarOpen((prev) => !prev);
   };
 
-  // TODO active zalozky
-  // TODO dynamicky title pomoci useLocation
-
   return (
     <div className="flex h-screen bg-green-50" id="admin-dashboard">
       {/* Sidebar */}

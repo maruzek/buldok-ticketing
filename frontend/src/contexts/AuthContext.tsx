@@ -21,6 +21,7 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
 });
 
+// es-lint-disable-next-line @typescript-eslint/no-explicit-any
 const isValidUser = (obj: any): obj is User => {
   return (
     obj &&

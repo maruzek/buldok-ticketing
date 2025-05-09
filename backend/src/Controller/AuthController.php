@@ -14,57 +14,6 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/auth',  name: 'api_auth_')]
 final class AuthController extends AbstractController
 {
-    // #[Route('/login', name: 'login', methods: ['POST'])]
-    // public function login(#[CurrentUser] ?User $user, Request $request): JsonResponse
-    // {
-    //     // $data = json_decode($request->getContent(), true);
-    //     // if (json_last_error() !== JSON_ERROR_NONE) {
-    //     //     return $this->json([
-    //     //         'error' => 'Invalid JSON',
-    //     //     ], JsonResponse::HTTP_BAD_REQUEST);
-    //     // }
-
-    //     // if (!isset($data['email'])) {
-    //     //     return $this->json([
-    //     //         'error' => 'Username is required',
-    //     //     ], JsonResponse::HTTP_BAD_REQUEST);
-    //     // }
-
-    //     // if (!isset($data['password'])) {
-    //     //     return $this->json([
-    //     //         'error' => 'Password is required',
-    //     //     ], JsonResponse::HTTP_BAD_REQUEST);
-    //     // }
-    //     // if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-    //     //     return $this->json([
-    //     //         'error' => 'Invalid email format',
-    //     //     ], JsonResponse::HTTP_BAD_REQUEST);
-    //     // }
-
-    //     // $user = $userRepository->findOneBy(['email' => $data['email']]);
-    //     // if (!$user) {
-    //     //     return $this->json([
-    //     //         'error' => 'User not found',
-    //     //     ], JsonResponse::HTTP_NOT_FOUND);
-    //     // }
-
-    //     // if (null === $user) {
-    //     //     return $this->json([
-    //     //         'message' => 'missing credentials',
-    //     //         'req' => json_decode($request->getContent(), true),
-    //     //     ], JsonResponse::HTTP_UNAUTHORIZED);
-    //     // }
-
-
-
-
-    //     // return $this->json([
-    //     //     'message' => 'Welcome to your new controller!',
-    //     //     'path' => 'src/Controller/LoginController.php'
-
-    //     // ]);
-    // }
-
     #[Route('/register', name: 'register', methods: ['POST'])]
     public function register(Request $request, UserPasswordHasherInterface $hasher, EntityManagerInterface $em, UserRepository $userRepository): JsonResponse
     {

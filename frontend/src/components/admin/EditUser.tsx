@@ -32,24 +32,6 @@ const EditUser = ({ onUserSave }: EditUserProps) => {
 
   useEffect(() => {
     const fetchUser = async () => {
-      // try {
-      //   setIsLoading(true);
-      //   const response = await fetch(
-      //     `http://localhost:8080/api/admin/users/user/${userID}`
-      //   );
-      //   if (!response.ok) {
-      //     throw new Error("Failed to fetch user");
-      //   }
-      //   const data = await response.json();
-      //   setEditedUser(data);
-      //   setValue("verified", data.verified);
-      //   setValue("admin", data.roles.includes("ROLE_ADMIN"));
-      // } catch (error) {
-      //   console.error("Error fetching user:", error);
-      // } finally {
-      //   setIsLoading(false);
-      // }
-
       try {
         const userData = await fetchData<UserData>(
           `/admin/users/user/${userID}`,
@@ -82,14 +64,6 @@ const EditUser = ({ onUserSave }: EditUserProps) => {
 
     let newRoles = [...editedUser.roles];
 
-    /*if (data.admin && editedUser?.roles.includes("ROLE_ADMIN")) {
-      setError("admin", {
-        type: "manual",
-        message: "Uživatel je již správcem.",
-      });
-
-      throw new Error("Uživatel je již správcem.");
-    } else*/
     if (data.admin && !editedUser.roles.includes("ROLE_ADMIN")) {
       newRoles = [...newRoles, "ROLE_ADMIN"];
     } else if (!data.admin && editedUser.roles.includes("ROLE_ADMIN")) {

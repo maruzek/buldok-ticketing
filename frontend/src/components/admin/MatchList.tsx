@@ -1,9 +1,9 @@
 import { Dot, Trash2, UserCog } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import { MatchEditStatus } from "../../types/MatchEditStatus";
 import Spinner from "../Spinner";
 import useApi from "../../hooks/useApi";
+import { EditStatus } from "../../types/EditStatus";
 
 interface Match {
   id: number;
@@ -15,7 +15,7 @@ interface Match {
 }
 
 type MatchListProps = {
-  matchCreateStatus: MatchEditStatus | null;
+  matchCreateStatus: EditStatus | null;
 };
 
 const MatchList = ({ matchCreateStatus }: MatchListProps) => {
@@ -26,31 +26,6 @@ const MatchList = ({ matchCreateStatus }: MatchListProps) => {
 
   useEffect(() => {
     const fetchMatches = async () => {
-      // setIsLoading(true);
-      // try {
-      //   const response = await fetch(
-      //     "http://localhost:8080/api/admin/match/list",
-      //     {
-      //       method: "GET",
-      //       headers: {
-      //         "Content-Type": "application/json",
-      //         Accept: "application/json",
-      //       },
-      //       credentials: "include",
-      //     }
-      //   );
-      //   if (!response.ok) {
-      //     throw new Error("Network response was not ok");
-      //   }
-      //   const data = await response.json();
-      //   console.log(data);
-      //   setMatches(data);
-      // } catch (error) {
-      //   console.error("Error fetching matches:", error);
-      // } finally {
-      //   setIsLoading(false);
-      // }
-
       try {
         const data = await fetchData<Match[]>("/admin/match/list", {
           method: "GET",

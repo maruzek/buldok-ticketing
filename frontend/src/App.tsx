@@ -21,9 +21,6 @@ import TicketList from "./components/admin/TicketList";
 
 function App() {
   const [userEditStatus, setUserEditStatus] = useState<EditStatus | null>(null);
-  const [matchEditStatus, setMatchEditStatus] = useState<EditStatus | null>(
-    null
-  );
   const [matchCreateStatus, setMatchCreateStatus] = useState<EditStatus | null>(
     null
   );

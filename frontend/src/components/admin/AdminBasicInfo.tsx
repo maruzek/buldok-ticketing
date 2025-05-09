@@ -1,4 +1,3 @@
-import { Dot } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   Cell,

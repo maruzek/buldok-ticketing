@@ -25,7 +25,6 @@ const EntranceList = ({ entranceStatus }: EntranceListProps) => {
         setEntrances(data);
       } catch (err) {
         console.log(err);
-        // setError((err as Error).message);
       }
     };
     fetchEntrances();
