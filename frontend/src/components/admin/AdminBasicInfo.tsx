@@ -123,6 +123,7 @@ const AdminBasicInfo = () => {
   return (
     <>
       <div className="flex flex-col gap-4 w-full h-screen">
+      {currentMatch ? (
         <div className="bg-white rounded-md p-4 flex flex-col shadow-md xl:h-1/2">
           <div className="card-header w-full">
             <h2 className="text-3xl font-bold">Aktuální zápas</h2>
@@ -311,6 +312,17 @@ const AdminBasicInfo = () => {
             </div>
           </div>
         </div>
+      ) : (
+        <div className="bg-white rounded-md p-4 flex flex-col shadow-md xl:h-1/2">
+          <div className="card-header w-full">
+            <h2 className="text-3xl font-bold">Aktuální zápas</h2>
+            <h3 className="flex text-xl flex-wrap">
+              Žádný zápas momentálně není aktivní
+            </h3>
+          </div>
+        </div>
+      )}
+        
 
         <div className="bg-white rounded-md p-4 flex flex-col shadow-md h-1/2">
           <div className="card-header w-full">
