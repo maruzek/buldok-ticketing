@@ -9,7 +9,7 @@ import {
   Ticket,
   Users,
 } from "lucide-react";
-import Header from "../components/app/Header";
+import Header from "../components/Header";
 
 const getTitleFromPathname = (pathname: string): string => {
   switch (pathname) {
@@ -37,6 +37,7 @@ const getTitleFromPathname = (pathname: string): string => {
 
 const Dashboard = () => {
   const [headerTitle, setHeaderTitle] = useState("Dashboard");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
 
   useEffect(() => {
@@ -46,6 +47,10 @@ const Dashboard = () => {
     setHeaderTitle(getTitleFromPathname(location.pathname));
   }, [location.pathname]);
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen((prev) => !prev);
+  };
+
   // TODO active zalozky
   // TODO dynamicky title pomoci useLocation
 
@@ -53,7 +58,10 @@ const Dashboard = () => {
     <div className="flex h-screen bg-green-50" id="admin-dashboard">
       {/* Sidebar */}
       <aside
-        className="w-64 bg-emerald-950 text-white flex flex-col sticky top-0 h-screen overflow-y-auto"
+        // className="w-64 bg-emerald-950 text-white flex flex-col sticky top-0 h-screen overflow-y-auto"
+        className={`bg-emerald-950 text-white flex flex-col sticky top-0 h-screen transition-all duration-300 ease-in-out ${
+          isSidebarOpen ? "w-64" : "w-0"
+        } overflow-hidden`}
         id="admin-dashboard-aside"
       >
         <div className="p-4 text-xl font-bold h-15">
@@ -66,15 +74,14 @@ const Dashboard = () => {
               <LayoutDashboard className="mr-2" />
               Přehled
             </NavLink>
-            <NavLink
+            {/* <NavLink
               to="/admin/current-season"
               className="sidebar-group-item"
               end
             >
               <CalendarDays className="mr-2" />
               Současná sezóna
-            </NavLink>
-            <hr className="text-green-900 mx-4 my-2 opacity-70" />
+            </NavLink> */}
           </div>
 
           <div className="sidebar-group w-full flex flex-col">
@@ -89,7 +96,6 @@ const Dashboard = () => {
               <Logs className="mr-3" />
               Seznam zápasů
             </NavLink>
-            <hr className="text-green-900 mx-4 my-2 opacity-70" />
           </div>
 
           <div className="sidebar-group w-full flex flex-col">
@@ -133,15 +139,15 @@ const Dashboard = () => {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen overflow-y-scroll">
+      <div className="flex-1 flex flex-col h-screen ">
         {/* Header */}
 
-        <Header>
+        <Header onToggleSidebar={toggleSidebar}>
           <h1 className="text-xl font-bold">{headerTitle}</h1>
         </Header>
 
         {/* Main Content Area */}
-        <main className="flex-1 p-4 ">
+        <main className="flex-1 p-4 overflow-y-scroll">
           <Outlet />
         </main>
       </div>

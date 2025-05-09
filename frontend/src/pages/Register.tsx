@@ -1,4 +1,4 @@
-import Header from "../components/app/Header";
+import Header from "../components/Header";
 import { FieldValues, useForm } from "react-hook-form";
 
 const Register = () => {

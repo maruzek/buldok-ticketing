@@ -1,5 +1,5 @@
 import { ArrowLeft, EllipsisVertical, XCircle } from "lucide-react";
-import Header from "../components/app/Header";
+import Header from "../components/Header";
 import { useEffect, useState } from "react";
 import PurchaseModal from "../components/app/PurchaseModal";
 import { Link, useParams } from "react-router";

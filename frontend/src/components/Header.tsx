@@ -1,13 +1,14 @@
-import { User } from "lucide-react";
-import useAuth from "../../hooks/useAuth";
+import { MenuIcon, User } from "lucide-react";
+import useAuth from "../hooks/useAuth";
 import { useState } from "react";
 
 type HeaderProps = {
   children?: React.ReactNode;
   color?: string;
+  onToggleSidebar?: () => void;
 };
 
-const Header = ({ children, color }: HeaderProps) => {
+const Header = ({ children, color, onToggleSidebar }: HeaderProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { logout } = useAuth();
 
@@ -22,26 +23,32 @@ const Header = ({ children, color }: HeaderProps) => {
       }`}
     >
       <div className="flex items-center w-full justify-between">
-        {/* <img
-          src="/logo-buldok-transparent.png"
-          alt="Logo"
-          className="h-10 w-auto"
-        /> */}
-        {children ? (
-          <div className="flex items-center">{children}</div>
-        ) : (
-          <img
-            src="/logo-buldok-transparent.png"
-            alt="Logo"
-            className="h-10 w-auto"
-          />
-        )}
+        <div className="flex items-center">
+          {onToggleSidebar && (
+            <button
+              onClick={onToggleSidebar}
+              className="p-2 rounded-full hover:bg-gray-200 0 mr-3 cursor-pointer transition-colors"
+              aria-label="Toggle sidebar"
+            >
+              <MenuIcon size={24} className="text-gray-600" />
+            </button>
+          )}
+          {children ? (
+            <div className="flex items-center">{children}</div>
+          ) : (
+            <img
+              src="/logo-buldok-transparent.png"
+              alt="Logo"
+              className="h-10 w-auto"
+            />
+          )}
+        </div>
         <div className="relative">
           <div
             className="w-10 h-10 flex justify-center items-center cursor-pointer"
             onClick={toggleDropdown}
           >
-            <User className="w-full h-full m-0 p-0 bg-gray-300 rounded-full text-gray-500" />
+            <User className="w-full h-full m-0 p-0 bg-gray-300 rounded-full text-gray-600 hover:bg-gray-400 transition-colors" />
             {isDropdownOpen && (
               <div className="absolute right-0 top-12 w-48 bg-white border rounded shadow z-50">
                 <ul>

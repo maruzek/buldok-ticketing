@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import Header from "../components/app/Header";
+import Header from "../components/Header";
 import { Link } from "react-router";
 import { useEffect, useState } from "react";
 import useApi from "../hooks/useApi";

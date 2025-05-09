@@ -40,7 +40,6 @@ const EntranceList = ({ entranceStatus }: EntranceListProps) => {
 
   return (
     <div className=" w-full p-5 bg-white rounded-xl">
-      <h2 className="text-lg font-bold mb-4">Entrances</h2>
       {error && <div className="form-error-box">{error}</div>}
       {entranceStatus?.status == "ok" && (
         <div className="form-success-box">{entranceStatus.message}</div>

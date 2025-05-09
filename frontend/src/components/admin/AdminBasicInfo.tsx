@@ -124,10 +124,10 @@ const AdminBasicInfo = () => {
   return (
     <>
       <div className="flex flex-col gap-4 w-full h-screen">
-        <div className="bg-white rounded-md p-4 flex flex-col shadow-md h-1/2">
+        <div className="bg-white rounded-md p-4 flex flex-col shadow-md xl:h-1/2">
           <div className="card-header w-full">
             <h2 className="text-3xl font-bold">Aktuální zápas</h2>
-            <h3 className="flex text-xl">
+            <h3 className="flex text-xl flex-wrap">
               {currentMatch?.rival} &bull;{" "}
               {currentMatch?.played_at &&
                 new Date(currentMatch?.played_at).toLocaleDateString("cs-CZ", {
@@ -140,73 +140,83 @@ const AdminBasicInfo = () => {
             </h3>
           </div>
 
-          <div className="grid grid-cols-5 grid-rows-2 gap-3 h-full mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 h-full mt-4">
             <div className="border border-emerald-800 rounded-md p-4 flex flex-col">
               <span className="font-black text-3xl">
-                {currentMatch?.purchases.reduce((acc, purchase) => {
-                  return (
-                    acc +
-                    Number(
-                      purchase.purchaseItems.reduce((acc, item) => {
-                        return acc + Number(item.price_at_purchase);
-                      }, 0)
-                    )
-                  );
-                }, 0)}{" "}
+                {currentMatch?.purchases
+                  .reduce((acc, purchase) => {
+                    return (
+                      acc +
+                      Number(
+                        purchase.purchaseItems.reduce((acc, item) => {
+                          return acc + Number(item.price_at_purchase);
+                        }, 0)
+                      )
+                    );
+                  }, 0)
+                  .toLocaleString("cs-CZ")}{" "}
                 Kč
               </span>
               <span className="text-xl">Utrženo celkem</span>
             </div>
-            <div className="col-start-1 row-start-2 border border-emerald-800 rounded-md p-4 flex flex-col">
+
+            <div className="md:row-start-2 xl:row-start-auto border border-emerald-800 rounded-md p-4 flex flex-col">
               <span className="font-black text-3xl">
                 {numOfFullTickets + numOfHalfTickets}
                 {" ks"}
               </span>
               <span className="text-xl">Celkem prodáno lístků</span>
             </div>
-            <div className="col-start-2 row-start-1 border border-emerald-800 rounded-md p-4 flex flex-col">
+
+            <div className="md:col-start-2 md:row-start-1 xl:col-start-auto xl:row-start-auto border border-emerald-800 rounded-md p-4 flex flex-col">
               <span className="font-black text-3xl">
                 {numOfFullTickets} ks &bull;{" "}
-                {currentMatch?.purchases.reduce((acc, purchase) => {
-                  return (
-                    acc +
-                    Number(
-                      purchase.purchaseItems.reduce((acc, item) => {
-                        if (item.ticket_type.name == "fullTicket") {
-                          return acc + Number(item.price_at_purchase);
-                        }
+                {currentMatch?.purchases
+                  .reduce((acc, purchase) => {
+                    return (
+                      acc +
+                      Number(
+                        purchase.purchaseItems.reduce((acc, item) => {
+                          if (item.ticket_type.name == "fullTicket") {
+                            return acc + Number(item.price_at_purchase);
+                          }
 
-                        return acc;
-                      }, 0)
-                    )
-                  );
-                }, 0)}{" "}
+                          return acc;
+                        }, 0)
+                      )
+                    );
+                  }, 0)
+                  .toLocaleString("cs-CZ")}{" "}
                 {" Kč"}
               </span>
               <span className="text-xl">Celkem plné</span>
             </div>
-            <div className="col-start-2 row-start-2 border border-emerald-800 rounded-md p-4 flex flex-col">
+
+            <div className="md:col-start-2 md:row-start-2 xl:col-start-auto xl:row-start-auto border border-emerald-800 rounded-md p-4 flex flex-col">
               <span className="font-black text-3xl">
                 {numOfHalfTickets} ks &bull;{" "}
-                {currentMatch?.purchases.reduce((acc, purchase) => {
-                  return (
-                    acc +
-                    Number(
-                      purchase.purchaseItems.reduce((acc, item) => {
-                        if (item.ticket_type.name == "halfTicket") {
-                          return acc + Number(item.price_at_purchase);
-                        }
+                {currentMatch?.purchases
+                  .reduce((acc, purchase) => {
+                    return (
+                      acc +
+                      Number(
+                        purchase.purchaseItems.reduce((acc, item) => {
+                          if (item.ticket_type.name == "halfTicket") {
+                            return acc + Number(item.price_at_purchase);
+                          }
 
-                        return acc;
-                      }, 0)
-                    )
-                  );
-                }, 0)}{" "}
+                          return acc;
+                        }, 0)
+                      )
+                    );
+                  }, 0)
+                  .toLocaleString("cs-CZ")}{" "}
                 {" Kč"}
               </span>
               <span className="text-xl">Celkem poloviční</span>
             </div>
-            <div className="row-span-2 col-start-3 row-start-1 border border-emerald-800 rounded-md p-4 flex flex-col">
+
+            <div className="md:col-span-2 xl:col-span-1 xl:row-span-2 xl:col-start-3 xl:row-start-1 border border-emerald-800 rounded-md p-4 flex flex-col">
               <span className="font-bold text-xl mb-3">
                 Výdělek za jedotlivé vstupy
               </span>
@@ -216,20 +226,22 @@ const AdminBasicInfo = () => {
                     <div key={entrance} className="flex flex-col">
                       <span className="text-xl font-black">{entrance}</span>
                       <span className="text-lg">
-                        {currentMatch?.purchases.reduce((acc, purchase) => {
-                          if (purchase.entrance.name == entrance) {
-                            return (
-                              acc +
-                              Number(
-                                purchase.purchaseItems.reduce((acc, item) => {
-                                  return acc + Number(item.price_at_purchase);
-                                }, 0)
-                              )
-                            );
-                          }
+                        {currentMatch?.purchases
+                          .reduce((acc, purchase) => {
+                            if (purchase.entrance.name == entrance) {
+                              return (
+                                acc +
+                                Number(
+                                  purchase.purchaseItems.reduce((acc, item) => {
+                                    return acc + Number(item.price_at_purchase);
+                                  }, 0)
+                                )
+                              );
+                            }
 
-                          return acc;
-                        }, 0)}{" "}
+                            return acc;
+                          }, 0)
+                          .toLocaleString("cs-CZ")}{" "}
                         {" Kč"}
                       </span>
                     </div>
@@ -237,7 +249,8 @@ const AdminBasicInfo = () => {
                 })}
               </span>
             </div>
-            <div className="row-span-2 col-start-4 row-start-1 border border-emerald-800 rounded-md p-4 flex flex-col">
+
+            <div className="md:col-span-2 md:h-80 xl:h-auto xl:col-span-1 xl:row-span-2 xl:col-start-4 xl:row-start-1 border border-emerald-800 rounded-md p-4 flex flex-col">
               <span className="text-xl font-bold">
                 Rozdělení typů vstupenek
               </span>
@@ -269,7 +282,7 @@ const AdminBasicInfo = () => {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="row-span-2 col-start-5 row-start-1 border border-emerald-800 rounded-md p-4 flex flex-col h-full">
+            <div className="md:col-span-2 md:h-80 xl:h-auto xl:col-span-1 xl:row-span-2 xl:col-start-5 xl:row-start-1 border border-emerald-800 rounded-md p-4 flex flex-col h-full">
               <span className="text-xl font-bold">
                 Rozdělení vstupů podle prodaných vstupenek
               </span>
