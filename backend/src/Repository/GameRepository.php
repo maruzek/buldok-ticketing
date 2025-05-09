@@ -25,7 +25,7 @@ class GameRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function findLastActiveMatch(): Game
+    public function findLastActiveMatch(): Game|null
     {
         return $this->createQueryBuilder('g')
             ->andWhere('g.status = :status')
