@@ -69,7 +69,6 @@ const MatchList = ({ matchCreateStatus }: MatchListProps) => {
                 key={match.id}
                 className="border-t border-gray-200 hover:bg-gray-50"
               >
-                {/* TODO: conditioal rendering of status */}
                 <td className="px-4 py-2">{match.id}</td>
                 <td className="px-4 py-2">{match.rival}</td>
                 <td className="px-4 py-2">{match.playedAt}</td>
