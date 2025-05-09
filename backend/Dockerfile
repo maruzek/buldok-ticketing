@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     zip \
     unzip \
-  && docker-php-ext-install intl pdo pdo_pgsql opcache
+  && docker-php-ext-install intl pdo pdo_pgsql pdo_mysql opcache
 
 # ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 

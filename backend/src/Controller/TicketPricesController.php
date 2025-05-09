@@ -39,6 +39,21 @@ final class TicketPricesController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
+        // if (!$fullTicket || !$halfTicket) {
+        //     $fullTicket = new TicketType();
+        //     $fullTicket->setName('fullTicket');
+        //     $fullTicket->setPrice(0);
+        //     $halfTicket = new TicketType();
+        //     $halfTicket->setName('halfTicket');
+        //     $halfTicket->setPrice(0);
+        //     $em->persist($fullTicket);
+        //     $em->persist($halfTicket);
+        //     $em->flush();
+        //     return $this->json([
+        //         'message' => 'Ticket types not found, created new ones',
+        //     ], 404);
+        // }
+
         if (!isset($data['fullTicket'])) {
             return $this->json([
                 'message' => 'fullTicket is required',
