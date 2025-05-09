@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router";
 import {
-  CalendarDays,
   DoorOpen,
   LayoutDashboard,
   Logs,
