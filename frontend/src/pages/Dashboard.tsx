@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { NavLink, Outlet } from "react-router";
+import { useEffect, useState } from "react";
+import { NavLink, Outlet, useLocation } from "react-router";
 import {
   CalendarDays,
   DoorOpen,
@@ -9,32 +9,58 @@ import {
   Ticket,
   Users,
 } from "lucide-react";
-import useAuth from "../hooks/useAuth";
+import Header from "../components/app/Header";
+
+const getTitleFromPathname = (pathname: string): string => {
+  switch (pathname) {
+    case "/admin":
+      return "Přehled";
+    case "/admin/current-season":
+      return "Současná sezóna";
+    case "/admin/matches/create":
+      return "Vytvořit zápas";
+    case "/admin/matches":
+      return "Seznam zápasů";
+    case "/admin/users":
+      return "Seznam uživatelů";
+    case "/admin/tickets":
+      return "Ceny vstupenek";
+    case "/admin/entrances":
+      return "Správa vstupů";
+    case "/admin/entrances/create":
+      return "Vytvořit vstup";
+    default:
+      if (pathname.startsWith("/admin/matches/")) return "Detail zápasu";
+      return "Dashboard";
+  }
+};
 
 const Dashboard = () => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [headerTitle, setHeaderTitle] = useState("Dashboard");
+  const location = useLocation();
 
-  const { logout } = useAuth();
-
-  const toggleDropdown = () => {
-    setIsDropdownOpen((prev) => !prev);
-  };
+  useEffect(() => {
+    document.title = `${getTitleFromPathname(
+      location.pathname
+    )} | Buldok Ticketing`;
+    setHeaderTitle(getTitleFromPathname(location.pathname));
+  }, [location.pathname]);
 
   // TODO active zalozky
   // TODO dynamicky title pomoci useLocation
 
   return (
-    <div className="flex h-screen" id="admin-dashboard">
+    <div className="flex h-screen bg-green-50" id="admin-dashboard">
       {/* Sidebar */}
       <aside
-        className="w-64 bg-emerald-950 text-white flex flex-col"
+        className="w-64 bg-emerald-950 text-white flex flex-col sticky top-0 h-screen overflow-y-auto"
         id="admin-dashboard-aside"
       >
         <div className="p-4 text-xl font-bold h-15">
           <h1 className="text-xl font-bold">Buldok Ticketing</h1>
         </div>
         <div className="p-4 text-sm tracking-widest uppercase">Menu</div>
-        <nav className="flex flex-col w-full">
+        <nav className="flex flex-col w-full flex-1 overflow-y-auto">
           <div className="sidebar-group w-full flex flex-col">
             <NavLink to="/admin" className="sidebar-group-item" end>
               <LayoutDashboard className="mr-2" />
@@ -107,37 +133,15 @@ const Dashboard = () => {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col h-screen overflow-y-scroll">
         {/* Header */}
-        <header className="bg-white  p-4 flex justify-between items-center h-15 shadow-xl/30">
-          <h1 className="text-xl font-bold">Dashboard</h1>
-          <div className="relative">
-            <div
-              className="w-10 h-10 bg-gray-300 rounded-full cursor-pointer"
-              onClick={toggleDropdown}
-            ></div>
-            {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow">
-                <ul>
-                  <li className="p-2 hover:bg-green-100 cursor-pointer">
-                    Settings
-                  </li>
-                  <li
-                    className="p-2 hover:bg-green-100 cursor-pointer"
-                    onClick={() => {
-                      logout();
-                    }}
-                  >
-                    Sign Out
-                  </li>
-                </ul>
-              </div>
-            )}
-          </div>
-        </header>
+
+        <Header>
+          <h1 className="text-xl font-bold">{headerTitle}</h1>
+        </Header>
 
         {/* Main Content Area */}
-        <main className="flex-1 p-4 bg-green-50">
+        <main className="flex-1 p-4 ">
           <Outlet />
         </main>
       </div>

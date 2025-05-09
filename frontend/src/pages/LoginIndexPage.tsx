@@ -44,39 +44,10 @@ const LoginIndexPage = () => {
     setSearchParams({});
 
     try {
-      // const res = await fetch("http://localhost:8080/api/auth/login", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   credentials: "include",
-      //   body: JSON.stringify(data),
-      // });
-
       const responseData = await fetchData<{ user: User }>("/auth/login", {
         method: "POST",
         body: JSON.stringify(data),
       });
-
-      // if (res.status === 401) {
-      //   setError("root", {
-      //     type: "server",
-      //     message:
-      //       "Nesprávné uživatelské jméno nebo heslo, nebo vašemu účtu chybí ověření od správce.",
-      //   });
-      //   return;
-      // }
-
-      // if (!res.ok) {
-      //   setError("root", {
-      //     type: "server",
-      //     message:
-      //       "Nastala chyba při přihlašování. Zkuste to prosím znovu později, nebo se obraťte na administrátora.",
-      //   });
-      //   return;
-      // }
-
-      // const responseData = await res.json();
       if (responseData?.user === null) {
         setError("root", {
           type: "server",

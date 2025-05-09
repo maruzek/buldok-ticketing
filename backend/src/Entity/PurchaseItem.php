@@ -85,4 +85,9 @@ class PurchaseItem
 
         return $this;
     }
+
+    public function __toString()
+    {
+        return $this->getTicketType()->getName() . ' - ' . $this->getQuantity() . ' - ' . $this->getPriceAtPurchase();
+    }
 }

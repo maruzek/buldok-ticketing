@@ -1,24 +1,31 @@
 import { Dot } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Legend, Pie, PieChart, ResponsiveContainer } from "recharts";
+import {
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 import useApi from "../../hooks/useApi";
 import { LastMatchResponse } from "../../types/LastMatchResponse";
 import Spinner from "../Spinner";
+
+// TODO: make the dashboard reusable for each match
+
+const PIE_COLORS = ["#7ccf01", "#FFBB28", "#A28DFF", "#FF82B3"];
 
 const AdminBasicInfo = () => {
   const [currentMatch, setCurrentMatch] = useState<LastMatchResponse | null>(
     null
   );
-  const [entrances, setEntrances] = useState<string[]>([]);
+  const [uniqueEntranceNames, setUniqueEntranceNames] = useState<string[]>([]);
   const [numOfFullTickets, setNumOfFullTickets] = useState<number>(0);
   const [numOfHalfTickets, setNumOfHalfTickets] = useState<number>(0);
-  const [numOfTickesAtEntrance, setNumOfTicketsAtEntrance] = useState<
-    | {
-        entrance: string;
-        number: number;
-      }[]
-    | null
-  >(null);
+  const [ticketsPerEntrance, setTicketsPerEntrance] = useState<
+    { entranceName: string; count: number }[]
+  >([]);
 
   const { fetchData, isLoading } = useApi();
 
@@ -34,56 +41,6 @@ const AdminBasicInfo = () => {
         if (response) {
           setCurrentMatch(response);
         }
-
-        console.log(response);
-        // Add each entrance name to the state from the response uniqely
-        let allEntranceNames: string[] = [];
-        allEntranceNames = response?.purchases.map((purchase) => {
-          return allEntranceNames?.find(
-            (entrance: string) => entrance == purchase.entrance.name
-          )
-            ? null
-            : purchase.entrance.name;
-        });
-        const uniqueNames: string[] = Array.from(new Set(allEntranceNames));
-        setEntrances(uniqueNames);
-
-        setNumOfFullTickets(
-          Number(
-            response?.purchases.reduce((acc, purchase) => {
-              return (
-                acc +
-                Number(
-                  purchase.purchaseItems.reduce((acc, item) => {
-                    if (item.ticket_type.name == "fullTicket") {
-                      return acc + Number(item.quantity);
-                    }
-
-                    return acc;
-                  }, 0)
-                )
-              );
-            }, 0)
-          )
-        );
-        setNumOfHalfTickets(
-          Number(
-            response?.purchases.reduce((acc, purchase) => {
-              return (
-                acc +
-                Number(
-                  purchase.purchaseItems.reduce((acc, item) => {
-                    if (item.ticket_type.name == "halfTicket") {
-                      return acc + Number(item.quantity);
-                    }
-
-                    return acc;
-                  }, 0)
-                )
-              );
-            }, 0)
-          )
-        );
       } catch (error) {
         console.error("Error fetching latest match:", error);
       }
@@ -92,39 +49,69 @@ const AdminBasicInfo = () => {
   }, [fetchData]);
 
   useEffect(() => {
-    if (entrances) {
-      entrances.forEach((entrance) => {
-        const entranceTickets = Number(
-          currentMatch?.purchases.reduce((acc, purchase) => {
-            if (purchase.entrance.name == entrance) {
-              return (
-                acc +
-                Number(
-                  purchase.purchaseItems.reduce((acc, item) => {
-                    return acc + Number(item.quantity);
-                  }, 0)
-                )
-              );
-            }
-
-            return acc;
-          }, 0)
+    if (currentMatch?.purchases) {
+      const allPurchaseEntranceNames = currentMatch.purchases
+        .map((purchase) => purchase.entrance?.name)
+        .filter(
+          (name): name is string =>
+            typeof name === "string" && name.trim() !== ""
         );
-        setNumOfTicketsAtEntrance((prev) => {
-          if (prev) {
-            console.log([
-              ...prev,
-              { entrance: entrance, number: entranceTickets },
-            ]);
-            return [...prev, { entrance: entrance, number: entranceTickets }];
-          } else {
-            console.log([{ entrance: entrance, number: entranceTickets }]);
-            return [{ entrance: entrance, number: entranceTickets }];
-          }
-        });
-      });
+      const uniqueNames = Array.from(new Set(allPurchaseEntranceNames));
+      setUniqueEntranceNames(uniqueNames);
+
+      const fullTickets = currentMatch.purchases.reduce(
+        (acc, purchase) =>
+          acc +
+          purchase.purchaseItems.reduce(
+            (itemAcc, item) =>
+              item.ticket_type.name === "fullTicket"
+                ? itemAcc + Number(item.quantity)
+                : itemAcc,
+            0
+          ),
+        0
+      );
+      setNumOfFullTickets(fullTickets);
+
+      const halfTickets = currentMatch.purchases.reduce(
+        (acc, purchase) =>
+          acc +
+          purchase.purchaseItems.reduce(
+            (itemAcc, item) =>
+              item.ticket_type.name === "halfTicket"
+                ? itemAcc + Number(item.quantity)
+                : itemAcc,
+            0
+          ),
+        0
+      );
+      setNumOfHalfTickets(halfTickets);
+    } else {
+      setUniqueEntranceNames([]);
+      setNumOfFullTickets(0);
+      setNumOfHalfTickets(0);
     }
-  }, [entrances, currentMatch?.purchases]);
+  }, [currentMatch]);
+
+  useEffect(() => {
+    if (currentMatch?.purchases && uniqueEntranceNames.length > 0) {
+      const calculatedData = uniqueEntranceNames.map((name) => {
+        const ticketsForThisEntrance = currentMatch.purchases
+          .filter((purchase) => purchase.entrance?.name === name)
+          .reduce((totalTicketsInEntrance, purchase) => {
+            const ticketsInThisSpecificPurchase = purchase.purchaseItems.reduce(
+              (itemSum, item) => itemSum + Number(item.quantity),
+              0
+            );
+            return totalTicketsInEntrance + ticketsInThisSpecificPurchase;
+          }, 0);
+        return { entranceName: name, count: ticketsForThisEntrance };
+      });
+      setTicketsPerEntrance(calculatedData);
+    } else {
+      setTicketsPerEntrance([]);
+    }
+  }, [currentMatch, uniqueEntranceNames]);
 
   if (isLoading) {
     return (
@@ -136,8 +123,8 @@ const AdminBasicInfo = () => {
 
   return (
     <>
-      <div className="flex flex-col gap-4 w-full">
-        <div className="bg-white rounded-md p-4 h-1/2 flex flex-col">
+      <div className="flex flex-col gap-4 w-full h-screen">
+        <div className="bg-white rounded-md p-4 flex flex-col shadow-md h-1/2">
           <div className="card-header w-full">
             <h2 className="text-3xl font-bold">Aktuální zápas</h2>
             <h3 className="flex text-xl">
@@ -220,11 +207,11 @@ const AdminBasicInfo = () => {
               <span className="text-xl">Celkem poloviční</span>
             </div>
             <div className="row-span-2 col-start-3 row-start-1 border border-emerald-800 rounded-md p-4 flex flex-col">
-              <span className="font-bold text-lg">
+              <span className="font-bold text-xl mb-3">
                 Výdělek za jedotlivé vstupy
               </span>
               <span className="">
-                {entrances.map((entrance: string) => {
+                {uniqueEntranceNames.map((entrance: string) => {
                   return (
                     <div key={entrance} className="flex flex-col">
                       <span className="text-xl font-black">{entrance}</span>
@@ -251,7 +238,9 @@ const AdminBasicInfo = () => {
               </span>
             </div>
             <div className="row-span-2 col-start-4 row-start-1 border border-emerald-800 rounded-md p-4 flex flex-col">
-              <span className="text-xl">Rozdělení typů vstupenek</span>
+              <span className="text-xl font-bold">
+                Rozdělení typů vstupenek
+              </span>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -259,62 +248,62 @@ const AdminBasicInfo = () => {
                       {
                         name: "Plné",
                         value: numOfFullTickets,
-                        fill: "#82ca9d",
                       },
                       {
                         name: "Poloviční",
                         value: numOfHalfTickets,
-                        fill: "#8884d8",
                       },
                     ]}
                     cx="50%"
                     cy="50%"
-                    innerRadius={40}
-                    outerRadius={60}
+                    innerRadius={50}
+                    outerRadius={80}
                     dataKey="value"
-                    label={({ name, value }) => {
-                      return `${name} - ${value}`;
-                    }}
-                  ></Pie>
+                    label={({ percent }) => `${(percent * 100).toFixed(0)} %`}
+                  >
+                    <Cell key="cell-0" fill="#7ccf01" />
+                    <Cell key="cell-1" fill="#FFBB28" />
+                  </Pie>
+                  <Tooltip />
+                  <Legend verticalAlign="bottom" height={36} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="row-span-2 col-start-5 row-start-1 border border-emerald-800 rounded-md p-4 flex flex-col">
-              <span className="text-xl">
+            <div className="row-span-2 col-start-5 row-start-1 border border-emerald-800 rounded-md p-4 flex flex-col h-full">
+              <span className="text-xl font-bold">
                 Rozdělení vstupů podle prodaných vstupenek
               </span>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={[
-                      {
-                        name: "Prodáno",
-                        value: numOfFullTickets,
-                        fill: "#82ca9d",
-                      },
-                      { name: "Zbývá", value: 200 },
-                    ]}
+                    data={ticketsPerEntrance}
                     cx="50%"
                     cy="50%"
-                    innerRadius={40}
-                    outerRadius={60}
+                    innerRadius={50}
+                    outerRadius={80}
                     fill="#8884d8"
-                    dataKey="value"
-                    label
-                  />
+                    dataKey="count"
+                    nameKey="entranceName"
+                  >
+                    {ticketsPerEntrance.map((_, index) => (
+                      <Cell
+                        key={`cell-entrance-${index}`}
+                        fill={PIE_COLORS[index % PIE_COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend verticalAlign="bottom" height={36} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-md p-4 h-1/2">
-          <h2 className="text-xl font-bold">Aktuální zápas</h2>
-          <h3 className="flex text-lg">
-            SK Slavia Praha <Dot /> 27.5.2025 17:30
-          </h3>
-          <div>Prodáno lístků 100</div>
-          <div>Utrženo celkem 1000 Kč</div>
+        <div className="bg-white rounded-md p-4 flex flex-col shadow-md h-1/2">
+          <div className="card-header w-full">
+            <h2 className="text-3xl font-bold">Aktuální sezóna</h2>
+          </div>
         </div>
       </div>
     </>

@@ -47,42 +47,37 @@ final class PurchaseController extends AbstractController
         $fullTicketsCount = $data['fullTickets'] ?? 0;
         $halfTicketsCount = $data['halfTickets'] ?? 0;
 
-        if ($fullTicketsCount < 0 || $halfTicketsCount < 0) {
-            return $this->json([
-                'error' => 'Invalid ticket count',
-                'message' => 'Vadné počty vstupenek',
-            ], JsonResponse::HTTP_BAD_REQUEST);
-        }
-
         $purchase = new Purchase();
         $purchase->setEntrance($authUser->getEntrance());
         $purchase->setMatch($gameRepository->findOneBy(['id' => $data['matchID']]));
         $purchase->setPurchasedAt(new \DateTimeImmutable());
         $purchase->setSoldBy($authUser);
 
+        if ($fullTicketsCount > 0) {
+            $fullTicketItems = new PurchaseItem();
+            $fullTicketItems->setTicketType($ticketTypeRepository->findOneBy(['name' => 'fullTicket']));
+            $fullTicketItems->setPriceAtPurchase((float)$ticketTypeRepository->findOneBy(['name' => 'fullTicket'])->getPrice() * $data['fullTickets']);
+            $fullTicketItems->setQuantity($data['fullTickets']);
+            $fullTicketItems->setPurchaseId($purchase);
 
-        $fullTicketItems = new PurchaseItem();
-        $fullTicketItems->setTicketType($ticketTypeRepository->findOneBy(['name' => 'fullTicket']));
-        $fullTicketItems->setPriceAtPurchase((float)$ticketTypeRepository->findOneBy(['name' => 'fullTicket'])->getPrice() * $data['fullTickets']);
-        $fullTicketItems->setQuantity($data['fullTickets']);
-        $fullTicketItems->setPurchaseId($purchase);
+            $purchase->addPurchaseItem($fullTicketItems);
+        }
 
-        $purchase->addPurchaseItem($fullTicketItems);
-        // $em->persist($fullTicketItems);
+        if ($halfTicketsCount > 0) {
+            $halfTicketItems = new PurchaseItem();
+            $halfTicketItems->setTicketType($ticketTypeRepository->findOneBy(['name' => 'halfTicket']));
+            $halfTicketItems->setPriceAtPurchase((float)$ticketTypeRepository->findOneBy(['name' => 'halfTicket'])->getPrice() * $data['halfTickets']);
+            $halfTicketItems->setQuantity($data['halfTickets']);
+            $halfTicketItems->setPurchaseId($purchase);
 
-        $halfTicketItems = new PurchaseItem();
-        $halfTicketItems->setTicketType($ticketTypeRepository->findOneBy(['name' => 'halfTicket']));
-        $halfTicketItems->setPriceAtPurchase((float)$ticketTypeRepository->findOneBy(['name' => 'halfTicket'])->getPrice() * $data['halfTickets']);
-        $halfTicketItems->setQuantity($data['halfTickets']);
-        $halfTicketItems->setPurchaseId($purchase);
-        // $em->persist($halfTicketItems);
-        $purchase->addPurchaseItem($halfTicketItems);
+            $purchase->addPurchaseItem($halfTicketItems);
+        }
 
         try {
-            if ($data['fullTickets'] > 0) {
+            if ($fullTicketsCount > 0) {
                 $em->persist($fullTicketItems);
             }
-            if ($data['halfTickets'] > 0) {
+            if ($halfTicketsCount > 0) {
                 $em->persist($halfTicketItems);
             }
             $em->persist($purchase);

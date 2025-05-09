@@ -17,6 +17,7 @@ const Ticketing = () => {
   const [ticketPrices, setTicketPrices] = useState<TicketPrices | null>(null);
   const [historyData, setHistoryData] = useState<PurchaseHistory[] | null>([]);
   const [notification, setNotification] = useState<string | null>(null);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
 
   const { fetchData } = useApi();
   const { auth } = useAuth();
@@ -58,6 +59,7 @@ const Ticketing = () => {
     }
     const fetchHistory = async () => {
       try {
+        setIsHistoryLoading(true);
         const hitory = await fetchData<PurchaseHistory[]>(
           `/purchase/match/${matchID}/all`,
           {
@@ -68,11 +70,21 @@ const Ticketing = () => {
         console.log(hitory);
       } catch (error) {
         console.error("Error fetching purchase history:", error);
+      } finally {
+        setIsHistoryLoading(false);
       }
     };
 
     fetchHistory();
   }, [match, fetchData, matchID]);
+
+  useEffect(() => {
+    if (match) {
+      document.title = `Buldok - ${match.rival} | Buldok Ticketing`;
+    } else {
+      document.title = "Buldok Ticketing";
+    }
+  }, [match]);
 
   const handleUpdateHistory = (newPurchase: PurchaseHistory) => {
     setHistoryData((prev: PurchaseHistory[] | null) => {
@@ -113,7 +125,7 @@ const Ticketing = () => {
   if (isLoading) {
     return (
       <div className="w-full h-full">
-        <Header />
+        <Header color="bg-emerald-950" />
         <div className="flex flex-col items-center justify-center h-screen">
           <Spinner />
         </div>
@@ -124,7 +136,7 @@ const Ticketing = () => {
   if (!match && !isLoading) {
     return (
       <div className="w-full h-full">
-        <Header />
+        <Header color="bg-emerald-950" />
         <div className="flex flex-col items-center justify-center h-screen">
           <h1 className="text-2xl font-bold">Zápas nenalezen</h1>
           <p className="text-gray-500">Zkontrolujte prosím vaše připojení.</p>
@@ -136,7 +148,7 @@ const Ticketing = () => {
   return (
     <>
       <div className="w-full">
-        <Header />
+        <Header color="bg-emerald-950" />
         <main className="px-4">
           <div className="sticky top-0 bg-white py-3">
             <div className="flex grow-0 flex-row items-center">
@@ -197,9 +209,15 @@ const Ticketing = () => {
               <span className="block sm:inline">{notification}</span>
             </div>
           )}
-          {historyData?.length === 0 ? (
+          {isHistoryLoading ? (
             <div className="w-full mt-5">
               <Spinner />
+            </div>
+          ) : historyData?.length === 0 ? (
+            <div>
+              <p className="text-gray-500 mt-3">
+                Zatím nebyly zaznamenány žádné nákupy.
+              </p>
             </div>
           ) : (
             <div className="w-full">
