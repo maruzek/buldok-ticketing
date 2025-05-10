@@ -70,40 +70,67 @@ const EditUser = ({ onUserSave }: EditUserProps) => {
       newRoles = newRoles.filter((role) => role !== "ROLE_ADMIN");
     }
 
+    // try {
+    //   console.log(editedUser);
+    //   const response = await fetch(
+    //     `http://localhost:8080/api/admin/users/user/${userID}`,
+    //     {
+    //       method: "PUT",
+    //       headers: {
+    //         "Content-Type": "application/json",
+    //       },
+    //       body: JSON.stringify({
+    //         ...editedUser,
+    //         roles: newRoles,
+    //         verified: data.verified,
+    //       }),
+    //       credentials: "include",
+    //     }
+    //   );
+
+    //   if (!response.ok) {
+    //     const errorData = await response.json();
+    //     const err = `Nastala chyba při aktualizaci uživatele. ${errorData.message}`;
+    //     setError("root", {
+    //       type: "server",
+    //       message: err,
+    //     });
+    //     throw new Error(err);
+    //   }
+
+    //   onUserSave({
+    //     status: "ok",
+    //     message: `Uživatel ${editedUser.fullName} byl úspěšně upraven!`,
+    //   });
+    //   navigate("/admin/users");
+    // } catch (error: unknown) {
+    //   if (error instanceof Error) {
+    //     setError("root", {
+    //       type: "server",
+    //       message: error?.message as string,
+    //     });
+    //     console.error("Error updating user:", error?.message as string);
+    //   }
+    // }
+
     try {
-      console.log(editedUser);
-      const response = await fetch(
-        `http://localhost:8080/api/admin/users/user/${userID}`,
+      const response = await fetchData<EditStatus>(
+        `/admin/users/user/${userID}`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
           body: JSON.stringify({
             ...editedUser,
             roles: newRoles,
             verified: data.verified,
           }),
-          credentials: "include",
         }
       );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        const err = `Nastala chyba při aktualizaci uživatele. ${errorData.message}`;
-        setError("root", {
-          type: "server",
-          message: err,
-        });
-        throw new Error(err);
-      }
+      console.log(response);
 
-      onUserSave({
-        status: "ok",
-        message: `Uživatel ${editedUser.fullName} byl úspěšně upraven!`,
-      });
+      onUserSave(response);
       navigate("/admin/users");
-    } catch (error: unknown) {
+    } catch (error) {
       if (error instanceof Error) {
         setError("root", {
           type: "server",
@@ -186,11 +213,10 @@ const EditUser = ({ onUserSave }: EditUserProps) => {
             </div>
             <button
               type="submit"
-              className={`${
-                isSubmitting
-                  ? "btn-disabled w-full mt-3"
-                  : "btn-lime w-full mt-3"
-              }`}
+              className={`${isSubmitting
+                ? "btn-disabled w-full mt-3"
+                : "btn-lime w-full mt-3"
+                }`}
             >
               Uložit
             </button>

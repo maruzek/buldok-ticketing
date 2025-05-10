@@ -128,8 +128,8 @@ final class UserController extends AbstractController
         ];
 
         return $this->json([
-            'satus' => 'OK',
-            'message' => 'User updated successfully',
+            'status' => 'ok',
+            'message' => 'Uživatel ' . $user->getFullName()  .' byl úspěšně upraven',
             'updatedUser' => $userData,
         ], JsonResponse::HTTP_OK);
     }
