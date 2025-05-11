@@ -9,7 +9,7 @@ lexik_jwt_authentication:
       lifetime: null
       samesite: lax
       path: /
-      secure: false
+      secure: true
 
   token_extractors:
     cookie:
