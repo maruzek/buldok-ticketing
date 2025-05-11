@@ -28,33 +28,60 @@ services:
     networks:
       - buldok-network
 
+  # db:
+  #   image: postgres:14
+  #   container_name: buldok_db
+  #   environment:
+  #     POSTGRES_DB: buldok
+  #     POSTGRES_USER: user
+  #     POSTGRES_PASSWORD: password
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #   networks:
+  #     - buldok-network
+
   db:
-    image: postgres:14
+    image: mariadb:10.4.34
     container_name: buldok_db
+    restart: always
     environment:
-      POSTGRES_DB: buldok
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      MARIADB_ROOT_PASSWORD: rootpwd
+      MARIADB_DATABASE: buldok
+      MARIADB_USER: user
+      MARIADB_PASSWORD: password
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - mariadb_data:/var/lib/mysql
     networks:
       - buldok-network
 
-  pgadmin:
-    image: dpage/pgadmin4:9.2
-    container_name: buldok_pgadmin
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@admin.cz
-      - PGADMIN_DEFAULT_PASSWORD=admin
-    ports:
-      - 5050:80
-    # volumes:
-    #   - pgadmin:/var/lib/pgadmin
-    volumes:
-      - pgadmindata:/var/lib/pgadmin
+  # pgadmin:
+  #   image: dpage/pgadmin4:9.2
+  #   container_name: buldok_pgadmin
+  #   environment:
+  #     - PGADMIN_DEFAULT_EMAIL=admin@admin.cz
+  #     - PGADMIN_DEFAULT_PASSWORD=admin
+  #   ports:
+  #     - 5050:80
+  #   # volumes:
+  #   #   - pgadmin:/var/lib/pgadmin
+  #   volumes:
+  #     - pgadmindata:/var/lib/pgadmin
 
+  #   depends_on:
+  #     - db
+  #   networks:
+  #     - buldok-network
+
+  adminer:
+    image: adminer:5
+    container_name: buldok_adminer
+    restart: always
+    ports:
+      - 5051:8080
     depends_on:
       - db
     networks:
@@ -64,5 +91,6 @@ networks:
   buldok-network:
 
 volumes:
-  pgdata:
-  pgadmindata:
+  # pgdata:
+  # pgadmindata:
+  mariadb_data:

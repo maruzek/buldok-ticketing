@@ -1,5 +1,5 @@
 # Use an official PHP image with Apache
-FROM php:8.3-apache
+FROM php:8.2-apache
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     zip \
     unzip \
-  && docker-php-ext-install intl pdo pdo_pgsql opcache
+  && docker-php-ext-install intl pdo pdo_pgsql pdo_mysql opcache
 
 # ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 
