@@ -42,8 +42,8 @@ security:
   access_control:
     - { path: ^/api, methods: [OPTIONS], roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/(login|logout|register), roles: PUBLIC_ACCESS }
+    - { path: ^/api/admin, roles: ROLE_ADMIN }
     - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
-    - { path: ^/api/auth, roles: ROLE_ADMIN }
 
 when@test:
   security:

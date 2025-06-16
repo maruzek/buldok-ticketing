@@ -12,9 +12,23 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/auth',  name: 'api_auth_')]
+/**
+ * AuthController handles user registration and logout operations.
+ * It allows users to register with an email and password, and to log out.
+ */
 final class AuthController extends AbstractController
 {
     #[Route('/register', name: 'register', methods: ['POST'])]
+    /**
+     * Register a new user.
+     *
+     * @param Request $request The request containing the user data.
+     * @param UserPasswordHasherInterface $hasher The password hasher to hash the user's password.
+     * @param EntityManagerInterface $em The entity manager to persist the new user.
+     * @param UserRepository $userRepository Repository to check for existing users.
+     *
+     * @return JsonResponse
+     */
     public function register(Request $request, UserPasswordHasherInterface $hasher, EntityManagerInterface $em, UserRepository $userRepository): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -94,6 +108,11 @@ final class AuthController extends AbstractController
     }
 
     #[Route('/logout', name: 'logout', methods: ['POST'])]
+    /**
+     * Log out the user.
+     *
+     * @return JsonResponse
+     */
     public function logout(): JsonResponse
     {
         return $this->json([

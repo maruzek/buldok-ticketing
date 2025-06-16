@@ -15,12 +15,26 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/purchase', name: 'purchase_')]
 final class PurchaseController extends AbstractController
 {
     #[Route('/mark', name: 'mark', methods: ['POST'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    /**
+     * Mark a purchase for a match.
+     *
+     * @param Request $request The request containing the purchase data.
+     * @param TicketTypeRepository $ticketTypeRepository Repository to fetch ticket types.
+     * @param EntityManagerInterface $em The entity manager to persist the purchase.
+     * @param GameRepository $gameRepository Repository to fetch game details.
+     * @param PurchaseRepository $purchaseRepository Repository to fetch purchases.
+     * @param SerializerInterface $serializer Serializer to convert purchase data to JSON.
+     *
+     * @return JsonResponse
+     */
     public function mark(
         Request $request,
         TicketTypeRepository $ticketTypeRepository,
@@ -103,6 +117,17 @@ final class PurchaseController extends AbstractController
     }
 
     #[Route('/match/{id}/all', name: 'match', methods: ['GET'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    /**
+     * Get all purchases for a specific match.
+     *
+     * @param GameRepository $gameRepository The repository to fetch game details.
+     * @param int $id The ID of the match.
+     * @param PurchaseRepository $purchaseRepository The repository to fetch purchases.
+     * @param SerializerInterface $serializer Serializer to convert purchase data to JSON.
+     *
+     * @return JsonResponse
+     */
     public function getPurchasesByMatch(
         GameRepository $gameRepository,
         int $id,
@@ -143,6 +168,16 @@ final class PurchaseController extends AbstractController
     }
 
     #[Route('/{id}', name: 'delete', methods: ['DELETE'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    /**
+     * Delete a purchase by its ID.
+     *
+     * @param PurchaseRepository $purchaseRepository The repository to fetch the purchase.
+     * @param int $id The ID of the purchase to delete.
+     * @param EntityManagerInterface $em The entity manager to handle the deletion.
+     *
+     * @return JsonResponse
+     */
     public function deletePurchase(
         PurchaseRepository $purchaseRepository,
         int $id,
