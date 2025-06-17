@@ -12,6 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 
 //TODO: refactor controller to match admin structure
@@ -20,6 +21,15 @@ use Symfony\Component\Serializer\SerializerInterface;
 final class MatchController extends AbstractController
 {
     #[Route('/api/admin/match/create', name: 'create', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    /**
+     * Create a new match.
+     *
+     * @param Request $request The request containing the match data.
+     * @param EntityManagerInterface $em The entity manager to persist the new match.
+     *
+     * @return JsonResponse
+     */
     public function createMatch(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -45,7 +55,7 @@ final class MatchController extends AbstractController
         $match = new Game();
         $match->setRival($data['rival']);
         $match->setPlayedAt(new \DateTime($data['matchDate']));
-        $match->setDescription($data['description'] || null);
+        $match->setDescription($data['description'] ?? null);
         $match->setStatus(MatchStatus::ACTIVE);
 
         try {
@@ -71,6 +81,13 @@ final class MatchController extends AbstractController
     }
 
     #[Route('/api/admin/match/list', name: 'list_match', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    /**
+     * List all matches.
+     *
+     * @param GameRepository $gameRepository
+     * @return JsonResponse
+     */
     public function listMatch(GameRepository $gameRepository): JsonResponse
     {
         $matches = $gameRepository->findAllMatches();
@@ -90,6 +107,15 @@ final class MatchController extends AbstractController
     }
 
     #[Route('/api/match/{id}', name: 'get_match', methods: ['GET'])]
+    /**
+     * Get match by ID.
+     *
+     * @param int $id The ID of the match.
+     * @param GameRepository $gameRepository The repository to fetch the match.
+     * @param SerializerInterface $serializer The serializer to format the response.
+     *
+     * @return JsonResponse
+     */
     public function getMatchById(int $id, GameRepository $gameRepository, SerializerInterface $serializer): JsonResponse
     {
         $match = $gameRepository->find($id);
@@ -116,6 +142,17 @@ final class MatchController extends AbstractController
     }
 
     #[Route('/api/admin/match/{id}', name: 'edit_match', methods: ['PUT'])]
+    #[IsGranted('ROLE_ADMIN')]
+    /**
+     * Edit a match by ID.
+     *
+     * @param int $id The ID of the match to edit.
+     * @param GameRepository $gameRepository The repository to fetch the match.
+     * @param Request $request The request containing the updated match data.
+     * @param EntityManagerInterface $em The entity manager to persist the changes.
+     *
+     * @return JsonResponse
+     */
     public function editMatchById(int $id, GameRepository $gameRepository, Request $request, EntityManagerInterface $em): JsonResponse
     {
         $match = $gameRepository->find($id);
@@ -174,6 +211,13 @@ final class MatchController extends AbstractController
     }
 
     #[Route('/api/users-matches', name: 'users_matches', methods: ['GET'])]
+    /**
+     * Get matches for the authenticated user.
+     *
+     * @param GameRepository $gameRepository The repository to fetch matches.
+     *
+     * @return JsonResponse
+     */
     public function getUsersMatches(GameRepository $gameRepository): JsonResponse
     {
         /** @var User $authUser */
@@ -206,6 +250,15 @@ final class MatchController extends AbstractController
     }
 
     #[Route('/api/admin/matches/last-active-match', name: 'last_active_match', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    /**
+     * Get the last active match.
+     *
+     * @param GameRepository $gameRepository The repository to fetch the last active match.
+     * @param SerializerInterface $serializer The serializer to format the response.
+     *
+     * @return JsonResponse
+     */
     public function getLastActiveMatch(GameRepository $gameRepository, SerializerInterface $serializer): JsonResponse
     {
         $match = $gameRepository->findLastActiveMatch();

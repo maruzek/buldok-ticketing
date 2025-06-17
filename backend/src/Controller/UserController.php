@@ -9,11 +9,25 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/admin/users', name: 'api_users_')]
+#[IsGranted('ROLE_ADMIN')]
+/**
+ * UserController handles user management operations.
+ * It allows fetching all users, getting a user by ID, editing a user by ID, and searching for users.
+ */
 final class UserController extends AbstractController
 {
     #[Route('/all', name: 'all', methods: ['GET'])]
+    /**
+     * Fetch all users.
+     *
+     * @param UserRepository $userRepository Repository to fetch users.
+     *
+     * @return JsonResponse
+     */
     public function index(UserRepository $userRepository): JsonResponse
     {
         $users = $userRepository->findAll();
@@ -24,6 +38,10 @@ final class UserController extends AbstractController
                 'email' => $user->getEmail(),
                 'roles' => $user->getRoles(),
                 'registeredAt' => $user->getRegisteredAt()->format('d.n.Y H:i'),
+                'entrance' => $user->getEntrance() ? [
+                    'id' => $user->getEntrance()->getId(),
+                    'name' => $user->getEntrance()->getName(),
+                ] : null,
                 'fullName' => $user->getFullName(),
             ];
         }
@@ -32,6 +50,14 @@ final class UserController extends AbstractController
     }
 
     #[Route('/user/{id}', name: 'get_by_id', methods: ['GET'])]
+    /**
+     * Get a user by ID.
+     *
+     * @param int $id The ID of the user to fetch.
+     * @param UserRepository $userRepository Repository to fetch the user.
+     *
+     * @return JsonResponse
+     */
     public function getById(int $id, UserRepository $userRepository): JsonResponse
     {
         $user = $userRepository->findOneBy(['id' => $id]);
@@ -57,7 +83,18 @@ final class UserController extends AbstractController
     }
 
     #[Route('/user/{id}', name: 'edit_by_id', methods: ['PUT'])]
-    public function editById(int $id, UserRepository $userRepository, Request $request, EntityManagerInterface $em, EntranceRepository $entranceRepository): JsonResponse
+    /**
+     * Edit a user by ID.
+     *
+     * @param int $id The ID of the user to edit.
+     * @param UserRepository $userRepository Repository to fetch the user.
+     * @param Request $request The request containing the new user data.
+     * @param EntityManagerInterface $em The entity manager to handle database operations.
+     * @param EntranceRepository $entranceRepository Repository to fetch entrances.
+     *
+     * @return JsonResponse
+     */
+    public function editById(int $id, UserRepository $userRepository, Request $request, EntityManagerInterface $em, EntranceRepository $entranceRepository, ValidatorInterface $validator): JsonResponse
     {
         if (json_last_error() !== JSON_ERROR_NONE) {
             return $this->json([
@@ -74,9 +111,23 @@ final class UserController extends AbstractController
             ], JsonResponse::HTTP_NOT_FOUND);
         }
 
+        $validations = $validator->validate($data);
+
+        if (count($validations) > 0) {
+            $errors = [];
+            foreach ($validations as $violation) {
+                $errors[] = [
+                    'property' => $violation->getPropertyPath(),
+                    'message' => $violation->getMessage(),
+                ];
+            }
+            return $this->json([
+                'error' => 'Validation errors',
+                'errors' => $errors,
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
         $newRoles = $data['roles'] ?? [];
-
-
 
         /** @var User|null $authUser */
         $authUser = $this->getUser();
@@ -129,12 +180,20 @@ final class UserController extends AbstractController
 
         return $this->json([
             'status' => 'ok',
-            'message' => 'Uživatel ' . $user->getFullName()  .' byl úspěšně upraven',
+            'message' => 'Uživatel ' . $user->getFullName()  . ' byl úspěšně upraven',
             'updatedUser' => $userData,
         ], JsonResponse::HTTP_OK);
     }
 
     #[Route('/search', name: 'searchUser', methods: ['GET'])]
+    /**
+     * Search for users by email or name.
+     *
+     * @param UserRepository $userRepository Repository to search users.
+     * @param Request $request The request containing the search query.
+     *
+     * @return JsonResponse
+     */
     public function searchUser(UserRepository $userRepository, Request $request): JsonResponse
     {
         $query = $request->query->get('q');
@@ -158,6 +217,15 @@ final class UserController extends AbstractController
     }
 
     #[Route('/user/{id}/remove-entrance', name: 'remove_entrance', methods: ['PUT'])]
+    /**
+     * Remove the entrance from a user.
+     *
+     * @param int $id The ID of the user.
+     * @param UserRepository $userRepository Repository to fetch the user.
+     * @param EntityManagerInterface $em The entity manager to handle database operations.
+     *
+     * @return JsonResponse
+     */
     public function removeEntrance(int $id, UserRepository $userRepository, EntityManagerInterface $em): JsonResponse
     {
         $user = $userRepository->find($id);
@@ -181,6 +249,17 @@ final class UserController extends AbstractController
     }
 
     #[Route('/user/{id}/change-entrance', name: 'change_entrance', methods: ['PUT'])]
+    /**
+     * Change the entrance of a user.
+     *
+     * @param int $id The ID of the user.
+     * @param UserRepository $userRepository Repository to fetch the user.
+     * @param EntranceRepository $entranceRepository Repository to fetch entrances.
+     * @param EntityManagerInterface $em The entity manager to handle database operations.
+     * @param Request $request The request containing the new entrance ID.
+     *
+     * @return JsonResponse
+     */
     public function changeEntrance(int $id, UserRepository $userRepository, EntranceRepository $entranceRepository, EntityManagerInterface $em, Request $request): JsonResponse
     {
         $user = $userRepository->find($id);

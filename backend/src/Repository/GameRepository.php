@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Game;
+use App\Enum\MatchStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -29,7 +30,7 @@ class GameRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('g')
             ->andWhere('g.status = :status')
-            ->setParameter('status', 'Otevřený')
+            ->setParameter('status', MatchStatus::ACTIVE->value)
             ->orderBy('g.played_at', 'DESC')
             ->setMaxResults(1)
             ->getQuery()

@@ -23,6 +23,7 @@ const UserList = ({ userEdit }: UserListProps) => {
           method: "GET",
         });
         setUsers(fetchedUsers);
+        console.log("Fetched users:", fetchedUsers);
       } catch (error) {
         console.error("Error fetching users:", error);
         setUsers([]);
