@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/admin/users', name: 'api_users_')]
 #[IsGranted('ROLE_ADMIN')]
@@ -37,6 +38,10 @@ final class UserController extends AbstractController
                 'email' => $user->getEmail(),
                 'roles' => $user->getRoles(),
                 'registeredAt' => $user->getRegisteredAt()->format('d.n.Y H:i'),
+                'entrance' => $user->getEntrance() ? [
+                    'id' => $user->getEntrance()->getId(),
+                    'name' => $user->getEntrance()->getName(),
+                ] : null,
                 'fullName' => $user->getFullName(),
             ];
         }
@@ -89,7 +94,7 @@ final class UserController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function editById(int $id, UserRepository $userRepository, Request $request, EntityManagerInterface $em, EntranceRepository $entranceRepository): JsonResponse
+    public function editById(int $id, UserRepository $userRepository, Request $request, EntityManagerInterface $em, EntranceRepository $entranceRepository, ValidatorInterface $validator): JsonResponse
     {
         if (json_last_error() !== JSON_ERROR_NONE) {
             return $this->json([
@@ -104,6 +109,22 @@ final class UserController extends AbstractController
             return $this->json([
                 'error' => 'User not found',
             ], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $validations = $validator->validate($data);
+
+        if (count($validations) > 0) {
+            $errors = [];
+            foreach ($validations as $violation) {
+                $errors[] = [
+                    'property' => $violation->getPropertyPath(),
+                    'message' => $violation->getMessage(),
+                ];
+            }
+            return $this->json([
+                'error' => 'Validation errors',
+                'errors' => $errors,
+            ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         $newRoles = $data['roles'] ?? [];

@@ -55,7 +55,7 @@ final class MatchController extends AbstractController
         $match = new Game();
         $match->setRival($data['rival']);
         $match->setPlayedAt(new \DateTime($data['matchDate']));
-        $match->setDescription($data['description'] || null);
+        $match->setDescription($data['description'] ?? null);
         $match->setStatus(MatchStatus::ACTIVE);
 
         try {

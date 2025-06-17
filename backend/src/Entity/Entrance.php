@@ -83,7 +83,7 @@ class Entrance
     {
         if (!$this->purchases->contains($purchase)) {
             $this->purchases->add($purchase);
-            $purchase->setEntranceId($this);
+            $purchase->setEntrance($this);
         }
 
         return $this;
@@ -92,9 +92,8 @@ class Entrance
     public function removePurchase(Purchase $purchase): static
     {
         if ($this->purchases->removeElement($purchase)) {
-            // set the owning side to null (unless already changed)
-            if ($purchase->getEntranceId() === $this) {
-                $purchase->setEntranceId(null);
+            if ($purchase->getEntrance() === $this) {
+                $purchase->setEntrance(null);
             }
         }
 

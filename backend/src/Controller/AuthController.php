@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/auth',  name: 'api_auth_')]
 /**
@@ -29,7 +30,7 @@ final class AuthController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function register(Request $request, UserPasswordHasherInterface $hasher, EntityManagerInterface $em, UserRepository $userRepository): JsonResponse
+    public function register(Request $request, UserPasswordHasherInterface $hasher, EntityManagerInterface $em, UserRepository $userRepository, ValidatorInterface $validator): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
