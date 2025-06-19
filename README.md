@@ -72,3 +72,5 @@ Momentálně projekt prošel prvním testováním a vše zatím naznačuje tomu,
 - [ ] Přidat fuknci záznamu prvního lístku ze šatnového bločku
 - [ ] Přejít na React Query
 - [ ] Přejít na Shadcn UI
+- [ ] Přidat spinner při hladání jména
+- [ ] Přidat možnost přidání branky uživateli přímo ze správy jeho účtu
