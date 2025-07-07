@@ -23,6 +23,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "../components/ui/sidebar";
+import { AppSidebar } from "../components/app-sidebar";
 
 const getTitleFromPathname = (pathname: string): string => {
   switch (pathname) {
@@ -62,11 +63,11 @@ const Dashboard = () => {
   return (
     <SidebarProvider defaultOpen={true}>
       <div
-        className="flex h-screen w-screen bg-background text-foreground"
+        className="flex h-screen w-screen text-foreground"
         id="admin-dashboard"
       >
         {/* Sidebar */}
-        <Sidebar
+        {/* <Sidebar
           variant="sidebar"
           className="bg-sidebar border-r border-sidebar-border"
         >
@@ -205,10 +206,12 @@ const Dashboard = () => {
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-        </Sidebar>
+        </Sidebar> */}
+
+        <AppSidebar />
 
         {/* Main Content */}
-        <SidebarInset className="flex-1 flex flex-col h-screen bg-background text-foreground">
+        <SidebarInset className="flex-1 flex flex-col text-foreground bg-background rounded-xl overflow-y-auto">
           {/* Header */}
           <Header onToggleSidebar={() => {}}>
             <SidebarTrigger className="mr-2" />
@@ -216,7 +219,7 @@ const Dashboard = () => {
           </Header>
 
           {/* Main Content Area */}
-          <main className="flex-1 p-4 overflow-y-auto">
+          <main className="flex-1 p-4">
             <Outlet />
           </main>
         </SidebarInset>

@@ -18,8 +18,8 @@ const Header = ({ children, color }: HeaderProps) => {
 
   return (
     <header
-      className={`p-4 flex justify-between items-center h-15 shadow-md ${
-        color && color.trim() !== "" ? color : "bg-white"
+      className={`p-4 flex justify-between items-center h-15 border-b ${
+        color && color.trim() !== "" ? color : "bg-background"
       }`}
     >
       <div className="flex items-center w-full justify-between">
