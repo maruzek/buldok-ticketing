@@ -1,4 +1,4 @@
-import { MenuIcon, User } from "lucide-react";
+import { User } from "lucide-react";
 import useAuth from "../hooks/useAuth";
 import { useState } from "react";
 
@@ -8,7 +8,7 @@ type HeaderProps = {
   onToggleSidebar?: () => void;
 };
 
-const Header = ({ children, color, onToggleSidebar }: HeaderProps) => {
+const Header = ({ children, color }: HeaderProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { logout } = useAuth();
 
@@ -24,15 +24,6 @@ const Header = ({ children, color, onToggleSidebar }: HeaderProps) => {
     >
       <div className="flex items-center w-full justify-between">
         <div className="flex items-center">
-          {onToggleSidebar && (
-            <button
-              onClick={onToggleSidebar}
-              className="p-2 rounded-full hover:bg-gray-200 0 mr-3 cursor-pointer transition-colors"
-              aria-label="Toggle sidebar"
-            >
-              <MenuIcon size={24} className="text-gray-600" />
-            </button>
-          )}
           {children ? (
             <div className="flex items-center">{children}</div>
           ) : (
