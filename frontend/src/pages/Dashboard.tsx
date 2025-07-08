@@ -1,25 +1,8 @@
 import { useEffect, useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router";
-import {
-  DoorOpen,
-  LayoutDashboard,
-  Logs,
-  Plus,
-  Ticket,
-  Users,
-} from "lucide-react";
+import { Outlet, useLocation } from "react-router";
 import Header from "../components/Header";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
   SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
 } from "../components/ui/sidebar";
@@ -211,7 +194,7 @@ const Dashboard = () => {
         <AppSidebar />
 
         {/* Main Content */}
-        <SidebarInset className="flex-1 flex flex-col text-foreground bg-background rounded-xl overflow-y-auto">
+        <SidebarInset className="flex-1 flex flex-col text-foreground bg-background rounded-md overflow-y-auto">
           {/* Header */}
           <Header onToggleSidebar={() => {}}>
             <SidebarTrigger className="mr-2" />

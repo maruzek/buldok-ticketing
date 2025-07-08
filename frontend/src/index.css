@@ -28,7 +28,7 @@ a.active {
 }
 
 .sidebar-group .sidebar-group-item {
-  @apply p-4 transition  ease-in-out hover:bg-green-900 cursor-pointer w-full flex items-center;
+  @apply transition  ease-in-out hover:bg-green-900 cursor-pointer w-full flex items-center;
 }
 
 .form-input {

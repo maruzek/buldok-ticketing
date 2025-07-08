@@ -110,9 +110,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <h1>Buldok Ticketing</h1>
       </SidebarHeader>
       <SidebarContent>
-        <div className="p-4 text-sm tracking-widest uppercase text-sidebar-foreground/70">
-          Menu
-        </div>
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -121,7 +118,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
               >
                 <NavLink to="/admin" end>
-                  <LayoutDashboard className="mr-2" />
+                  <LayoutDashboard className="" />
                   Přehled
                 </NavLink>
               </SidebarMenuButton>
@@ -140,8 +137,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
-                  <SidebarMenuButton className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ">
-                    <Logs className="mr-2" />
+                  <SidebarMenuButton className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
+                    <Logs className="" />
                     <span>Zápasy</span>
                     <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                   </SidebarMenuButton>
@@ -151,7 +148,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <SidebarMenuSubItem>
                       <SidebarMenuSubButton asChild>
                         <NavLink to="/admin/matches/create" end>
-                          <Plus className="mr-2" />
+                          <Plus className="" />
                           Vytvořit zápas
                         </NavLink>
                       </SidebarMenuSubButton>
@@ -159,7 +156,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <SidebarMenuSubItem>
                       <SidebarMenuSubButton asChild>
                         <NavLink to="/admin/matches" end>
-                          <Logs className="mr-2" />
+                          <Logs className="" />
                           Seznam zápasů
                         </NavLink>
                       </SidebarMenuSubButton>
@@ -181,7 +178,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
               >
                 <NavLink to="/admin/users" end>
-                  <Users className="mr-2" />
+                  <Users className="" />
                   Seznam uživatelů
                 </NavLink>
               </SidebarMenuButton>
@@ -199,7 +196,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
               >
                 <NavLink to="/admin/tickets" end>
-                  <Ticket className="mr-2" />
+                  <Ticket className="" />
                   Upravit ceny vstupenek
                 </NavLink>
               </SidebarMenuButton>
@@ -219,7 +216,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ">
-                    <DoorOpen className="mr-2" />
+                    <DoorOpen className="" />
                     <span>Vstupy</span>
                     <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                   </SidebarMenuButton>
@@ -229,7 +226,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <SidebarMenuSubItem>
                       <SidebarMenuSubButton asChild>
                         <NavLink to="/admin/entrances" end>
-                          <DoorOpen className="mr-2" />
+                          <DoorOpen className="" />
                           Spravovat vstupy
                         </NavLink>
                       </SidebarMenuSubButton>
@@ -237,7 +234,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <SidebarMenuSubItem>
                       <SidebarMenuSubButton asChild>
                         <NavLink to="/admin/entrances/create">
-                          <Plus className="mr-2" />
+                          <Plus className="" />
                           Vytvořit vstup
                         </NavLink>
                       </SidebarMenuSubButton>
