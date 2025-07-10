@@ -1,10 +1,11 @@
-import { Dot, Trash2, UserCog } from "lucide-react";
+import { Dot, Plus, Trash2, UserCog } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import Spinner from "../Spinner";
 import useApi from "../../hooks/useApi";
 import { EditStatus } from "../../types/EditStatus";
 import { Card } from "../ui/card";
+import ContentBoard from "./ContentBoard";
 
 interface Match {
   id: number;
@@ -106,7 +107,13 @@ const MatchList = ({ matchCreateStatus }: MatchListProps) => {
   // );
 
   return (
-    <Card className=" w-full p-5 bg-card text-card-foreground rounded-md">
+    <ContentBoard
+      cardAction={
+        <Link to="/admin/matches/create" className="flex items-center gap-2">
+          <Plus /> Vytvořit zápas
+        </Link>
+      }
+    >
       {matchCreateStatus?.status === "ok" && (
         <div className="form-success-box">{matchCreateStatus.message}</div>
       )}
@@ -161,7 +168,7 @@ const MatchList = ({ matchCreateStatus }: MatchListProps) => {
           </tbody>
         </table>
       </div>
-    </Card>
+    </ContentBoard>
   );
 };
 
