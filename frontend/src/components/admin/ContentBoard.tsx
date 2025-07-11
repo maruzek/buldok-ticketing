@@ -10,7 +10,7 @@ const ContentBoard = ({ children, cardAction }: contentBoardProps) => {
   return (
     <Card className="w-full p-5 bg-card text-card-foreground rounded-md shadow-sm">
       {cardAction && (
-        <CardHeader>
+        <CardHeader className="w-full m-0 p-0">
           <CardAction>
             <Button>{cardAction}</Button>
           </CardAction>

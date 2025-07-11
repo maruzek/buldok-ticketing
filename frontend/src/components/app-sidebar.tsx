@@ -103,7 +103,12 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="icon" variant="inset" {...props}>
+    <Sidebar
+      collapsible="icon"
+      variant="inset"
+      className="overflow-hidden"
+      {...props}
+    >
       <SidebarHeader>
         {/* <TeamSwitcher teams={data.teams} /> */}
         {/* TODO: Season switcher */}
@@ -149,7 +154,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       <SidebarMenuSubButton asChild>
                         <NavLink to="/admin/matches/create" end>
                           <Plus className="" />
-                          Vytvořit zápas
+                          Vytvořit
                         </NavLink>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
@@ -157,7 +162,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       <SidebarMenuSubButton asChild>
                         <NavLink to="/admin/matches" end>
                           <Logs className="" />
-                          Seznam zápasů
+                          Seznam
                         </NavLink>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
@@ -179,7 +184,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               >
                 <NavLink to="/admin/users" end>
                   <Users className="" />
-                  Seznam uživatelů
+                  Uživatelé
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -197,7 +202,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               >
                 <NavLink to="/admin/tickets" end>
                   <Ticket className="" />
-                  Upravit ceny vstupenek
+                  Vstupenky
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>

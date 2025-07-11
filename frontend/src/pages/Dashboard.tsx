@@ -7,6 +7,7 @@ import {
   SidebarTrigger,
 } from "../components/ui/sidebar";
 import { AppSidebar } from "../components/app-sidebar";
+import { Separator } from "@/components/ui/separator";
 
 const getTitleFromPathname = (pathname: string): string => {
   switch (pathname) {
@@ -197,7 +198,11 @@ const Dashboard = () => {
         <SidebarInset className="flex-1 flex flex-col text-foreground bg-background rounded-md overflow-y-auto">
           {/* Header */}
           <Header onToggleSidebar={() => {}}>
-            <SidebarTrigger className="mr-2" />
+            <SidebarTrigger className="mr-2 cursor-pointer" />
+            <Separator
+              orientation="vertical"
+              className="data-[orientation=vertical]:h-4 mr-4"
+            />
             <h1 className="text-xl font-bold">{headerTitle}</h1>
           </Header>
 
