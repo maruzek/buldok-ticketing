@@ -112,7 +112,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         {/* <TeamSwitcher teams={data.teams} /> */}
         {/* TODO: Season switcher */}
-        <h1>Buldok Ticketing</h1>
+        <h1>Buldok</h1>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -232,7 +232,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       <SidebarMenuSubButton asChild>
                         <NavLink to="/admin/entrances" end>
                           <DoorOpen className="" />
-                          Spravovat vstupy
+                          Spravovat
                         </NavLink>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
@@ -240,7 +240,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       <SidebarMenuSubButton asChild>
                         <NavLink to="/admin/entrances/create">
                           <Plus className="" />
-                          Vytvořit vstup
+                          Vytvořit
                         </NavLink>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
