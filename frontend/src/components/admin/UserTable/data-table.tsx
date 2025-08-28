@@ -33,10 +33,6 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onRowSelectionChange: setRowSelection,
-    getRowId: (row) => {
-      console.log(row);
-      return row.id.toString();
-    },
     state: {
       rowSelection,
     },
@@ -114,7 +110,7 @@ export function DataTable<TData, TValue>({
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
-          Previous
+          Předchozí
         </Button>
         <Button
           variant="outline"
@@ -122,7 +118,7 @@ export function DataTable<TData, TValue>({
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
-          Next
+          Další
         </Button>
       </div>
     </div>

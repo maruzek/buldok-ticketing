@@ -6,6 +6,9 @@ import { User } from "../../types/User";
 import { EditStatus } from "../../types/EditStatus";
 import useApi from "../../hooks/useApi";
 import Spinner from "../Spinner";
+import { DataTable } from "./UserTable/data-table";
+import { columns } from "./UserTable/columns";
+import ContentBoard from "./ContentBoard";
 
 type UserListProps = {
   userEdit: EditStatus | null;
@@ -42,14 +45,15 @@ const UserList = ({ userEdit }: UserListProps) => {
   }
 
   return (
-    <div>
+    <ContentBoard>
       {userEdit?.status == "ok" && (
         <div className="form-success-box">{userEdit.message}</div>
       )}
       {userEdit?.status == "error" && (
         <div className="form-error-box">{userEdit.message}</div>
       )}
-      <div className="table-none md:table-fixed w-full p-5 bg-white rounded-xl">
+      <DataTable columns={columns} data={users} />
+      {/* <div className="table-none md:table-fixed w-full p-5 bg-white rounded-xl">
         <table className="table-auto w-full border border-gray-200 rounded-lg overflow-hidden">
           <thead className="bg-gray-100">
             <tr>
@@ -89,8 +93,8 @@ const UserList = ({ userEdit }: UserListProps) => {
             ))}
           </tbody>
         </table>
-      </div>
-    </div>
+      </div> */}
+    </ContentBoard>
   );
 };
 
