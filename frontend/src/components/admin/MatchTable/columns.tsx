@@ -2,7 +2,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import type { Match } from "@/types/Match";
 import MatchStatus from "../MatchStatus";
 import { Link } from "react-router";
-import { UserCog, Trash } from "lucide-react";
+import { UserCog, Trash, ChartColumnIncreasing } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export const columns: ColumnDef<Match>[] = [
@@ -33,7 +33,7 @@ export const columns: ColumnDef<Match>[] = [
     header: "Soupeř",
     cell: ({ getValue, row }) => (
       <Link
-        to={`/admin/matches/${row.original.id as unknown}/edit`}
+        to={`/admin/matches/${row.original.id as unknown}/stats`}
         className="font-medium"
       >
         {getValue() as string}
@@ -56,6 +56,12 @@ export const columns: ColumnDef<Match>[] = [
           className="text-blue-800 hover:text-blue-950 px-3 py-1 rounded text-xs flex items-center transition-colors"
         >
           <UserCog className="w-5 h-5 " />
+        </Link>
+        <Link
+          to={`/admin/matches/${row.original.id}/stats`}
+          className="text-fuchsia-600 hover:text-fuchsia-800 px-3 py-1 rounded text-xs flex items-center transition-colors"
+        >
+          <ChartColumnIncreasing className="w-5 h-5 " />
         </Link>
         <button
           className="cursor-pointer text-red-600 hover:text-red-900 px-3 py-1 rounded text-xs flex items-center transition-colors"

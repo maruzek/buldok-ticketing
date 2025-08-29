@@ -1,21 +1,22 @@
 import { Card, CardAction, CardHeader } from "../ui/card";
-import { Button } from "../ui/button";
 
 type contentBoardProps = {
   children: React.ReactNode;
+  cardHeader?: React.ReactNode;
   cardAction?: React.ReactNode;
 };
 
-const ContentBoard = ({ children, cardAction }: contentBoardProps) => {
+const ContentBoard = ({
+  children,
+  cardHeader,
+  cardAction,
+}: contentBoardProps) => {
   return (
-    <Card className="w-full p-5 bg-card text-card-foreground rounded-md shadow-sm">
-      {cardAction && (
-        <CardHeader className="w-full m-0 p-0">
-          <CardAction>
-            <Button>{cardAction}</Button>
-          </CardAction>
-        </CardHeader>
-      )}
+    <Card className="w-full p-5 text-card-foreground rounded-md bg-background border-0 shadow-none">
+      <CardHeader className="w-full m-0 p-0">
+        {cardHeader && cardHeader}
+        {cardAction && <CardAction>{cardAction}</CardAction>}
+      </CardHeader>
       {children}
     </Card>
   );
