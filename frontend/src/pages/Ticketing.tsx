@@ -9,6 +9,7 @@ import useAuth from "../hooks/useAuth";
 import Spinner from "../components/Spinner";
 import { TicketPrices } from "../types/TicketPrices";
 import { PurchaseHistory } from "../types/PurchaseHistory";
+import PurchaseDrawer from "@/components/app/PurchaseDrawer";
 
 const Ticketing = () => {
   const [showModal, setShowModal] = useState(false);
@@ -171,7 +172,7 @@ const Ticketing = () => {
                 })}
             </p>
             <p className="text-gray-500 font-bold text-sm mt-5">
-              {auth.user?.entrance?.name}
+              Celkem utrženo
             </p>
             <h3 className="font-bold text-3xl">
               {historyData?.reduce(
@@ -192,6 +193,11 @@ const Ticketing = () => {
               Zaznamenat nákup
             </button>
           </div>
+          <PurchaseDrawer
+            matchID={matchID}
+            ticketPrices={ticketPrices}
+            onHistoryUpdate={handleUpdateHistory}
+          />
           {/* Modal */}
           {showModal && (
             <PurchaseModal
