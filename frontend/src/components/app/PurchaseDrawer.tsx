@@ -155,7 +155,7 @@ export default function PurchaseDrawer({
                     {...register("fullTickets", { required: true })}
                   />
                 </div>
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 mt-4">
                   <Label htmlFor="">
                     Počet polovičních vstupenek:{" "}
                     <Input
