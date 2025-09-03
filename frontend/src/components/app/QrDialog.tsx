@@ -38,7 +38,7 @@ export default function QrDialog({ fullPrice }: QrDialogProps) {
         <DialogFooter className="sm:justify-start">
           <DialogClose asChild>
             <Button type="button" variant="outline">
-              Close
+              Zrušit
             </Button>
           </DialogClose>
         </DialogFooter>
