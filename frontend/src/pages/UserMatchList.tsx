@@ -6,6 +6,7 @@ import useApi from "../hooks/useApi";
 import { Match } from "../types/Match";
 import Spinner from "../components/Spinner";
 import useAuth from "../hooks/useAuth";
+import { Card, CardContent } from "@/components/ui/card";
 
 const UserMatchList = () => {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -56,30 +57,26 @@ const UserMatchList = () => {
       <Header />
       <main className="p-4">
         <h1 className="text-2xl font-bold">Mé aktivní zápasy</h1>
+        <h3 className="text-gray-500 font-semibold">{`${auth.user?.entrance?.name}`}</h3>
         {error && <div className="form-error-box">{error}</div>}
         <div className="flex flex-col gap-4 mt-4">
           {matches.map((match) => (
-            <Link
-              key={match.id}
-              to={`/app/ticketing/${match.id}`}
-              className="flex flex-row items-center justify-between bg-green-50 p-3 rounded-md"
-            >
-              <div>
-                <h3 className="font-bold">{`Buldok - ${match.rival}`}</h3>
-                <p className="text-gray-500 font-bold text-sm">
-                  {new Date(match.playedAt).toLocaleDateString("cs-CZ", {
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-                <p className="text-gray-500 font-bold text-sm">
-                  {`Vstup ${auth.user?.entrance?.name}`}
-                </p>
-              </div>
-              <ArrowRight />
+            <Link key={match.id} to={`/app/ticketing/${match.id}`} className="">
+              <Card className="flex flex-row items-center justify-between px-5">
+                <CardContent className="p-0">
+                  <h3 className="font-bold">{`Buldok - ${match.rival}`}</h3>
+                  <p className="text-gray-500 font-bold text-sm">
+                    {new Date(match.playedAt).toLocaleDateString("cs-CZ", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </CardContent>
+                <ArrowRight />
+              </Card>
             </Link>
           ))}
         </div>

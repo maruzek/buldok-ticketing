@@ -9,8 +9,8 @@ import { TicketPrices } from "../types/TicketPrices";
 import { PurchaseHistory } from "../types/PurchaseHistory";
 import PurchaseDrawer from "@/components/app/PurchaseDrawer";
 import PurchaseCard from "@/components/app/PurchaseCard";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 const Ticketing = () => {
   // const [showModal, setShowModal] = useState(false);
@@ -148,13 +148,18 @@ const Ticketing = () => {
         <Header />
         <main className="px-4">
           <div className="sticky top-0 bg-white py-3">
-            <div className="flex grow-0 flex-row items-center">
-              <Link
+            <div className="flex grow-0 flex-row items-center py-1">
+              {/* <Link
                 to="/app"
                 className=" text-gray-500 font-bold my-1 flex flex-row items-center border p-1 pr-2 rounded-md"
               >
                 <ArrowLeft /> Zpět
-              </Link>
+              </Link> */}
+              {/* <Link to="/app" className="text-gray-500 my-1 ">
+                <Button variant="ghost" className="ml-auto font-bold p-0">
+                  <ArrowLeft className="w-7 h-7" />
+                </Button>
+              </Link> */}
             </div>
             <h1 className="text-xl font-bold">Buldoci - {match?.rival}</h1>
             <p className="text-gray-500 font-bold text-sm">
