@@ -1,27 +1,26 @@
-import { ArrowLeft, XCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Header from "../components/Header";
 import { useEffect, useState } from "react";
-import PurchaseModal from "../components/app/PurchaseModal";
 import { Link, useParams } from "react-router";
 import { Match } from "../types/Match";
 import useApi from "../hooks/useApi";
-import useAuth from "../hooks/useAuth";
 import Spinner from "../components/Spinner";
 import { TicketPrices } from "../types/TicketPrices";
 import { PurchaseHistory } from "../types/PurchaseHistory";
 import PurchaseDrawer from "@/components/app/PurchaseDrawer";
+import PurchaseCard from "@/components/app/PurchaseCard";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const Ticketing = () => {
-  const [showModal, setShowModal] = useState(false);
+  // const [showModal, setShowModal] = useState(false);
   const [match, setMatch] = useState<Match | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [ticketPrices, setTicketPrices] = useState<TicketPrices | null>(null);
   const [historyData, setHistoryData] = useState<PurchaseHistory[] | null>([]);
-  const [notification, setNotification] = useState<string | null>(null);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
 
   const { fetchData } = useApi();
-  const { auth } = useAuth();
   const { matchID } = useParams<{ matchID: string }>();
 
   useEffect(() => {
@@ -107,10 +106,7 @@ const Ticketing = () => {
         await fetchData(`/purchase/${purchaseID}`, {
           method: "DELETE",
         });
-        setNotification("Nákup byl úspěšně smazán.");
-        setTimeout(() => {
-          setNotification(null);
-        }, 2000);
+        toast.success("Nákup byl úspěšně smazán.");
       } catch (error) {
         console.error("Error deleting purchase:", error);
         setHistoryData((prev) => {
@@ -149,7 +145,7 @@ const Ticketing = () => {
   return (
     <>
       <div className="w-full">
-        <Header color="bg-emerald-950" />
+        <Header />
         <main className="px-4">
           <div className="sticky top-0 bg-white py-3">
             <div className="flex grow-0 flex-row items-center">
@@ -186,12 +182,12 @@ const Ticketing = () => {
               ) || 0}
               {" Kč"}
             </h3>
-            <button
+            {/* <button
               className="w-full font-bold bg-green-200 hover:bg-green-200 rounded-md p-2 mt-5 cursor-pointer"
               onClick={() => setShowModal(true)}
             >
               Zaznamenat nákup
-            </button>
+            </button> */}
           </div>
           <PurchaseDrawer
             matchID={matchID}
@@ -199,7 +195,7 @@ const Ticketing = () => {
             onHistoryUpdate={handleUpdateHistory}
           />
           {/* Modal */}
-          {showModal && (
+          {/* {showModal && (
             <PurchaseModal
               onModalToggle={(value) => {
                 setShowModal(value);
@@ -208,13 +204,8 @@ const Ticketing = () => {
               ticketPrices={ticketPrices}
               onHistoryUpdate={handleUpdateHistory}
             />
-          )}
+          )} */}
           <h4 className="font-semibold text-xl mt-4">Historie nákupů</h4>
-          {notification && (
-            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mt-5">
-              <span className="block sm:inline">{notification}</span>
-            </div>
-          )}
           {isHistoryLoading ? (
             <div className="w-full mt-5">
               <Spinner />
@@ -227,40 +218,45 @@ const Ticketing = () => {
             </div>
           ) : (
             <div className="w-full">
-              {historyData?.map((purchase, i) => (
-                <div
+              {historyData?.map((purchase) => (
+                <PurchaseCard
                   key={purchase.id}
-                  className={`flex flex-row justify-between items-center p-3 rounded-md mb-2 ${
-                    i % 2 === 0 ? "bg-green-50" : "bg-white"
-                  }`}
-                >
-                  <div className="flex flex-col">
-                    <p className="text-2xl font-bold mb-0">
-                      {purchase.purchaseItems.reduce(
-                        (acc, cur) => acc + Number(cur.price_at_purchase),
-                        0
-                      )}{" "}
-                      Kč
-                    </p>
-                    {purchase.purchaseItems.map((item) => (
-                      <span
-                        key={item.id}
-                        className="text-gray-500 text-sm mt-0"
-                      >
-                        {item.quantity}x{" "}
-                        {item.ticket_type.name == "fullTicket"
-                          ? "plná"
-                          : "poloviční"}
-                      </span>
-                    ))}
-                  </div>
-                  {/* <EllipsisVertical className="text-gray-700" /> */}
-                  <XCircle
-                    className="text-red-500 hover:text-red-800 transition ease-in-out cursor-pointer"
-                    onClick={() => handleDeletePurchase(purchase.id as number)}
-                    aria-label="Smazat nákup"
-                  />
-                </div>
+                  purchase={purchase}
+                  handleDeletePurchase={handleDeletePurchase}
+                />
+                // <div
+                //   key={purchase.id}
+                //   className={`flex flex-row justify-between items-center p-3 rounded-md mb-2 ${
+                //     i % 2 === 0 ? "bg-green-50" : "bg-white"
+                //   }`}
+                // >
+                //   <div className="flex flex-col">
+                //     <p className="text-2xl font-bold mb-0">
+                //       {purchase.purchaseItems.reduce(
+                //         (acc, cur) => acc + Number(cur.price_at_purchase),
+                //         0
+                //       )}{" "}
+                //       Kč
+                //     </p>
+                //     {purchase.purchaseItems.map((item) => (
+                //       <span
+                //         key={item.id}
+                //         className="text-gray-500 text-sm mt-0"
+                //       >
+                //         {item.quantity}x{" "}
+                //         {item.ticket_type.name == "fullTicket"
+                //           ? "plná"
+                //           : "poloviční"}
+                //       </span>
+                //     ))}
+                //   </div>
+                //   {/* <EllipsisVertical className="text-gray-700" /> */}
+                //   <XCircle
+                //     className="text-red-500 hover:text-red-800 transition ease-in-out cursor-pointer"
+                //     onClick={() => handleDeletePurchase(purchase.id as number)}
+                //     aria-label="Smazat nákup"
+                //   />
+                // </div>
               )) || <p>Žádné nákupy</p>}
             </div>
           )}

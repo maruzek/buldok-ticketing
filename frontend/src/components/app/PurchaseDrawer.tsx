@@ -26,6 +26,7 @@ import { Input } from "../ui/input";
 import { Slider } from "../ui/slider";
 import { Label } from "../ui/label";
 import { useState } from "react";
+import { toast } from "sonner";
 
 type PurchaseDrawerProps = {
   matchID: string | undefined;
@@ -109,13 +110,16 @@ function PaymentForm({
         }),
       });
       if (!response) {
+        toast.error("Chyba při zaznamenávání nákupu.");
         console.error("Failed to purchase tickets");
         return;
       }
       console.log("response: ", response);
       onHistoryUpdate(response);
+      toast.success("Nákup byl úspěšně zaznamenán.");
       // onModalToggle(false);
     } catch (error) {
+      toast.error("Chyba při zaznamenávání nákupu.");
       console.error("Error purchasing tickets:", error);
     }
   };
@@ -166,11 +170,17 @@ function PaymentForm({
                         <Label htmlFor="fullTickets">
                           Počet plných vstupenek:{" "}
                         </Label>
-                        <Input type="number" {...field} className="w-1/5" />
+                        <Input
+                          type="number"
+                          {...field}
+                          className="w-1/5"
+                          min={0}
+                        />
                       </div>
                       <Slider
                         value={[field.value]}
                         max={10}
+                        min={0}
                         step={1}
                         onValueChange={([v]) => field.onChange(v)}
                       />
@@ -188,12 +198,18 @@ function PaymentForm({
                         <Label htmlFor="halfTickets">
                           Počet polovičních vstupenek:{" "}
                         </Label>
-                        <Input type="number" {...field} className="w-1/5" />
+                        <Input
+                          type="number"
+                          {...field}
+                          className="w-1/5"
+                          min={0}
+                        />
                       </div>
                       <Slider
                         value={[field.value]}
                         max={10}
                         step={1}
+                        min={0}
                         onValueChange={([v]) => field.onChange(v)}
                       />
                     </div>
