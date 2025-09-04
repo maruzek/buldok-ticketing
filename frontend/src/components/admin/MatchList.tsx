@@ -7,6 +7,7 @@ import { EditStatus } from "../../types/EditStatus";
 import ContentBoard from "./ContentBoard";
 import { DataTable } from "./MatchTable/data-table";
 import { columns } from "./MatchTable/columns";
+import { Button } from "../ui/button";
 
 interface Match {
   id: number;
@@ -110,9 +111,11 @@ const MatchList = ({ matchCreateStatus }: MatchListProps) => {
   return (
     <ContentBoard
       cardAction={
-        <Link to="/admin/matches/create" className="flex items-center gap-2">
-          <Plus /> Vytvořit zápas
-        </Link>
+        <Button>
+          <Link to="/admin/matches/create" className="flex items-center gap-2">
+            <Plus /> Vytvořit zápas
+          </Link>
+        </Button>
       }
     >
       {matchCreateStatus?.status === "ok" && (

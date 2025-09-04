@@ -278,4 +278,34 @@ final class MatchController extends AbstractController
 
         return JsonResponse::fromJsonString($match, JsonResponse::HTTP_OK);
     }
+
+    #[Route('/api/admin/matches/{id}/stats', name: 'full_match_stats', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    /**
+     * Get full statistics for a match by ID.
+     *
+     * @param GameRepository $gameRepository The repository to fetch the last active match.
+     * @param SerializerInterface $serializer The serializer to format the response.
+     *
+     * @return JsonResponse
+     */
+    public function getFullMatchStats(int $id, GameRepository $gameRepository, SerializerInterface $serializer): JsonResponse
+    {
+        $match = $gameRepository->find($id);
+
+        if (!$match) {
+            return $this->json([
+                'error' => 'No active matches found',
+            ], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $match = $serializer->serialize($match, 'json', [
+            'groups' => ['game:admin_dashboard', 'purchase:admin_game_summary'],
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
+
+        return JsonResponse::fromJsonString($match, JsonResponse::HTTP_OK);
+    }
 }

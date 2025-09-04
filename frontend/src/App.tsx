@@ -18,6 +18,7 @@ import EditEntrance from "./components/admin/EditEntrance";
 import EditMatch from "./components/admin/EditMatch";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TicketList from "./components/admin/TicketList";
+import MatchDashboard from "./components/admin/MatchDashboard";
 
 function App() {
   const [userEditStatus, setUserEditStatus] = useState<EditStatus | null>(null);
@@ -49,6 +50,7 @@ function App() {
                 path=":matchID/edit"
                 element={<EditMatch onEditMatch={setMatchCreateStatus} />}
               />
+              <Route path=":matchID/stats" element={<MatchDashboard />} />
             </Route>
             <Route path="users">
               <Route index element={<UserList userEdit={userEditStatus} />} />

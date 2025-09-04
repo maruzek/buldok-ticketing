@@ -39,6 +39,7 @@ const AdminBasicInfo = () => {
         );
         if (response) {
           setCurrentMatch(response);
+          console.log(response);
         }
       } catch (error) {
         console.error("Error fetching latest match:", error);

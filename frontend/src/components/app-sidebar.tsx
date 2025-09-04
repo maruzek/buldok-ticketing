@@ -100,7 +100,7 @@ const data = {
   ],
   projects: [],
 };
-
+// TODO: make child components reusable and unified
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar
@@ -120,7 +120,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
+                className="hover:bg-muted data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
               >
                 <NavLink to="/admin" end>
                   <LayoutDashboard className="" />
