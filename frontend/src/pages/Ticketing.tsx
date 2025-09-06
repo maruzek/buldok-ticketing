@@ -58,8 +58,8 @@ const Ticketing = () => {
 
   return (
     <>
-      <div className="w-full">
-        <Header />
+      <Header />
+      <div className="w-full lg:max-w-2/5 mx-auto h-screen">
         <main className="px-4">
           <div className="sticky top-0 bg-white py-3">
             <div className="flex grow-0 flex-row items-center py-1">
