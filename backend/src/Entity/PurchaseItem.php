@@ -23,11 +23,11 @@ class PurchaseItem
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(['purchase:read', 'purchase_item:read', 'purchase:admin_game_summary'])]
-    private ?TicketType $ticket_type = null;
+    private ?TicketType $ticketType = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     #[Groups(['purchase:read', 'purchase_item:read', 'purchase:admin_game_summary'])]
-    private ?string $price_at_purchase = null;
+    private ?string $priceAtPurchase = null;
 
     #[ORM\Column]
     #[Groups(['purchase:read', 'purchase_item:read', 'purchase:admin_game_summary'])]
@@ -52,24 +52,24 @@ class PurchaseItem
 
     public function getTicketType(): ?TicketType
     {
-        return $this->ticket_type;
+        return $this->ticketType;
     }
 
-    public function setTicketType(?TicketType $ticket_type): static
+    public function setTicketType(?TicketType $ticketType): static
     {
-        $this->ticket_type = $ticket_type;
+        $this->ticketType = $ticketType;
 
         return $this;
     }
 
     public function getPriceAtPurchase(): ?string
     {
-        return $this->price_at_purchase;
+        return $this->priceAtPurchase;
     }
 
-    public function setPriceAtPurchase(string $price_at_purchase): static
+    public function setPriceAtPurchase(string $priceAtPurchase): static
     {
-        $this->price_at_purchase = $price_at_purchase;
+        $this->priceAtPurchase = $priceAtPurchase;
 
         return $this;
     }

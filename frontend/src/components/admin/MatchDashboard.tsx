@@ -14,8 +14,6 @@ import {
 import ContentBoard from "./ContentBoard";
 import {
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
@@ -28,44 +26,9 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Settings2 } from "lucide-react";
-import { Link } from "react-router";
-import { useEffect, useState } from "react";
-import { LastMatchResponse } from "@/types/LastMatchResponse";
-import useApi from "../../hooks/useApi";
+import { Link, useParams } from "react-router";
 import Spinner from "../Spinner";
-
-const chartDataPie = [
-  { browser: "chrome", visitors: 275, fill: "var(--color-chrome)" },
-  { browser: "safari", visitors: 200, fill: "var(--color-safari)" },
-  { browser: "firefox", visitors: 187, fill: "var(--color-firefox)" },
-  { browser: "edge", visitors: 173, fill: "var(--color-edge)" },
-  { browser: "other", visitors: 90, fill: "var(--color-other)" },
-];
-const chartConfigPie = {
-  visitors: {
-    label: "Visitors",
-  },
-  chrome: {
-    label: "Chrome",
-    color: "var(--chart-1)",
-  },
-  safari: {
-    label: "Safari",
-    color: "var(--chart-2)",
-  },
-  firefox: {
-    label: "Firefox",
-    color: "var(--chart-3)",
-  },
-  edge: {
-    label: "Edge",
-    color: "var(--chart-4)",
-  },
-  other: {
-    label: "Other",
-    color: "var(--chart-5)",
-  },
-} satisfies ChartConfig;
+import { useMatchDashboard } from "@/hooks/useMatchDashboard";
 
 const chartDataTime = [
   { month: "January", desktop: 186 },
@@ -94,146 +57,19 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 const MatchDashboard = () => {
-  const [match, setMatch] = useState<LastMatchResponse | null>(null);
-  const [uniqueEntranceNames, setUniqueEntranceNames] = useState<string[]>([]);
-  const [numOfFullTickets, setNumOfFullTickets] = useState<number>(0);
-  const [numOfHalfTickets, setNumOfHalfTickets] = useState<number>(0);
-  const [ticketsPerEntrance, setTicketsPerEntrance] = useState<
-    { entranceName: string; count: number }[]
-  >([]);
-  const { fetchData, isLoading } = useApi();
-  useEffect(() => {
-    const fetchLatestMatch = async () => {
-      try {
-        const response = await fetchData<LastMatchResponse | null>(
-          "/admin/matches/last-active-match",
-          {
-            method: "GET",
-          }
-        );
-        if (response) {
-          setMatch(response);
-          console.log(response);
-        }
-      } catch (error) {
-        console.error("Error fetching latest match:", error);
-      }
-    };
-    fetchLatestMatch();
-  }, [fetchData]);
+  const { matchID } = useParams<{ matchID: string }>();
 
-  useEffect(() => {
-    if (match?.purchases) {
-      const allPurchaseEntranceNames = match.purchases
-        .map((purchase) => purchase.entrance?.name)
-        .filter(
-          (name): name is string =>
-            typeof name === "string" && name.trim() !== ""
-        );
-      const uniqueNames = Array.from(new Set(allPurchaseEntranceNames));
-      setUniqueEntranceNames(uniqueNames);
-
-      const fullTickets = match.purchases.reduce(
-        (acc, purchase) =>
-          acc +
-          purchase.purchaseItems.reduce(
-            (itemAcc, item) =>
-              item.ticket_type.name === "fullTicket"
-                ? itemAcc + Number(item.quantity)
-                : itemAcc,
-            0
-          ),
-        0
-      );
-      setNumOfFullTickets(fullTickets);
-
-      const halfTickets = match.purchases.reduce(
-        (acc, purchase) =>
-          acc +
-          purchase.purchaseItems.reduce(
-            (itemAcc, item) =>
-              item.ticket_type.name === "halfTicket"
-                ? itemAcc + Number(item.quantity)
-                : itemAcc,
-            0
-          ),
-        0
-      );
-      setNumOfHalfTickets(halfTickets);
-    } else {
-      setUniqueEntranceNames([]);
-      setNumOfFullTickets(0);
-      setNumOfHalfTickets(0);
-    }
-  }, [match]);
-
-  useEffect(() => {
-    if (match?.purchases && uniqueEntranceNames.length > 0) {
-      const calculatedData = uniqueEntranceNames.map((name) => {
-        const ticketsForThisEntrance = match.purchases
-          .filter((purchase) => purchase.entrance?.name === name)
-          .reduce((totalTicketsInEntrance, purchase) => {
-            const ticketsInThisSpecificPurchase = purchase.purchaseItems.reduce(
-              (itemSum, item) => itemSum + Number(item.quantity),
-              0
-            );
-            return totalTicketsInEntrance + ticketsInThisSpecificPurchase;
-          }, 0);
-        return { entranceName: name, count: ticketsForThisEntrance };
-      });
-      setTicketsPerEntrance(calculatedData);
-      console.log("calc data: ", calculatedData);
-    } else {
-      setTicketsPerEntrance([]);
-    }
-  }, [match, uniqueEntranceNames]);
-
-  const totalEarnings = match?.purchases
-    .reduce((acc, purchase) => {
-      return (
-        acc +
-        Number(
-          purchase.purchaseItems.reduce((acc, item) => {
-            return acc + Number(item.price_at_purchase);
-          }, 0)
-        )
-      );
-    }, 0)
-    .toLocaleString("cs-CZ");
-
-  const fullTicketsEarnings = match?.purchases
-    .reduce((acc, purchase) => {
-      return (
-        acc +
-        Number(
-          purchase.purchaseItems.reduce((acc, item) => {
-            if (item.ticket_type.name == "fullTicket") {
-              return acc + Number(item.price_at_purchase);
-            }
-
-            return acc;
-          }, 0)
-        )
-      );
-    }, 0)
-    .toLocaleString("cs-CZ");
-
-  const halfTicketsEarnings = match?.purchases
-    .reduce((acc, purchase) => {
-      return (
-        acc +
-        Number(
-          purchase.purchaseItems.reduce((acc, item) => {
-            if (item.ticket_type.name == "halfTicket") {
-              return acc + Number(item.price_at_purchase);
-            }
-
-            return acc;
-          }, 0)
-        )
-      );
-    }, 0)
-    .toLocaleString("cs-CZ");
+  const {
+    match,
+    uniqueEntranceNames,
+    numOfFullTickets,
+    numOfHalfTickets,
+    ticketsPerEntrance,
+    totalEarnings,
+    fullTicketsEarnings,
+    halfTicketsEarnings,
+    isPending,
+  } = useMatchDashboard(matchID!);
 
   const DashboardHeader = (
     <div>
@@ -241,8 +77,8 @@ const MatchDashboard = () => {
         Přehled zápasu proti {match?.rival}
       </h2>
       <p className="text-gray-600">
-        {match?.played_at &&
-          new Date(match?.played_at).toLocaleDateString("cs-CZ", {
+        {match?.playedAt &&
+          new Date(match?.playedAt).toLocaleDateString("cs-CZ", {
             year: "numeric",
             month: "2-digit",
             day: "2-digit",
@@ -261,7 +97,8 @@ const MatchDashboard = () => {
     "var(--chart-5)",
   ];
 
-  if (isLoading) {
+  if (isPending) {
+    console.log("isPending", isPending);
     return (
       <div className="flex justify-center items-center h-full w-full">
         <Spinner />
