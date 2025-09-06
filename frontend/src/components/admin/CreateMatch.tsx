@@ -5,44 +5,47 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from "react-router";
 import useApi from "../../hooks/useApi";
 import { Match } from "../../types/Match";
-import { EditStatus } from "../../types/EditStatus";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 registerLocale("cs", cs);
 
-type CreateMatchProps = {
-  onCreateMatch: (status: EditStatus) => void;
-};
-
-const CreateMatch = ({ onCreateMatch }: CreateMatchProps) => {
+const CreateMatch = () => {
   const {
     register,
     handleSubmit,
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm();
 
   const { fetchData } = useApi();
 
   const navigate = useNavigate();
 
-  const onSubmit = async (data: FieldValues) => {
-    try {
-      const resData = await fetchData<{ message: string; match: Match }>(
-        "/admin/match/create",
-        {
-          method: "POST",
-          body: JSON.stringify(data),
-        }
-      );
+  const queryClient = useQueryClient();
 
-      onCreateMatch({
-        status: "ok",
-        message: `Zápas proti ${resData.match.rival} úspěšně vytvořen`,
-      });
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data: FieldValues) =>
+      fetchData<Match>("/admin/match/create", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: (result, variables) => {
+      toast.success(`Zápas proti ${variables.rival} byl úspěšně vytvořen!`);
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
       navigate("/admin/matches");
-    } catch (error) {
+    },
+    onError: (error: any) => {
       console.error("Error creating match:", error);
-    }
+      toast.error(
+        error?.message ||
+          "Nastala chyba při vytváření zápasu. Zkuste to prosím znovu."
+      );
+    },
+  });
+
+  const onSubmit = async (data: FieldValues) => {
+    mutate(data);
   };
 
   return (
@@ -108,7 +111,7 @@ const CreateMatch = ({ onCreateMatch }: CreateMatchProps) => {
 
         <button
           type="submit"
-          className={`${isSubmitting ? "btn-disabled" : "btn-lime"} w-full`}
+          className={`${isPending ? "btn-disabled" : "btn-lime"} w-full`}
         >
           Vytvořit zápas
         </button>

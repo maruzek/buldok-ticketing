@@ -42,10 +42,7 @@ function App() {
                 index
                 element={<MatchList matchCreateStatus={matchCreateStatus} />}
               />
-              <Route
-                path="create"
-                element={<CreateMatch onCreateMatch={setMatchCreateStatus} />}
-              />
+              <Route path="create" element={<CreateMatch />} />
               <Route
                 path=":matchID/edit"
                 element={<EditMatch onEditMatch={setMatchCreateStatus} />}
