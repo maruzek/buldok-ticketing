@@ -1,41 +1,38 @@
-import { useState, useEffect } from "react";
 import Spinner from "../Spinner";
 import { Link } from "react-router";
 import { Settings, Trash2 } from "lucide-react";
 import { Entrance } from "../../types/Entrance";
 import useApi from "../../hooks/useApi";
 import { EditStatus } from "../../types/EditStatus";
+import { useQuery } from "@tanstack/react-query";
 
 type EntranceListProps = {
   entranceStatus: EditStatus | null;
 };
 
 const EntranceList = ({ entranceStatus }: EntranceListProps) => {
-  const [entrances, setEntrances] = useState<Entrance[]>([]);
-  // const [error, setError] = useState<string | null>(null);
-  const { fetchData, error, isLoading } = useApi();
+  const { fetchData, error } = useApi();
 
-  // fetch entrances on mount
-  useEffect(() => {
-    const fetchEntrances = async () => {
-      try {
-        const data = await fetchData<Entrance[]>("/admin/entrances/all", {
-          method: "GET",
-        });
-        setEntrances(data);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    fetchEntrances();
-  }, [fetchData]);
+  const { data: entrances, isPending } = useQuery<Entrance[]>({
+    queryKey: ["entrances"],
+    queryFn: () =>
+      fetchData<Entrance[]>("/admin/entrances/all", { method: "GET" }),
+  });
 
-  if (isLoading)
+  if (isPending)
     return (
       <div className="flex justify-center h-screen bg-white w-full pt-20">
         <Spinner />
       </div>
     );
+
+  if (!entrances || entrances.length === 0) {
+    return (
+      <div className="flex justify-center h-screen bg-white w-full pt-20">
+        <p className="text-gray-500">Žádné vstupy k zobrazení.</p>
+      </div>
+    );
+  }
 
   return (
     <div className=" w-full p-5 bg-white rounded-xl">

@@ -8,17 +8,15 @@ import {
   Tooltip,
 } from "recharts";
 import useApi from "../../hooks/useApi";
-import { LastMatchResponse } from "../../types/LastMatchResponse";
 import Spinner from "../Spinner";
+import { Match } from "@/types/Match";
 
 // TODO: make the dashboard reusable for each match
 
 const PIE_COLORS = ["#7ccf01", "#FFBB28", "#A28DFF", "#FF82B3"];
 
 const AdminBasicInfo = () => {
-  const [currentMatch, setCurrentMatch] = useState<LastMatchResponse | null>(
-    null
-  );
+  const [currentMatch, setCurrentMatch] = useState<Match | null>(null);
   const [uniqueEntranceNames, setUniqueEntranceNames] = useState<string[]>([]);
   const [numOfFullTickets, setNumOfFullTickets] = useState<number>(0);
   const [numOfHalfTickets, setNumOfHalfTickets] = useState<number>(0);
@@ -31,7 +29,7 @@ const AdminBasicInfo = () => {
   useEffect(() => {
     const fetchLatestMatch = async () => {
       try {
-        const response = await fetchData<LastMatchResponse | null>(
+        const response = await fetchData<Match | null>(
           "/admin/matches/last-active-match",
           {
             method: "GET",
@@ -64,7 +62,7 @@ const AdminBasicInfo = () => {
           acc +
           purchase.purchaseItems.reduce(
             (itemAcc, item) =>
-              item.ticket_type.name === "fullTicket"
+              item.ticketType.name === "fullTicket"
                 ? itemAcc + Number(item.quantity)
                 : itemAcc,
             0
@@ -78,7 +76,7 @@ const AdminBasicInfo = () => {
           acc +
           purchase.purchaseItems.reduce(
             (itemAcc, item) =>
-              item.ticket_type.name === "halfTicket"
+              item.ticketType.name === "halfTicket"
                 ? itemAcc + Number(item.quantity)
                 : itemAcc,
             0
@@ -130,17 +128,14 @@ const AdminBasicInfo = () => {
               <h2 className="text-3xl font-bold">Aktuální zápas</h2>
               <h3 className="flex text-xl flex-wrap">
                 {currentMatch?.rival} &bull;{" "}
-                {currentMatch?.played_at &&
-                  new Date(currentMatch?.played_at).toLocaleDateString(
-                    "cs-CZ",
-                    {
-                      year: "numeric",
-                      month: "2-digit",
-                      day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }
-                  )}
+                {currentMatch?.playedAt &&
+                  new Date(currentMatch?.playedAt).toLocaleDateString("cs-CZ", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
               </h3>
             </div>
 
@@ -153,7 +148,7 @@ const AdminBasicInfo = () => {
                         acc +
                         Number(
                           purchase.purchaseItems.reduce((acc, item) => {
-                            return acc + Number(item.price_at_purchase);
+                            return acc + Number(item.priceAtPurchase);
                           }, 0)
                         )
                       );
@@ -181,8 +176,8 @@ const AdminBasicInfo = () => {
                         acc +
                         Number(
                           purchase.purchaseItems.reduce((acc, item) => {
-                            if (item.ticket_type.name == "fullTicket") {
-                              return acc + Number(item.price_at_purchase);
+                            if (item.ticketType.name == "fullTicket") {
+                              return acc + Number(item.priceAtPurchase);
                             }
 
                             return acc;
@@ -205,8 +200,8 @@ const AdminBasicInfo = () => {
                         acc +
                         Number(
                           purchase.purchaseItems.reduce((acc, item) => {
-                            if (item.ticket_type.name == "halfTicket") {
-                              return acc + Number(item.price_at_purchase);
+                            if (item.ticketType.name == "halfTicket") {
+                              return acc + Number(item.priceAtPurchase);
                             }
 
                             return acc;
@@ -239,7 +234,7 @@ const AdminBasicInfo = () => {
                                     purchase.purchaseItems.reduce(
                                       (acc, item) => {
                                         return (
-                                          acc + Number(item.price_at_purchase)
+                                          acc + Number(item.priceAtPurchase)
                                         );
                                       },
                                       0

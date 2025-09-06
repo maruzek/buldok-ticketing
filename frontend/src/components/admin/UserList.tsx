@@ -1,7 +1,3 @@
-import { Trash2, UserCog } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Link } from "react-router";
-
 import { User } from "../../types/User";
 import { EditStatus } from "../../types/EditStatus";
 import useApi from "../../hooks/useApi";
@@ -9,36 +5,23 @@ import Spinner from "../Spinner";
 import { DataTable } from "./UserTable/data-table";
 import { columns } from "./UserTable/columns";
 import ContentBoard from "./ContentBoard";
+import { useQuery } from "@tanstack/react-query";
 
 type UserListProps = {
   userEdit: EditStatus | null;
 };
 
 const UserList = ({ userEdit }: UserListProps) => {
-  const { fetchData, isLoading } = useApi();
+  const { fetchData } = useApi();
 
-  const [users, setUsers] = useState<User[]>([]);
+  const { data: users, isPending } = useQuery<User[]>({
+    queryKey: ["users"],
+    queryFn: () => fetchData<User[]>("/admin/users/all", { method: "GET" }),
+  });
 
-  useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        const fetchedUsers = await fetchData<User[]>("/admin/users/all", {
-          method: "GET",
-        });
-        setUsers(fetchedUsers);
-        console.log("Fetched users:", fetchedUsers);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        setUsers([]);
-      }
-    };
-
-    loadUsers();
-  }, [fetchData]);
-
-  if (isLoading) {
+  if (isPending) {
     return (
-      <div className="flex justify-center items-center h-full bg-white rounded-md">
+      <div className="flex justify-center items-center h-full rounded-md">
         <Spinner />
       </div>
     );
@@ -53,47 +36,6 @@ const UserList = ({ userEdit }: UserListProps) => {
         <div className="form-error-box">{userEdit.message}</div>
       )}
       <DataTable columns={columns} data={users} />
-      {/* <div className="table-none md:table-fixed w-full p-5 bg-white rounded-xl">
-        <table className="table-auto w-full border border-gray-200 rounded-lg overflow-hidden">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-4 py-2 text-left">ID</th>
-              <th className="px-4 py-2 text-left">Uživatelské jméno (email)</th>
-              <th className="px-4 py-2 text-left">Celé jméno</th>
-              <th className="px-4 py-2 text-left">Role</th>
-              <th className="px-4 py-2 text-left">Přiřazený vchod</th>
-              <th className="px-4 py-2 text-left">Vytvořeno</th>
-              <th className="px-4 py-2 text-left">Akce</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr
-                key={user.id}
-                className="border-t border-gray-200 hover:bg-gray-50"
-              >
-                <td className="px-4 py-2">{user.id}</td>
-                <td className="px-4 py-2">{user.email}</td>
-                <td className="px-4 py-2">{user.fullName}</td>
-                <td className="px-4 py-2">{user.roles.join(", ")}</td>
-                <td className="px-4 py-2">{user?.entrance?.name}</td>
-                <td className="px-4 py-2">{user.registeredAt}</td>
-                <td className="px-4 py-2 flex gap-2">
-                  <Link
-                    to={`/admin/users/${user.id}/edit`}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs cursor-pointer"
-                  >
-                    <UserCog className="w-5 h-5" />
-                  </Link>
-                  <button className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs cursor-pointer">
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div> */}
     </ContentBoard>
   );
 };
