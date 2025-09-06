@@ -19,7 +19,7 @@ export function useMatchDashboard(matchID: string) {
   const match = useQuery<Match>({
     queryKey: ["match", matchID],
     queryFn: () =>
-      fetchData<Match>(`/admin/matches/${matchID}/stats`, { method: "GET" }),
+      fetchData<Match>(`/matches/${matchID}/stats`, { method: "GET" }),
     enabled: !!matchID,
   });
 

@@ -13,32 +13,6 @@ const UserMatchList = () => {
   const { fetchData } = useApi();
   const { auth } = useAuth();
 
-  // useEffect(() => {
-  //   const fetchMatches = async () => {
-  //     try {
-  //       setIsLoading(true);
-  //       const response = await fetchData<Match[]>("/users-matches", {
-  //         method: "GET",
-  //       });
-  //       if (!response) {
-  //         console.error("Failed to fetch matches.");
-  //         setError("Nastala chyba při načítání zápasů.");
-  //         setMatches([]);
-  //         return;
-  //       }
-  //       setMatches(response);
-  //       setError(null);
-  //     } catch (error) {
-  //       console.error("Error fetching matches:", error);
-  //       setError("Nastala chyba při načítání zápasů.");
-  //       setMatches([]);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-  //   fetchMatches();
-  // }, [fetchData]);
-
   const {
     data: matches,
     error,

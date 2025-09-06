@@ -7,16 +7,37 @@ import {
   CardTitle,
 } from "../ui/card";
 import { PurchaseHistory } from "@/types/PurchaseHistory";
+import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import useApi from "@/hooks/useApi";
+import { useParams } from "react-router";
 
 type PurchaseCardProps = {
   purchase: PurchaseHistory;
-  handleDeletePurchase: (id: number) => void;
 };
 
-const PurchaseCard = ({
-  purchase,
-  handleDeletePurchase,
-}: PurchaseCardProps) => {
+const PurchaseCard = ({ purchase }: PurchaseCardProps) => {
+  const { fetchData } = useApi();
+  const { matchID } = useParams<{ matchID: string }>();
+  const queryClient = useQueryClient();
+
+  const { mutate: deletePurchase } = useMutation({
+    mutationFn: (purchaseID: number) =>
+      fetchData(`/purchase/${purchaseID}`, {
+        method: "DELETE",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["match", matchID],
+      });
+      toast.success("Nákup byl úspěšně smazán.");
+    },
+    onError: (error) => {
+      console.error("Error deleting purchase:", error);
+      toast.error("Chyba při mazání nákupu. Zkontrolujte konzoli.");
+    },
+  });
+
   return (
     <Card className="w-full my-3 py-3 px-3">
       <CardHeader className="px-0">
@@ -38,7 +59,7 @@ const PurchaseCard = ({
         <CardAction className="h-full flex items-center">
           <XCircle
             className="text-red-500 hover:text-red-800 transition ease-in-out cursor-pointer"
-            onClick={() => handleDeletePurchase(purchase.id as number)}
+            onClick={() => deletePurchase(purchase.id as number)}
             aria-label="Smazat nákup"
           />
         </CardAction>

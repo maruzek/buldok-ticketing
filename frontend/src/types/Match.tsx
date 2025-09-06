@@ -1,4 +1,4 @@
-import { Entrance } from "./Entrance";
+import { PurchaseHistory } from "./PurchaseHistory";
 
 // TODO: Omit description, status and purchases if not needed in the frontend
 
@@ -8,18 +8,5 @@ export type Match = {
   description: string;
   playedAt: string;
   status: string;
-  purchases: {
-    id: number;
-    purchasedAt: string;
-    entrance: Entrance;
-    purchaseItems: {
-      id: number;
-      quantity: number;
-      priceAtPurchase: number;
-      ticketType: {
-        id: number;
-        name: string;
-      };
-    }[];
-  }[];
+  purchases: PurchaseHistory[];
 };

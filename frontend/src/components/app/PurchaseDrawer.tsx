@@ -27,17 +27,16 @@ import { Slider } from "../ui/slider";
 import { Label } from "../ui/label";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 type PurchaseDrawerProps = {
   matchID: string | undefined;
   ticketPrices: TicketPrices | null;
-  onHistoryUpdate: (data: PurchaseHistory) => void;
 };
 
 export default function PurchaseDrawer({
   matchID,
   ticketPrices,
-  onHistoryUpdate,
 }: PurchaseDrawerProps) {
   const [open, setOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -52,11 +51,7 @@ export default function PurchaseDrawer({
           <DialogHeader>
             <DialogTitle>Zaznamenat nákup</DialogTitle>
           </DialogHeader>
-          <PaymentForm
-            ticketPrices={ticketPrices}
-            matchID={matchID}
-            onHistoryUpdate={onHistoryUpdate}
-          />
+          <PaymentForm ticketPrices={ticketPrices} matchID={matchID} />
         </DialogContent>
       </Dialog>
     );
@@ -71,11 +66,7 @@ export default function PurchaseDrawer({
         <DrawerHeader className="text-left">
           <DrawerTitle>Zaznamenat nákup</DrawerTitle>
         </DrawerHeader>
-        <PaymentForm
-          ticketPrices={ticketPrices}
-          matchID={matchID}
-          onHistoryUpdate={onHistoryUpdate}
-        />
+        <PaymentForm ticketPrices={ticketPrices} matchID={matchID} />
       </DrawerContent>
     </Drawer>
   );
@@ -84,47 +75,69 @@ export default function PurchaseDrawer({
 function PaymentForm({
   ticketPrices,
   matchID,
-  onHistoryUpdate,
 }: {
   ticketPrices: TicketPrices | null;
   matchID: string | undefined;
-  onHistoryUpdate: (data: PurchaseHistory) => void;
 }) {
   const { watch, handleSubmit, control } = useForm({
     defaultValues: { fullTickets: 0, halfTickets: 0 },
   });
 
-  const onSubmit = async (data: FieldValues) => {
-    try {
-      if (data.fullTickets < 0 && data.halfTickets < 0) {
-        console.error("Invalid ticket count");
-        return;
-      }
+  // const onSubmit = async (data: FieldValues) => {
+  //   try {
+  //     if (data.fullTickets < 0 && data.halfTickets < 0) {
+  //       console.error("Invalid ticket count");
+  //       return;
+  //     }
 
-      const response = await fetchData<PurchaseHistory>(`/purchase/mark`, {
+  //     const response = await fetchData<PurchaseHistory>(`/purchase/mark`, {
+  //       method: "POST",
+  //       body: JSON.stringify({
+  //         fullTickets: data.fullTickets,
+  //         halfTickets: data.halfTickets,
+  //         matchID: matchID,
+  //       }),
+  //     });
+  //     if (!response) {
+  //       toast.error("Chyba při zaznamenávání nákupu.");
+  //       console.error("Failed to purchase tickets");
+  //       return;
+  //     }
+  //     console.log("response: ", response);
+  //     onHistoryUpdate(response);
+  //     toast.success("Nákup byl úspěšně zaznamenán.");
+  //     // onModalToggle(false);
+  //   } catch (error) {
+  //     toast.error("Chyba při zaznamenávání nákupu.");
+  //     console.error("Error purchasing tickets:", error);
+  //   }
+  // };
+
+  const { fetchData } = useApi();
+
+  const queryClient = useQueryClient();
+
+  const { mutate } = useMutation({
+    mutationFn: (data: FieldValues) =>
+      fetchData<PurchaseHistory>(`/purchase/mark`, {
         method: "POST",
         body: JSON.stringify({
           fullTickets: data.fullTickets,
           halfTickets: data.halfTickets,
           matchID: matchID,
         }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["match", matchID],
       });
-      if (!response) {
-        toast.error("Chyba při zaznamenávání nákupu.");
-        console.error("Failed to purchase tickets");
-        return;
-      }
-      console.log("response: ", response);
-      onHistoryUpdate(response);
       toast.success("Nákup byl úspěšně zaznamenán.");
-      // onModalToggle(false);
-    } catch (error) {
+    },
+    onError: (error) => {
       toast.error("Chyba při zaznamenávání nákupu.");
       console.error("Error purchasing tickets:", error);
-    }
-  };
-
-  const { fetchData } = useApi();
+    },
+  });
 
   const fullTicketsValue = watch("fullTickets", 0);
   const halfTicketsValue = watch("halfTickets", 0);
@@ -157,7 +170,8 @@ function PaymentForm({
           </div>
           <form
             className="flex flex-col gap-4"
-            onSubmit={handleSubmit(onSubmit)}
+            // onSubmit={handleSubmit(onSubmit)}
+            onSubmit={handleSubmit((data) => mutate(data))}
           >
             <div className="px-5">
               <div className="flex flex-col gap-3">

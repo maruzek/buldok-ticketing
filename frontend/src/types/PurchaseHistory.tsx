@@ -1,6 +1,9 @@
+import { Entrance } from "./Entrance";
+
 export type PurchaseHistory = {
-  id?: number;
-  purchased_at?: string;
+  id: number;
+  purchasedAt: string;
+  entrance: Entrance;
   purchaseItems: {
     id: number;
     quantity: number;
@@ -8,7 +11,6 @@ export type PurchaseHistory = {
     ticketType: {
       id: number;
       name: string;
-      price: number;
     };
   }[];
 };
