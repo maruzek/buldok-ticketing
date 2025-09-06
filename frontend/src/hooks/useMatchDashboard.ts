@@ -117,5 +117,6 @@ export function useMatchDashboard(matchID: string) {
     totalEarnings,
     fullTicketsEarnings,
     halfTicketsEarnings,
+    refetch: match.refetch,
   };
 }

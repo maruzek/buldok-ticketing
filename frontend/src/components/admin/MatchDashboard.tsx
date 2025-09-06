@@ -25,10 +25,11 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
-import { Settings2 } from "lucide-react";
+import { RefreshCw, Settings2 } from "lucide-react";
 import { Link, useParams } from "react-router";
 import Spinner from "../Spinner";
 import { useMatchDashboard } from "@/hooks/useMatchDashboard";
+import { toast } from "sonner";
 
 const chartDataTime = [
   { month: "January", desktop: 186 },
@@ -69,6 +70,7 @@ const MatchDashboard = () => {
     fullTicketsEarnings,
     halfTicketsEarnings,
     isPending,
+    refetch,
   } = useMatchDashboard(matchID!);
 
   const DashboardHeader = (
@@ -109,12 +111,23 @@ const MatchDashboard = () => {
   return (
     <ContentBoard
       cardAction={
-        <Link
-          to={`/admin/matches/${match?.id}/edit`}
-          className="cursor-pointer text-gray-600 hover:text-gray-900"
-        >
-          <Settings2 />
-        </Link>
+        <div className="flex items-center gap-4">
+          <RefreshCw
+            onClick={() => {
+              if (refetch) {
+                refetch();
+                toast.success("Data znovu načtena");
+              }
+            }}
+            className="cursor-pointer text-gray-600 hover:text-gray-900"
+          />
+          <Link
+            to={`/admin/matches/${match?.id}/edit`}
+            className="cursor-pointer text-gray-600 hover:text-gray-900"
+          >
+            <Settings2 />
+          </Link>
+        </div>
       }
       cardHeader={DashboardHeader}
     >

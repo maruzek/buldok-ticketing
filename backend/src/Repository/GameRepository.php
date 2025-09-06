@@ -31,7 +31,7 @@ class GameRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('g')
             ->andWhere('g.status = :status')
             ->setParameter('status', MatchStatus::ACTIVE->value)
-            ->orderBy('g.played_at', 'DESC')
+            ->orderBy('g.playedAt', 'DESC')
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
