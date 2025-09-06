@@ -30,19 +30,19 @@ final class EntranceController extends AbstractController
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             return $this->json([
-                'error' => 'Invalid JSON',
+                'message' => 'Invalid JSON',
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         if (!$data['name']) {
             return $this->json([
-                'error' => 'Name is required',
+                'message' => 'Name is required',
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         if ($em->getRepository(Entrance::class)->findOneBy(['name' => $data['name']])) {
             return $this->json([
-                'error' => 'Entrance with this name already exists',
+                'message' => 'Vstup s tímto názvem již existuje',
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
 

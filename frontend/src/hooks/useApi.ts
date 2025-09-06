@@ -57,8 +57,12 @@ const useApi = (): ApiHook => {
         }
 
         if (!response.ok) {
+          const errorBody = await response.json();
+          const backendError =
+            errorBody.message ?? JSON.stringify(errorBody.message);
+
           throw new Error(
-            `Error: Při načítání dat došlo k chybě ${response.status}`
+            `Error: Při načítání dat došlo k chybě ${response.status} - ${backendError}`
           );
         }
 

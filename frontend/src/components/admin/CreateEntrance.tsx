@@ -1,94 +1,98 @@
 import { FieldValues, useForm } from "react-hook-form";
 import useApi from "../../hooks/useApi";
-import { EditStatus } from "../../types/EditStatus";
 import { useNavigate } from "react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-type CreateEntranceProps = {
-  onEntranceCreate: (status: EditStatus) => void;
-};
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
+import { Input } from "@/components/ui/input";
 
-const CreateEntrance = ({ onEntranceCreate }: CreateEntranceProps) => {
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors, isSubmitting, isSubmitSuccessful },
-  } = useForm();
+import { Button } from "@/components/ui/button";
+
+const CreateEntrance = () => {
+  const form = useForm();
   const { fetchData } = useApi();
   const navigate = useNavigate();
 
-  const onSubmit = async (data: FieldValues) => {
-    try {
-      const res = await fetchData("/admin/entrances/create", {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending: isSaving } = useMutation({
+    mutationFn: (data: FieldValues) =>
+      fetchData("/admin/entrances/create", {
         method: "POST",
         body: JSON.stringify(data),
-      });
-      if (!res) {
-        setError("root", {
-          type: "server",
-          message:
-            "Nastala chyba při vytváření vstupu, zkuste to prosím znovu později.",
-        });
-        throw new Error("Failed to create entrance");
-      }
-
-      onEntranceCreate({
-        status: "ok",
-        message: `Vstup ${data.name} byl úspěšně vytvořen.`,
-      });
+      }),
+    onSuccess: (res, variables) => {
+      toast.success(`Vstup ${variables.name} byl úspěšně vytvořen!`);
+      queryClient.invalidateQueries({ queryKey: ["entrances"] });
       navigate("/admin/entrances");
-    } catch (error) {
+    },
+    onError: (error: any) => {
       console.error("Error creating entrance:", error);
-    }
-  };
+      toast.error(
+        error?.message ||
+          "Nastala chyba při vytváření vstupu. Zkuste to prosím znovu."
+      );
+    },
+  });
 
   return (
-    <div className="max-w-md mx-auto bg-white p-8 rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-4 text-center">Vytvořit vstup</h2>
-      {isSubmitSuccessful && (
-        <div className="bg-green-100 text-green-700 p-4 mb-4 rounded-md">
-          Vstup byl úspěšně vytvořen!
-        </div>
-      )}
-      {errors.root && (
-        <div className="bg-red-100 text-red-700 p-4 mb-4 rounded-md">
-          {errors.root.message as string}
-        </div>
-      )}
-      <form onSubmit={handleSubmit(onSubmit)} className="mx-auto space-y-6">
-        <div className="flex flex-col gap-1">
-          <label className="font-medium">Název</label>
-          <input
-            type="text"
-            {...register("name", { required: "Toto pole je povinné" })}
-            className="form-input"
-          />
-          {errors.name && (
-            <span className="text-red-500 text-sm">
-              {errors.name.message as string}
-            </span>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="font-medium">Lokace (odkaz na mapy)</label>
-          <input {...register("location")} className="form-input" />
-          {errors.location && (
-            <span className="text-red-500 text-sm">
-              {errors.location.message as string}
-            </span>
-          )}
-        </div>
-        <button
-          type="submit"
-          className={`${
-            isSubmitting ? "btn-disabled w-full" : "btn-lime w-full"
-          }`}
-        >
-          Vytvořit zápas
-        </button>
-      </form>
-    </div>
+    <Card className="w-full lg:max-w-3/5 mx-auto">
+      <CardHeader>
+        <CardTitle>Vytvořit vstup</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {form.formState.errors.root && (
+          <div className="form-error-box">
+            {form.formState.errors.root.message}
+          </div>
+        )}
+        <Form {...form}>
+          <form
+            className="w-full flex flex-col gap-4"
+            onSubmit={form.handleSubmit((data) => mutate(data))}
+          >
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Název</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Lokace (odkaz na mapy)</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" disabled={isSaving}>
+              Uložit
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };
 
