@@ -22,7 +22,7 @@ const PurchaseCard = ({
       <CardHeader className="px-0">
         <CardTitle className="font-bold text-2xl">
           {purchase.purchaseItems.reduce(
-            (acc, cur) => acc + Number(cur.price_at_purchase),
+            (acc, cur) => acc + Number(cur.priceAtPurchase),
             0
           )}{" "}
           Kč
@@ -31,7 +31,7 @@ const PurchaseCard = ({
           {purchase.purchaseItems.map((item) => (
             <p key={item.id} className="text-gray-500 text-sm mt-0">
               {item.quantity}x{" "}
-              {item.ticket_type.name == "fullTicket" ? "plná" : "poloviční"}
+              {item.ticketType.name == "fullTicket" ? "plná" : "poloviční"}
             </p>
           ))}
         </CardDescription>

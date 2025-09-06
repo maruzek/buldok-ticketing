@@ -16,28 +16,30 @@ class Game
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['game:admin_dashboard'])]
+    #[Groups(['game:admin_dashboard', "match:read"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['game:admin_dashboard'])]
+    #[Groups(['game:admin_dashboard', "match:read"])]
     private ?string $rival = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["match:read"])]
     private ?string $description = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    #[Groups(['game:admin_dashboard'])]
-    private ?\DateTimeInterface $played_at = null;
+    #[Groups(['game:admin_dashboard', "match:read"])]
+    private ?\DateTimeInterface $playedAt = null;
 
-    #[ORM\Column(length: 15)]
+    #[ORM\Column(length: 15, enumType: MatchStatus::class)]
+    #[Groups(["match:read"])]
     private ?MatchStatus $status = null;
 
     /**
      * @var Collection<int, Purchase>
      */
     #[ORM\OneToMany(targetEntity: Purchase::class, mappedBy: 'match', cascade: ['persist', 'remove'])]
-    #[Groups(['game:admin_dashboard'])]
+    #[Groups(['game:admin_dashboard', "match:read"])]
     private Collection $purchases;
 
     public function __construct()
@@ -77,12 +79,12 @@ class Game
 
     public function getPlayedAt(): ?\DateTimeInterface
     {
-        return $this->played_at;
+        return $this->playedAt;
     }
 
-    public function setPlayedAt(\DateTimeInterface $played_at): static
+    public function setPlayedAt(\DateTimeInterface $playedAt): static
     {
-        $this->played_at = $played_at;
+        $this->playedAt = $playedAt;
 
         return $this;
     }

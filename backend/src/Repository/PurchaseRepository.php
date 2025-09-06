@@ -32,7 +32,7 @@ class PurchaseRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('p') // Purchase
             ->addSelect('pi', 'tt')
             ->leftJoin('p.purchaseItems', 'pi')    // ' PurchaseItem
-            ->leftJoin('pi.ticket_type', 'tt')      // TicketType
+            ->leftJoin('pi.ticketType', 'tt')      // TicketType
             ->andWhere('p.match = :matchEntity')
             ->andWhere('p.entrance = :entranceEntity')
             ->setParameter('matchEntity', $match)
@@ -56,7 +56,7 @@ class PurchaseRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('p') // Purchase
             ->addSelect('pi', 'tt')
             ->leftJoin('p.purchaseItems', 'pi')    // ' PurchaseItem
-            ->leftJoin('pi.ticket_type', 'tt')      // TicketType
+            ->leftJoin('pi.ticketType', 'tt')      // TicketType
             ->andWhere('p.match = :matchEntity')
             ->andWhere('p.entrance = :entranceEntity')
             ->setParameter('matchEntity', $match)

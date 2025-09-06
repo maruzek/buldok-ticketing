@@ -1,52 +1,78 @@
 import { ArrowRight } from "lucide-react";
 import Header from "../components/Header";
 import { Link } from "react-router";
-import { useEffect, useState } from "react";
 import useApi from "../hooks/useApi";
 import { Match } from "../types/Match";
 import Spinner from "../components/Spinner";
 import useAuth from "../hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const UserMatchList = () => {
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { fetchData } = useApi();
   const { auth } = useAuth();
 
-  useEffect(() => {
-    const fetchMatches = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetchData<Match[]>("/users-matches", {
-          method: "GET",
-        });
-        if (!response) {
-          console.error("Failed to fetch matches.");
-          setError("Nastala chyba při načítání zápasů.");
-          setMatches([]);
-          return;
-        }
-        setMatches(response);
-        setError(null);
-      } catch (error) {
-        console.error("Error fetching matches:", error);
-        setError("Nastala chyba při načítání zápasů.");
-        setMatches([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchMatches();
-  }, [fetchData]);
+  // useEffect(() => {
+  //   const fetchMatches = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const response = await fetchData<Match[]>("/users-matches", {
+  //         method: "GET",
+  //       });
+  //       if (!response) {
+  //         console.error("Failed to fetch matches.");
+  //         setError("Nastala chyba při načítání zápasů.");
+  //         setMatches([]);
+  //         return;
+  //       }
+  //       setMatches(response);
+  //       setError(null);
+  //     } catch (error) {
+  //       console.error("Error fetching matches:", error);
+  //       setError("Nastala chyba při načítání zápasů.");
+  //       setMatches([]);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+  //   fetchMatches();
+  // }, [fetchData]);
 
-  if (isLoading) {
+  const {
+    data: matches,
+    error,
+    isPending,
+  } = useQuery<Match[]>({
+    queryKey: ["matches"],
+    queryFn: () =>
+      fetchData<Match[]>("/matches?status=active", {
+        method: "GET",
+      }),
+  });
+
+  console.log("matches", matches);
+
+  if (isPending) {
     return (
       <div className="h-screen w-full">
         <Header />
         <main className="flex justify-center h-full mt-10">
           <Spinner />
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    toast.error("Nastala chyba při načítání zápasů.");
+    return (
+      <div className="h-screen w-full">
+        <Header />
+        <main className="p-4">
+          <h1 className="text-2xl font-bold">Mé aktivní zápasy</h1>
+          <h3 className="text-gray-500 font-semibold">{`${auth.user?.entrance?.name}`}</h3>
+          <div className="form-error-box">{error.message}</div>
         </main>
       </div>
     );

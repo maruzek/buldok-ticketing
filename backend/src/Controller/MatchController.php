@@ -80,30 +80,40 @@ final class MatchController extends AbstractController
         ], JsonResponse::HTTP_CREATED);
     }
 
-    #[Route('/api/admin/match/list', name: 'list_match', methods: ['GET'])]
-    #[IsGranted('ROLE_ADMIN')]
+    // #[Route('/api/admin/matches/list', name: 'list_matches', methods: ['GET'])]
+    #[Route('/api/matches', name: 'list_matches', methods: ['GET'])]
     /**
      * List all matches.
      *
      * @param GameRepository $gameRepository
      * @return JsonResponse
      */
-    public function listMatch(GameRepository $gameRepository): JsonResponse
+    public function listMatches(GameRepository $gameRepository, Request $request, SerializerInterface $serializer): JsonResponse
     {
-        $matches = $gameRepository->findAllMatches();
+        $criteria = [];
 
-        $matchList = [];
-        foreach ($matches as $match) {
-            $matchList[] = [
-                'id' => $match->getId(),
-                'rival' => $match->getRival(),
-                'playedAt' => $match->getPlayedAt()->format('d.m.Y H:i'),
-                'description' => $match->getDescription(),
-                'status' => $match->getStatus(),
-            ];
+        if ($this->isGranted("ROLE_ADMIN")) {
+            $statusParam = $request->query->get('status');
+            if ($statusParam) {
+                $statusEnum = MatchStatus::tryFrom($statusParam);
+
+                if (!$statusEnum) {
+                    return $this->json([
+                        'error' => 'Invalid status value, must be one of: ' . implode(', ', array_column(MatchStatus::cases(), 'value')),
+                    ], JsonResponse::HTTP_BAD_REQUEST);
+                }
+
+                $criteria['status'] = $statusEnum;
+            }
+        } else {
+            $criteria['status'] = MatchStatus::ACTIVE;
         }
 
-        return $this->json($matchList, JsonResponse::HTTP_OK);
+        $matches =  $gameRepository->findBy($criteria, ['playedAt' => 'DESC']);
+
+        $result = $serializer->serialize($matches, 'json', ['groups' => ['match:read']]);
+
+        return JsonResponse::fromJsonString($result, JsonResponse::HTTP_OK);
     }
 
     #[Route('/api/match/{id}', name: 'get_match', methods: ['GET'])]

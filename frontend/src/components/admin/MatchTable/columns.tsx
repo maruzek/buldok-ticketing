@@ -40,7 +40,19 @@ export const columns: ColumnDef<Match>[] = [
       </Link>
     ),
   },
-  { accessorKey: "playedAt", header: "Termín" },
+  {
+    accessorKey: "playedAt",
+    header: "Termín",
+    cell: ({ getValue }) => {
+      return new Date(getValue() as string).toLocaleDateString("cs-CZ", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    },
+  },
   {
     accessorKey: "status",
     header: "Stav",

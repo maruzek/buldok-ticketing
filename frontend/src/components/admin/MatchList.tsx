@@ -32,7 +32,7 @@ const MatchList = ({ matchCreateStatus }: MatchListProps) => {
     error,
   } = useQuery<Match[]>({
     queryKey: ["matches"],
-    queryFn: () => fetchData<Match[]>("/admin/match/list", { method: "GET" }),
+    queryFn: () => fetchData<Match[]>("/matches", { method: "GET" }),
   });
 
   // TODO: Custom component for loading screens?

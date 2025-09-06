@@ -1,7 +1,6 @@
-import { ArrowLeft } from "lucide-react";
 import Header from "../components/Header";
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router";
+import { useParams } from "react-router";
 import { Match } from "../types/Match";
 import useApi from "../hooks/useApi";
 import Spinner from "../components/Spinner";
@@ -10,7 +9,6 @@ import { PurchaseHistory } from "../types/PurchaseHistory";
 import PurchaseDrawer from "@/components/app/PurchaseDrawer";
 import PurchaseCard from "@/components/app/PurchaseCard";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 
 const Ticketing = () => {
   // const [showModal, setShowModal] = useState(false);
@@ -180,7 +178,7 @@ const Ticketing = () => {
                 (acc, cur) =>
                   acc +
                   cur.purchaseItems.reduce(
-                    (acc, cur) => acc + Number(cur.price_at_purchase),
+                    (acc, cur) => acc + Number(cur.priceAtPurchase),
                     0
                   ),
                 0

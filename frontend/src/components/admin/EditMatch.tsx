@@ -129,8 +129,8 @@ const EditMatch = ({ onEditMatch }: EditMatchProps) => {
             name="status"
             id="status"
           >
-            <option value="Otevřený">Aktivní</option>
-            <option value="Ukončený">Zápas odehrán</option>
+            <option value="active">Aktivní</option>
+            <option value="finished">Zápas odehrán</option>
           </select>
           {errors.status && (
             <span className="text-red-500 text-sm">

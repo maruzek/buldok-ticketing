@@ -11,8 +11,8 @@ export type LastMatchResponse = {
     purchaseItems: {
       id: number;
       quantity: number;
-      price_at_purchase: number;
-      ticket_type: {
+      priceAtPurchase: number;
+      ticketType: {
         id: number;
         name: string;
       };

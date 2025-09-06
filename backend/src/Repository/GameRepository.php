@@ -37,6 +37,16 @@ class GameRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function findByStatus(string $status): array
+    {
+        return $this->createQueryBuilder('g')
+            ->andWhere('g.status = :status')
+            ->setParameter('status', $status)
+            ->orderBy('g.played_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return Game[] Returns an array of Game objects
     //     */
