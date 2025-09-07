@@ -44,7 +44,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var Collection<int, Purchase>
      */
-    #[ORM\OneToMany(targetEntity: Purchase::class, mappedBy: 'sold_by')]
+    #[ORM\OneToMany(targetEntity: Purchase::class, mappedBy: 'soldBy')]
     private Collection $purchases;
 
     #[ORM\Column]

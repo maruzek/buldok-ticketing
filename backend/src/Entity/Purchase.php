@@ -18,7 +18,7 @@ class Purchase
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'purchases')]
-    private ?User $sold_by = null;
+    private ?User $soldBy = null;
 
     #[ORM\ManyToOne(inversedBy: 'purchases')]
     #[Groups(['purchase:admin_game_summary'])]
@@ -30,7 +30,7 @@ class Purchase
 
     #[ORM\Column]
     #[Groups(['purchase:read', 'purchase:admin_game_summary'])]
-    private ?\DateTimeImmutable $purchased_at = null;
+    private ?\DateTimeImmutable $purchasedAt = null;
 
     /**
      * @var Collection<int, PurchaseItem>
@@ -51,12 +51,12 @@ class Purchase
 
     public function getSoldBy(): ?User
     {
-        return $this->sold_by;
+        return $this->soldBy;
     }
 
-    public function setSoldBy(?User $sold_by): static
+    public function setSoldBy(?User $soldBy): static
     {
-        $this->sold_by = $sold_by;
+        $this->soldBy = $soldBy;
 
         return $this;
     }
@@ -87,12 +87,12 @@ class Purchase
 
     public function getPurchasedAt(): ?\DateTimeImmutable
     {
-        return $this->purchased_at;
+        return $this->purchasedAt;
     }
 
-    public function setPurchasedAt(\DateTimeImmutable $purchased_at): static
+    public function setPurchasedAt(\DateTimeImmutable $purchasedAt): static
     {
-        $this->purchased_at = $purchased_at;
+        $this->purchasedAt = $purchasedAt;
 
         return $this;
     }

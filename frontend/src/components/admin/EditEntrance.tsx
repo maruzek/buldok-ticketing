@@ -96,7 +96,8 @@ const EditEntrance = () => {
         }),
       }),
     onSuccess: (res, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["entrances", entranceID] });
+      queryClient.invalidateQueries({ queryKey: ["entrances"] });
+      queryClient.invalidateQueries({ queryKey: ["entrance", entranceID] });
       console.log(res);
       toast.success(`Vstup ${variables.name} byl úspěšně upraven.`);
       navigate("/admin/entrances");

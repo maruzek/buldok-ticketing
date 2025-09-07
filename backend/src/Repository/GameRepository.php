@@ -17,7 +17,6 @@ class GameRepository extends ServiceEntityRepository
         parent::__construct($registry, Game::class);
     }
 
-    // List all matches order by date from the most recent
     public function findAllMatches(): array
     {
         return $this->createQueryBuilder('g')
@@ -45,6 +44,26 @@ class GameRepository extends ServiceEntityRepository
             ->orderBy('g.played_at', 'DESC')
             ->getQuery()
             ->getResult();
+    }
+
+    public function findWithFilteredPurchases(int $matchId, ?int $entranceId = null): ?Game
+    {
+        $qb = $this->createQueryBuilder('g')
+            ->leftJoin('g.purchases', 'p')
+            ->addSelect('p')
+            ->leftJoin('p.soldBy', 'sb')
+            ->addSelect('sb')
+            ->leftJoin('sb.entrance', 'e')
+            ->addSelect('e')
+            ->andWhere('g.id = :matchId')
+            ->setParameter('matchId', $matchId);
+
+        if ($entranceId !== null) {
+            $qb->andWhere('e.id = :entranceId')
+                ->setParameter('entranceId', $entranceId);
+        }
+
+        return $qb->getQuery()->getOneOrNullResult();
     }
 
     //    /**

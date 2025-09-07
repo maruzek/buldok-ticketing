@@ -16,7 +16,9 @@ const Ticketing = () => {
   const { data: match, isPending: isMatchDataLoading } = useQuery<Match>({
     queryKey: ["match", matchID],
     queryFn: () =>
-      fetchData<Match>(`/matches/${matchID}/stats`, { method: "GET" }),
+      fetchData<Match>(`/matches/${matchID}/stats?userEntranceLimit=1`, {
+        method: "GET",
+      }),
     enabled: !!matchID,
   });
 
@@ -47,7 +49,7 @@ const Ticketing = () => {
   if (!match && !isMatchDataLoading) {
     return (
       <div className="w-full h-full">
-        <Header color="bg-emerald-950" />
+        <Header />
         <div className="flex flex-col items-center justify-center h-screen">
           <h1 className="text-2xl font-bold">Zápas nenalezen</h1>
           <p className="text-gray-500">Zkontrolujte prosím vaše připojení.</p>

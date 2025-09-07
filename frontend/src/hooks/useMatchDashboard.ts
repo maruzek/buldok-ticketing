@@ -55,13 +55,11 @@ export function useMatchDashboard(matchID: string) {
     };
   }
 
-  // unique entrances
   const allNames = purchases
     .map((p) => p.entrance?.name)
     .filter((n): n is string => !!n.trim());
   const uniqueEntranceNames = Array.from(new Set(allNames));
 
-  // full / half counts
   const numOfFullTickets = purchases.reduce(
     (sum, p) =>
       sum +
@@ -83,7 +81,6 @@ export function useMatchDashboard(matchID: string) {
     0
   );
 
-  // tickets per entrance
   const ticketsPerEntrance = uniqueEntranceNames.map((name) => ({
     entranceName: name,
     count: purchases
@@ -95,7 +92,6 @@ export function useMatchDashboard(matchID: string) {
       ),
   }));
 
-  // earnings
   const flatItems = purchases.flatMap((p) => p.purchaseItems);
   const totalEarnings = flatItems
     .reduce((sum, it) => sum + Number(it.priceAtPurchase), 0)

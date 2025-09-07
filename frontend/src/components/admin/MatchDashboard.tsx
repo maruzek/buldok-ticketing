@@ -73,6 +73,8 @@ const MatchDashboard = () => {
     refetch,
   } = useMatchDashboard(matchID!);
 
+  console.log(uniqueEntranceNames);
+
   const DashboardHeader = (
     <div>
       <h2 className="text-2xl font-bold mb-1">
@@ -100,7 +102,6 @@ const MatchDashboard = () => {
   ];
 
   if (isPending) {
-    console.log("isPending", isPending);
     return (
       <div className="flex justify-center items-center h-full w-full">
         <Spinner />

@@ -300,6 +300,7 @@ final class MatchController extends AbstractController
     }
 
     #[Route('/api/matches/{id}/stats', name: 'full_match_stats', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
     /**
      * Get full statistics for a match by ID.
      *
@@ -308,9 +309,27 @@ final class MatchController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function getFullMatchStats(int $id, GameRepository $gameRepository, SerializerInterface $serializer): JsonResponse
+    public function getFullMatchStats(int $id, GameRepository $gameRepository, SerializerInterface $serializer, Request $request): JsonResponse
     {
-        $match = $gameRepository->find($id);
+        $isAdmin = $this->isGranted('ROLE_ADMIN');
+        /** @var User $authUser */
+        $authUser = $this->getUser();
+
+        $limit = $request->query->get('userEntranceLimit') == 1 ? true : false;
+
+        $entrance = $authUser->getEntrance();
+        if (!$entrance) {
+            return $this->json(
+                ['error' => 'No entrance defined for this user'],
+                JsonResponse::HTTP_UNAUTHORIZED
+            );
+        }
+
+        if ($limit || (!$isAdmin && !$limit)) {
+            $match = $gameRepository->findWithFilteredPurchases($id, $entrance->getId());
+        } else if ($isAdmin && !$limit) {
+            $match = $gameRepository->find($id);
+        }
 
         if (!$match) {
             return $this->json([
