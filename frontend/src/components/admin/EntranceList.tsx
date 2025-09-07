@@ -16,7 +16,7 @@ const EntranceList = ({ entranceStatus }: EntranceListProps) => {
   const { data: entrances, isPending } = useQuery<Entrance[]>({
     queryKey: ["entrances"],
     queryFn: () =>
-      fetchData<Entrance[]>("/admin/entrances/all", { method: "GET" }),
+      fetchData<Entrance[]>("/admin/entrances/", { method: "GET" }),
   });
 
   if (isPending)

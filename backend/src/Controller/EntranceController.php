@@ -68,7 +68,7 @@ final class EntranceController extends AbstractController
         ], JsonResponse::HTTP_CREATED);
     }
 
-    #[Route('/all', name: 'all', methods: ['GET'])]
+    #[Route('/', name: 'list_all', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN')]
     /**
      * Get all entrances with their users.
@@ -106,7 +106,7 @@ final class EntranceController extends AbstractController
     }
 
 
-    #[Route('/entrance/{id}', name: 'get_by_id', methods: ['GET'])]
+    #[Route('/{id}', name: 'get_by_id', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN')]
     /**
      * Get an entrance by its ID.
@@ -145,7 +145,7 @@ final class EntranceController extends AbstractController
         ], JsonResponse::HTTP_OK);
     }
 
-    #[Route('/entrance/{id}', name: 'edit_by_id', methods: ['PUT'])]
+    #[Route('/{id}', name: 'edit_by_id', methods: ['PUT'])]
     #[IsGranted('ROLE_ADMIN')]
     /**
      * Edit an entrance by its ID.
