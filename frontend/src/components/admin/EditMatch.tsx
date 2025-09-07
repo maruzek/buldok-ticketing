@@ -1,73 +1,94 @@
-import DatePicker, { registerLocale } from "react-datepicker";
-import { useForm, FieldValues, Controller } from "react-hook-form";
+import { useForm, FieldValues } from "react-hook-form";
 import { cs } from "date-fns/locale/cs";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
-import { EditStatus } from "../../types/EditStatus";
 import useApi from "../../hooks/useApi";
 import { Match } from "../../types/Match";
 import Spinner from "../Spinner";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
+import { Input } from "../ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Button } from "../ui/button";
+import { Calendar } from "../ui/calendar";
+import { cn } from "@/lib/utils";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "../ui/textarea";
 
-registerLocale("cs", cs);
-
-type EditMatchProps = {
-  onEditMatch: (status: EditStatus) => void;
-};
-
-const EditMatch = ({ onEditMatch }: EditMatchProps) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const {
-    register,
-    handleSubmit,
-    setError,
-    control,
-    setValue,
-    formState: { errors, isSubmitting },
-  } = useForm();
-
+const EditMatch = () => {
   const { matchID } = useParams<{ matchID: string }>();
   const navigate = useNavigate();
   const { fetchData } = useApi();
 
-  useEffect(() => {
-    const fetchMatch = async () => {
-      try {
-        setIsLoading(true);
-        const data = await fetchData<Match>(`/match/${matchID}`, {
-          method: "GET",
-        });
-        console.log(data);
-        setValue("rival", data.rival);
-        setValue("matchDate", new Date(data.playedAt));
-        setValue("description", data.description);
-        setValue("status", data.status);
-      } catch (error) {
-        console.error("Error fetching match:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchMatch();
-  }, [matchID, setValue, setError, fetchData]);
+  const { data: editedMatch, isPending } = useQuery({
+    queryKey: ["match", matchID],
+    queryFn: () => fetchData<Match>(`/match/${matchID}`, { method: "GET" }),
+  });
 
-  const onSubmit = async (data: FieldValues) => {
-    try {
-      const res = await fetchData<Match>(`/admin/match/${matchID}`, {
+  const form = useForm({
+    defaultValues: {
+      rival: editedMatch ? editedMatch.rival : "",
+      matchDate: editedMatch ? new Date(editedMatch.playedAt) : undefined,
+      matchTime: editedMatch
+        ? new Date(editedMatch.playedAt).toTimeString().split(" ")[0]
+        : "10:30:00",
+      description: editedMatch ? editedMatch.description : "",
+      status: editedMatch ? editedMatch.status : "active",
+    },
+  });
+
+  useEffect(() => {
+    if (editedMatch) {
+      form.reset({
+        rival: editedMatch.rival,
+        matchDate: new Date(editedMatch.playedAt),
+        description: editedMatch.description,
+        status: editedMatch.status,
+      });
+    }
+  }, [editedMatch, form]);
+
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending: isSubmitting } = useMutation({
+    mutationFn: (data: FieldValues) =>
+      fetchData<Match>(`/admin/match/${matchID}`, {
         method: "PUT",
         body: JSON.stringify(data),
-      });
-
-      onEditMatch({
-        status: "ok",
-        message: `Zápas proti ${res.rival} úspěšně upraven`,
-      });
+      }),
+    onSuccess: (res, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["match", matchID] });
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+      toast.success(`Zápas proti ${variables.rival} byl úspěšně upraven.`);
       navigate("/admin/matches");
-    } catch (error) {
-      console.error("Error creating entrance:", error);
-    }
-  };
+    },
+    onError: (error: any) => {
+      console.error("Error updating match:", error);
+      toast.error(
+        error?.message ||
+          "Nastala chyba při aktualizaci zápasu. Zkuste to prosím znovu."
+      );
+    },
+  });
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className="flex justify-center items-center h-full">
         <h1 className="text-2xl font-bold">
@@ -78,88 +99,134 @@ const EditMatch = ({ onEditMatch }: EditMatchProps) => {
   }
 
   return (
-    <div className="form-page-card">
-      <h2 className="text-2xl font-bold text-center">Upravit zápas</h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="flex flex-col gap-1">
-          <label className="font-medium">Soupeř</label>
-          <input
-            type="text"
-            {...register("rival", { required: "Toto pole je povinné" })}
-            className="form-input"
-          />
-          {errors.rival && (
-            <span className="text-red-500 text-sm">
-              {errors.rival.message as string}
-            </span>
-          )}
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="font-medium">Datum zápasu</label>
-          <Controller
-            control={control}
-            name="matchDate"
-            rules={{ required: "Toto pole je povinné" }}
-            render={({ field }) => (
-              <DatePicker
-                {...field}
-                selected={field.value}
-                onChange={field.onChange}
-                dateFormat="dd.MM.yyyy HH:mm"
-                showTimeSelect
-                timeIntervals={5}
-                locale="cs"
-                className="form-input"
-                name="matchDate"
-                required
-              />
-            )}
-          />
-          {errors.matchDate && (
-            <span className="text-red-500 text-sm">
-              {errors.matchDate.message as string}
-            </span>
-          )}
-        </div>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="">Stav</label>
-          <select
-            {...register("status")}
-            className="form-input"
-            name="status"
-            id="status"
+    <Card className="w-full lg:max-w-3/5 mx-auto">
+      <CardHeader>
+        <CardTitle>Upravit zápas</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form
+            className="w-full flex flex-col gap-4"
+            onSubmit={form.handleSubmit((data) => mutate(data))}
           >
-            <option value="active">Aktivní</option>
-            <option value="finished">Zápas odehrán</option>
-          </select>
-          {errors.status && (
-            <span className="text-red-500 text-sm">
-              {errors.status.message as string}
-            </span>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="font-medium">Popis</label>
-          <textarea
-            {...register("description")}
-            className="form-input resize-y min-h-[80px]"
-          />
-          {errors.description && (
-            <span className="text-red-500 text-sm">
-              {errors.description.message as string}
-            </span>
-          )}
-        </div>
-
-        <button
-          type="submit"
-          className={`${isSubmitting ? "btn-disabled" : "btn-lime"} w-full`}
-        >
-          Upravit zápas
-        </button>
-      </form>
-    </div>
+            <FormField
+              control={form.control}
+              name="rival"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Soupeř</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Název soupeře" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="w-full flex flex-row justify-between gap-4 lg:max-w-1/3 ">
+              <FormField
+                control={form.control}
+                name="matchDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Termín zápasu</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "min-w-1/3 pl-3 text-left font-normal bg-white",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP", { locale: cs })
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) => date <= new Date()}
+                          captionLayout="dropdown"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="matchTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Čas zápasu</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="time"
+                        step="1"
+                        className="appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select {...field}>
+                    <FormControl>
+                      <SelectTrigger className="w-full md:max-w-1/3">
+                        <SelectValue placeholder="Vyberte stav zápasu" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="active">Aktivní</SelectItem>
+                      <SelectItem value="finished">Odehrán</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Poznámka</FormLabel>
+                  <FormControl>
+                    <Textarea className="resize-none" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className={`${
+                isSubmitting ? "btn-disabled cursor-progress" : ""
+              } w-full`}
+            >
+              Vytvořit
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };
 
