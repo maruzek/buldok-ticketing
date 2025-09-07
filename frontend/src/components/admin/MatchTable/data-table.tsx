@@ -34,7 +34,7 @@ export function DataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     onRowSelectionChange: setRowSelection,
     getRowId: (row) => {
-      console.log(row);
+      // console.log(row);
       return row.id.toString();
     },
     state: {

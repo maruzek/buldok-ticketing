@@ -54,7 +54,17 @@ final class MatchController extends AbstractController
 
         $match = new Game();
         $match->setRival($data['rival']);
-        $match->setPlayedAt(new \DateTime($data['matchDate']));
+
+        try {
+            // parse ISO8601 date (including timezone) in UTC to prevent local offset
+            $date = new \DateTime($data['matchDate']);
+        } catch (\Exception $e) {
+            return $this->json([
+                'error' => 'Invalid date format, expected ISO8601',
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $match->setPlayedAt($date);
         $match->setDescription($data['description'] ?? null);
         $match->setStatus(MatchStatus::ACTIVE);
 

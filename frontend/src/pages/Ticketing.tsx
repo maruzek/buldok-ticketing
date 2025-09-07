@@ -57,9 +57,9 @@ const Ticketing = () => {
   }
 
   return (
-    <>
+    <div className="min-h-screen">
       <Header />
-      <div className="w-full lg:max-w-2/5 mx-auto h-screen">
+      <div className="w-full lg:max-w-2/5 mx-auto">
         <main className="px-4">
           <div className="sticky top-0 bg-white py-3">
             <div className="flex grow-0 flex-row items-center py-1">
@@ -128,7 +128,7 @@ const Ticketing = () => {
           )}
         </main>
       </div>
-    </>
+    </div>
   );
 };
 
