@@ -38,7 +38,7 @@ class PurchaseRepository extends ServiceEntityRepository
             ->setParameter('matchEntity', $match)
             ->setParameter('entranceEntity', $entrance);
 
-        return $qb->orderBy('p.purchased_at', 'DESC')
+        return $qb->orderBy('p.purchasedAt', 'DESC')
             ->getQuery()
             ->getResult();
     }
@@ -63,7 +63,7 @@ class PurchaseRepository extends ServiceEntityRepository
             ->setParameter('entranceEntity', $entrance);
 
 
-        return $qb->orderBy('p.purchased_at', 'DESC')
+        return $qb->orderBy('p.purchasedAt', 'DESC')
             ->setMaxResults(1) // Limit to one result
             ->getQuery()
             ->getOneOrNullResult(); // Get a single result or null
