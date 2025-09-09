@@ -31,6 +31,10 @@ services:
           method: onAuthenticationSuccess,
         }
 
+  App\Service\FioApiService:
+    arguments:
+      $fioApiToken: "%env(FIO_API_TOKEN)%"
+
   # App\EventSubscriber\AuthenticationSuccessListener:
   #   tags: [kernel.event_subscriber]
 
