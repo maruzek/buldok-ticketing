@@ -2,6 +2,7 @@ import { Banknote, XCircle } from "lucide-react";
 import {
   Card,
   CardAction,
+  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -47,11 +48,13 @@ const PurchaseCard = ({ purchase }: PurchaseCardProps) => {
   const qrData = {
     vs: purchase?.payment?.variableSymbol,
   };
+  // console.log("QR data paymentCard:", qrData);
+  // console.log("status paymentCard:", purchase.payment?.status);
 
   return (
     <>
-      <Card className="w-full my-3 py-3 px-3">
-        <CardHeader className="px-0">
+      <Card className="w-full my-3 py-3 px-3 gap-0">
+        <CardHeader className="p-0 ">
           <CardDescription className="text-gray-500 text-sm">
             #{purchase.id}
           </CardDescription>
@@ -79,7 +82,7 @@ const PurchaseCard = ({ purchase }: PurchaseCardProps) => {
             ))}
           </CardDescription>
           {purchase.paymentType !== "qr" && (
-            <CardAction className="h-full flex items-center">
+            <CardAction className="h-full flex items-start">
               <XCircle
                 className="text-red-500 hover:text-red-800 transition ease-in-out cursor-pointer"
                 onClick={() => deletePurchase(purchase.id as number)}

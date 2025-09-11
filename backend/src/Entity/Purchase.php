@@ -35,7 +35,7 @@ class Purchase
     /**
      * @var Collection<int, PurchaseItem>
      */
-    #[ORM\OneToMany(targetEntity: PurchaseItem::class, mappedBy: 'purchase', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: PurchaseItem::class, mappedBy: 'purchase', orphanRemoval: true, cascade: ['remove'])]
     #[Groups(['purchase:read', 'purchase:admin_game_summary'])]
     private Collection $purchaseItems;
 

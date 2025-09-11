@@ -16,7 +16,8 @@ import useApi from "@/hooks/useApi";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "sonner";
-import { Check, QrCode } from "lucide-react";
+import { Check, CircleX, Coins, QrCode } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 
 type QrDialogProps = {
   fullPrice: number;
@@ -59,6 +60,8 @@ export default function QrDialog({
     },
   });
 
+  console.log("paymentStatus qr:", paymentStatus, qrData);
+
   const [status, setStatus] = useState<
     "pending" | "paid" | "failed" | "canceled"
   >(
@@ -68,6 +71,12 @@ export default function QrDialog({
       ? "failed"
       : "pending"
   );
+  console.log("status state", status);
+  const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
+  function beep() {
+    const snd = new Audio("../../../public/pay-success.mp3");
+    snd.play();
+  }
   console.log(status, paymentStatus);
   useEffect(() => {
     if (status !== "pending" || !qrData) {
@@ -81,14 +90,34 @@ export default function QrDialog({
 
     hubUrl.searchParams.append("topic", topic);
 
-    const eventSource = new EventSource(hubUrl.toString());
+    const eventSource = new EventSource(hubUrl.toString(), {
+      withCredentials: false,
+    });
 
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.status === "completed") {
         setStatus("paid");
+        queryClient.invalidateQueries({
+          queryKey: ["match", matchID],
+          refetchType: "all",
+        });
+        beep();
+        toast.success("Platba byla přijata!");
       } else if (data.status === "failed") {
         setStatus("failed");
+        queryClient.invalidateQueries({
+          queryKey: ["match", matchID],
+          refetchType: "all",
+        });
+        console.log("data", data);
+        if (data.reason === "amount_mismatch") {
+          toast.error("Platba selhala. Nesouhlasí částka platby.");
+          setPaymentMessage("Nesouhlasí částka platby.");
+        } else {
+          toast.error("Platba selhala. Zkuste to prosím znovu.");
+          setPaymentMessage("Zkuste to prosím znovu.");
+        }
       }
 
       console.log("Received event:", data);
@@ -98,7 +127,7 @@ export default function QrDialog({
     return () => {
       eventSource.close();
     };
-  }, [qrData, status]);
+  }, [qrData, status, queryClient, matchID]);
 
   const onCancelClick = () => {
     if (status === "pending") {
@@ -141,7 +170,7 @@ export default function QrDialog({
         </DialogHeader>
         <div className="flex items-center gap-2 mx-auto my-4 flex-col">
           {isQrLoading && <Spinner />}
-          {!isQrLoading && qrData && (
+          {!isQrLoading && qrData && status === "pending" && (
             <div className="flex flex-col items-center">
               <QRCodeSVG
                 value={`SPD*1.0*ACC:CZ4120100000002803306141*AM:${fullPrice}*CC:CZK*X-VS:${qrData.vs}*MSG:Vstupenky Buldok`}
@@ -161,18 +190,27 @@ export default function QrDialog({
                 // }
               />
               {status === "pending" && (
-                <div className="flex flex-row items-center mt-4 text-center gap-3">
-                  <Spinner />
-                  <div>Čekání na platbu...</div>
-                </div>
+                <Alert className="flex flex-row justify-center items-center text-center gap-3 mt-3">
+                  <Coins className="animate-bounce" />
+                  <AlertTitle>Čekání na platbu...</AlertTitle>
+                  <AlertDescription></AlertDescription>
+                </Alert>
               )}
             </div>
           )}
           {status === "paid" && (
-            <div className="text-green-600 font-bold flex gap-2">
+            <Alert variant="success">
               <Check />
-              Platba přijata
-            </div>
+              <AlertTitle>Platba úspěšně přijata!</AlertTitle>
+              <AlertDescription></AlertDescription>
+            </Alert>
+          )}
+          {status === "failed" && (
+            <Alert variant="destructive">
+              <CircleX />
+              <AlertTitle>Platba selhala!</AlertTitle>
+              <AlertDescription>{paymentMessage}</AlertDescription>
+            </Alert>
           )}
         </div>
         <DialogFooter className="sm:justify-center sm:flex-col">
@@ -193,6 +231,7 @@ export default function QrDialog({
               Zrušit platbu QR kódem a smazat nákup
             </Button>
           </DialogClose>
+          <Button onClick={() => beep()}>beep</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

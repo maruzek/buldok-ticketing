@@ -12,6 +12,13 @@ framework:
     routing:
       App\Message\CheckPaymentsMessage: async # Route your messages to the transports
       # 'App\Message\YourMessage': async
+
+    buses:
+      messenger.bus.default:
+        middleware:
+          # This service will ping the DB before each message.
+          # If the connection is gone, it reconnects.
+          - doctrine_ping_connection
 # when@test:
 #    framework:
 #        messenger:
