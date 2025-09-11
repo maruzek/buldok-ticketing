@@ -39,6 +39,14 @@ class Purchase
     #[Groups(['purchase:read', 'purchase:admin_game_summary'])]
     private Collection $purchaseItems;
 
+    #[ORM\OneToOne(mappedBy: 'Purchase', cascade: ['persist', 'remove'])]
+    #[Groups(['purchase:read', 'purchase:admin_game_summary'])]
+    private ?Payment $payment = null;
+
+    #[ORM\Column(length: 20, nullable: true)]
+    #[Groups(['purchase:read', 'purchase:admin_game_summary'])]
+    private ?string $paymentType = null;
+
     public function __construct()
     {
         $this->purchaseItems = new ArrayCollection();
@@ -123,6 +131,35 @@ class Purchase
                 $purchaseItem->setPurchaseId(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getPayment(): ?Payment
+    {
+        return $this->payment;
+    }
+
+    public function setPayment(Payment $payment): static
+    {
+        // set the owning side of the relation if necessary
+        if ($payment->getPurchase() !== $this) {
+            $payment->setPurchase($this);
+        }
+
+        $this->payment = $payment;
+
+        return $this;
+    }
+
+    public function getPaymentType(): ?string
+    {
+        return $this->paymentType;
+    }
+
+    public function setPaymentType(?string $paymentType): static
+    {
+        $this->paymentType = $paymentType;
 
         return $this;
     }

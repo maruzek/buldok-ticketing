@@ -31,6 +31,7 @@ class FioApiService
 
         try {
             $response = $this->client->request('GET', $url);
+            // return $response->toArray();
 
             if ($response->getStatusCode() === 409) {
                 $this->logger->warning('Fio API rate limit hit. Asking for data too frequently.');

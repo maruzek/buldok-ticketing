@@ -4,6 +4,7 @@ export type PurchaseHistory = {
   id: number;
   purchasedAt: string;
   entrance: Entrance;
+  paymentType: "cash" | "qr";
   purchaseItems: {
     id: number;
     quantity: number;

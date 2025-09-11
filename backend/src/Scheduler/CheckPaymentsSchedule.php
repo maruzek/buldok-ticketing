@@ -24,6 +24,7 @@ final class CheckPaymentsSchedule implements ScheduleProviderInterface
                 RecurringMessage::every('31 seconds', new CheckPaymentsMessage()),
             )
             ->stateful($this->cache)
+            ->processOnlyLastMissedRun(true)
         ;
     }
 }

@@ -38,7 +38,7 @@ const Ticketing = () => {
   if (isMatchDataLoading) {
     return (
       <div className="w-full h-full">
-        <Header color="bg-emerald-950" />
+        <Header />
         <div className="flex flex-col items-center justify-center h-screen">
           <Spinner />
         </div>

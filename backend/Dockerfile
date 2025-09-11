@@ -48,7 +48,11 @@ RUN docker-php-ext-install \
     intl \
     pdo pdo_mysql \
     zip \
-    opcache
+    opcache 
+
+# RUN apk add --no-cache pcre-dev $PHPIZE_DEPS \
+# && pecl install redis \
+# && docker-php-ext-enable redis.so
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 

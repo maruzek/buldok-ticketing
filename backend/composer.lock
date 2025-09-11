@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2b569aef7215230ed62ad2321ccbd748",
+    "content-hash": "e1502302e9d1c8b3aef262efce685ecc",
     "packages": [
         {
             "name": "doctrine/cache",
@@ -2176,16 +2176,16 @@
         },
         {
             "name": "symfony/cache",
-            "version": "v7.2.6",
+            "version": "v7.2.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/cache.git",
-                "reference": "8b49dde3f5a5e9867595a3a269977f78418d75ee"
+                "reference": "e874746cea6893d4b91943eab8376a0fe7528de6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/cache/zipball/8b49dde3f5a5e9867595a3a269977f78418d75ee",
-                "reference": "8b49dde3f5a5e9867595a3a269977f78418d75ee",
+                "url": "https://api.github.com/repos/symfony/cache/zipball/e874746cea6893d4b91943eab8376a0fe7528de6",
+                "reference": "e874746cea6893d4b91943eab8376a0fe7528de6",
                 "shasum": ""
             },
             "require": {
@@ -2254,7 +2254,7 @@
                 "psr6"
             ],
             "support": {
-                "source": "https://github.com/symfony/cache/tree/v7.2.6"
+                "source": "https://github.com/symfony/cache/tree/v7.2.9"
             },
             "funding": [
                 {
@@ -2266,11 +2266,15 @@
                     "type": "github"
                 },
                 {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-04-08T09:06:23+00:00"
+            "time": "2025-07-30T17:03:27+00:00"
         },
         {
             "name": "symfony/cache-contracts",

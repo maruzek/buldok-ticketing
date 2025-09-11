@@ -51,7 +51,11 @@ export default function PurchaseDrawer({
           <DialogHeader>
             <DialogTitle>Zaznamenat nákup</DialogTitle>
           </DialogHeader>
-          <PaymentForm ticketPrices={ticketPrices} matchID={matchID} />
+          <PaymentForm
+            ticketPrices={ticketPrices}
+            matchID={matchID}
+            setPurchaseFormOpened={setOpen}
+          />
         </DialogContent>
       </Dialog>
     );
@@ -66,7 +70,11 @@ export default function PurchaseDrawer({
         <DrawerHeader className="text-left">
           <DrawerTitle>Zaznamenat nákup</DrawerTitle>
         </DrawerHeader>
-        <PaymentForm ticketPrices={ticketPrices} matchID={matchID} />
+        <PaymentForm
+          ticketPrices={ticketPrices}
+          matchID={matchID}
+          setPurchaseFormOpened={setOpen}
+        />
       </DrawerContent>
     </Drawer>
   );
@@ -75,49 +83,22 @@ export default function PurchaseDrawer({
 function PaymentForm({
   ticketPrices,
   matchID,
+  setPurchaseFormOpened,
 }: {
   ticketPrices: TicketPrices | null;
   matchID: string | undefined;
+  setPurchaseFormOpened: (open: boolean) => void;
 }) {
   const { watch, handleSubmit, control } = useForm({
     defaultValues: { fullTickets: 0, halfTickets: 0 },
   });
 
-  // const onSubmit = async (data: FieldValues) => {
-  //   try {
-  //     if (data.fullTickets < 0 && data.halfTickets < 0) {
-  //       console.error("Invalid ticket count");
-  //       return;
-  //     }
-
-  //     const response = await fetchData<PurchaseHistory>(`/purchase/mark`, {
-  //       method: "POST",
-  //       body: JSON.stringify({
-  //         fullTickets: data.fullTickets,
-  //         halfTickets: data.halfTickets,
-  //         matchID: matchID,
-  //       }),
-  //     });
-  //     if (!response) {
-  //       toast.error("Chyba při zaznamenávání nákupu.");
-  //       console.error("Failed to purchase tickets");
-  //       return;
-  //     }
-  //     console.log("response: ", response);
-  //     onHistoryUpdate(response);
-  //     toast.success("Nákup byl úspěšně zaznamenán.");
-  //     // onModalToggle(false);
-  //   } catch (error) {
-  //     toast.error("Chyba při zaznamenávání nákupu.");
-  //     console.error("Error purchasing tickets:", error);
-  //   }
-  // };
-
   const { fetchData } = useApi();
 
   const queryClient = useQueryClient();
-
-  const { mutate } = useMutation({
+  const [qrData, setQrData] = useState<PaymentResponse | null>(null);
+  const [isQrLoading, setIsQrLoading] = useState(false);
+  const { mutate: purchase, mutateAsync: purchaseAsync } = useMutation({
     mutationFn: (data: FieldValues) =>
       fetchData<PurchaseHistory>(`/purchase/mark`, {
         method: "POST",
@@ -125,6 +106,7 @@ function PaymentForm({
           fullTickets: data.fullTickets,
           halfTickets: data.halfTickets,
           matchID: matchID,
+          paymentType: data.paymentType || "cash",
         }),
       }),
     onSuccess: () => {
@@ -139,8 +121,61 @@ function PaymentForm({
     },
   });
 
+  const { mutateAsync: paymentAsync } = useMutation<
+    PaymentResponse,
+    any,
+    { id: number; amount: number }
+  >({
+    mutationFn: (data) =>
+      fetchData<PaymentResponse>("/payment", {
+        method: "POST",
+        body: JSON.stringify({
+          amount: data.amount,
+          purchaseId: data.id,
+        }),
+      }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["payment"],
+      });
+      toast.success("Platba byla úspěšně vytvořena.");
+      console.log("Payment created:", data);
+    },
+    onError: (error) => {
+      toast.error("Chyba při vytváření platby.");
+      console.error("Error creating payment:", error);
+    },
+  });
+
   const fullTicketsValue = watch("fullTickets", 0);
   const halfTicketsValue = watch("halfTickets", 0);
+
+  const onQrRequest = async () => {
+    if (!ticketPrices) return;
+
+    try {
+      setIsQrLoading(true);
+      const { id, paymentType } = await purchaseAsync({
+        fullTickets: fullTicketsValue,
+        halfTickets: halfTicketsValue,
+        matchID,
+        paymentType: "qr",
+      });
+      console.log("id", id);
+      console.log("paymentType", paymentType);
+      const payment = await paymentAsync({
+        id,
+        amount:
+          fullTicketsValue * ticketPrices.fullTicket +
+          halfTicketsValue * ticketPrices.halfTicket,
+      });
+      setQrData(payment);
+    } catch {
+      toast.error("Chyba při vytváření platby");
+    } finally {
+      setIsQrLoading(false);
+    }
+  };
 
   return (
     <>
@@ -171,7 +206,7 @@ function PaymentForm({
           <form
             className="flex flex-col gap-4"
             // onSubmit={handleSubmit(onSubmit)}
-            onSubmit={handleSubmit((data) => mutate(data))}
+            onSubmit={handleSubmit((data) => purchase(data))}
           >
             <div className="px-5">
               <div className="flex flex-col gap-3">
@@ -256,7 +291,11 @@ function PaymentForm({
             </div>
             <DrawerFooter className="">
               <DrawerClose asChild>
-                <Button type="submit" className="w-full cursor-pointer">
+                <Button
+                  type="submit"
+                  className="w-full cursor-pointer"
+                  disabled={fullTicketsValue + halfTicketsValue === 0}
+                >
                   Uložit
                 </Button>
               </DrawerClose>
@@ -269,6 +308,11 @@ function PaymentForm({
                   fullTicketsValue * ticketPrices?.fullTicket +
                   halfTicketsValue * ticketPrices?.halfTicket
                 }
+                onQrRequest={onQrRequest}
+                qrData={qrData}
+                isQrLoading={isQrLoading}
+                triggerDisabled={fullTicketsValue + halfTicketsValue === 0}
+                setPurchaseFormOpened={setPurchaseFormOpened}
               />
             </DrawerFooter>
           </form>

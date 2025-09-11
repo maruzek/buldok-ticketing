@@ -61,11 +61,18 @@ final class PurchaseController extends AbstractController
         $fullTicketsCount = $data['fullTickets'] ?? 0;
         $halfTicketsCount = $data['halfTickets'] ?? 0;
 
+        if ($fullTicketsCount + $halfTicketsCount <= 0) {
+            return $this->json([
+                'error' => 'At least one ticket must be purchased',
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
         $purchase = new Purchase();
         $purchase->setEntrance($authUser->getEntrance());
         $purchase->setMatch($gameRepository->findOneBy(['id' => $data['matchID']]));
         $purchase->setPurchasedAt(new \DateTimeImmutable());
         $purchase->setSoldBy($authUser);
+        $purchase->setPaymentType($data['paymentType'] ?? 'cash');
 
         if ($fullTicketsCount > 0) {
             $fullTicketItems = new PurchaseItem();

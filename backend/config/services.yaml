@@ -35,6 +35,8 @@ services:
     arguments:
       $fioApiToken: "%env(FIO_API_TOKEN)%"
 
+  App\Service\VariableSymbolService:
+
   # App\EventSubscriber\AuthenticationSuccessListener:
   #   tags: [kernel.event_subscriber]
 

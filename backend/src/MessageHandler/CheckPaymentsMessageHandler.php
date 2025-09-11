@@ -33,7 +33,6 @@ final class CheckPaymentsMessageHandler
         }
 
         foreach ($transactions as $transaction) {
-            // The JSON structure uses "columnX" keys (see page 26 of docs)
             // column5 = Variabilní symbol (VS)
             $variableSymbol = $transaction['column5']['value'] ?? null;
             // column1 = Objem (Amount)
@@ -42,7 +41,6 @@ final class CheckPaymentsMessageHandler
             $transactionId = $transaction['column22']['value'];
 
             if ($variableSymbol === null || $amount === null || $amount <= 0) {
-                // We only care about incoming payments with a variable symbol
                 continue;
             }
 
@@ -52,26 +50,22 @@ final class CheckPaymentsMessageHandler
                 'amount' => $amount
             ]);
 
-            // Find a PENDING payment in our database that matches the VS and amount
             $payment = $this->paymentRepository->findOneBy([
-                'id' => (int)$variableSymbol,
-                'amount' => (float)$amount,
-                'status' => 'pending'
+                'variableSymbol' => (int)$variableSymbol,
+                // 'amount' => (float)$amount,
+                // 'status' => 'pending'
             ]);
 
             if ($payment) {
-                // WE FOUND A MATCH!
                 $this->logger->info('HANDLER: Found matching payment in DB!', ['payment_id' => $payment->getId()]);
 
-                // 1. Update the payment status in the database
                 $payment->setStatus('paid');
                 $this->entityManager->flush();
 
-                // 2. Publish a real-time update via Mercure
-                $topic = 'https://my-ticketing-app.com/payments/' . $payment->getId();
+                $topic = 'https://my-ticketing-app.com/payments/' . $payment->getVariableSymbol();
                 $update = new Update(
                     $topic,
-                    json_encode(['status' => 'paid'])
+                    json_encode(['status' => 'completed'])
                 );
                 $this->hub->publish($update);
 
