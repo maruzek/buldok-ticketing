@@ -2,7 +2,6 @@ import { Plus } from "lucide-react";
 import { Link } from "react-router";
 import Spinner from "../Spinner";
 import useApi from "../../hooks/useApi";
-import { EditStatus } from "../../types/EditStatus";
 import ContentBoard from "./ContentBoard";
 import { DataTable } from "./MatchTable/data-table";
 import { columns } from "./MatchTable/columns";
@@ -19,11 +18,7 @@ interface Match {
   status: string;
 }
 
-type MatchListProps = {
-  matchCreateStatus: EditStatus | null;
-};
-
-const MatchList = ({ matchCreateStatus }: MatchListProps) => {
+const MatchList = () => {
   const { fetchData } = useApi();
 
   const {
@@ -63,9 +58,6 @@ const MatchList = ({ matchCreateStatus }: MatchListProps) => {
         </Button>
       }
     >
-      {matchCreateStatus?.status === "ok" && (
-        <div className="form-success-box">{matchCreateStatus.message}</div>
-      )}
       {/* TODO: implementovat server-side pagination */}
       <DataTable columns={columns} data={matches} />
     </ContentBoard>
