@@ -78,56 +78,120 @@ export default function QrDialog({
     snd.play();
   }
   console.log(status, paymentStatus);
+  // useEffect(() => {
+  //   if (status !== "pending" || !qrData) {
+  //     return;
+  //   }
+
+  //   const hubUrl = new URL("https://buldok.app/.well-known/mercure");
+
+  //   const topic = `https://buldok.app/payments/${qrData.vs}`;
+
+  //   hubUrl.searchParams.append("topic", topic);
+
+  //   const eventSource = new EventSource(hubUrl.toString(), {
+  //     withCredentials: true,
+  //   });
+
+  //   eventSource.onmessage = (event) => {
+  //     const data = JSON.parse(event.data);
+  //     if (data.status === "completed") {
+  //       setStatus("paid");
+  //       queryClient.invalidateQueries({
+  //         queryKey: ["match", matchID],
+  //         refetchType: "all",
+  //       });
+  //       beep();
+  //       toast.success("Platba byla přijata!");
+  //     } else if (data.status === "failed") {
+  //       setStatus("failed");
+  //       queryClient.invalidateQueries({
+  //         queryKey: ["match", matchID],
+  //         refetchType: "all",
+  //       });
+  //       console.log("data", data);
+  //       if (data.reason === "amount_mismatch") {
+  //         toast.error("Platba selhala. Nesouhlasí částka platby.");
+  //         setPaymentMessage("Nesouhlasí částka platby.");
+  //       } else {
+  //         toast.error("Platba selhala. Zkuste to prosím znovu.");
+  //         setPaymentMessage("Zkuste to prosím znovu.");
+  //       }
+  //     }
+
+  //     console.log("Received event:", data);
+  //     eventSource.close();
+  //   };
+
+  //   return () => {
+  //     eventSource.close();
+  //   };
+  // }, [qrData, status, queryClient, matchID]);
+
   useEffect(() => {
-    if (status !== "pending" || !qrData) {
+    if (status !== "pending" || !qrData || !qrData.vs) {
       return;
     }
-    console.log("Setting up EventSource for paymentId:", qrData.vs);
-    const hubUrl = new URL("http://localhost:8081/.well-known/mercure");
 
-    const topic = `https://my-ticketing-app.com/payments/${qrData.vs}`;
-    console.log(topic);
+    let eventSource: EventSource | null = null;
 
-    hubUrl.searchParams.append("topic", topic);
-
-    const eventSource = new EventSource(hubUrl.toString(), {
-      withCredentials: false,
-    });
-
-    eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.status === "completed") {
-        setStatus("paid");
-        queryClient.invalidateQueries({
-          queryKey: ["match", matchID],
-          refetchType: "all",
+    const connectToMercure = async () => {
+      try {
+        await fetchData("/mercure/token", {
+          method: "POST",
+          body: JSON.stringify({ paymentId: qrData.vs }),
         });
-        beep();
-        toast.success("Platba byla přijata!");
-      } else if (data.status === "failed") {
-        setStatus("failed");
-        queryClient.invalidateQueries({
-          queryKey: ["match", matchID],
-          refetchType: "all",
+
+        const hubUrl = new URL(import.meta.env.VITE_MERCURE_PUBLIC_URL);
+        const topic = `https://buldok.app/payments/${qrData.vs}`;
+        hubUrl.searchParams.append("topic", topic);
+
+        eventSource = new EventSource(hubUrl.toString(), {
+          withCredentials: true,
         });
-        console.log("data", data);
-        if (data.reason === "amount_mismatch") {
-          toast.error("Platba selhala. Nesouhlasí částka platby.");
-          setPaymentMessage("Nesouhlasí částka platby.");
-        } else {
-          toast.error("Platba selhala. Zkuste to prosím znovu.");
-          setPaymentMessage("Zkuste to prosím znovu.");
-        }
+
+        eventSource.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+
+          if (data.status === "completed") {
+            setStatus("paid");
+            queryClient.invalidateQueries({ queryKey: ["match", matchID] });
+            beep();
+            toast.success("Platba byla přijata!");
+          } else if (data.status === "failed") {
+            setStatus("failed");
+            queryClient.invalidateQueries({ queryKey: ["match", matchID] });
+            if (data.reason === "amount_mismatch") {
+              setPaymentMessage("Nesouhlasí částka platby.");
+              toast.error("Platba selhala. Nesouhlasí částka platby.");
+            } else {
+              setPaymentMessage("Zkuste to prosím znovu.");
+              toast.error("Platba selhala. Zkuste to prosím znovu.");
+            }
+          }
+
+          eventSource?.close();
+        };
+
+        eventSource.onerror = (err) => {
+          console.error("Mercure EventSource failed:", err);
+          eventSource?.close();
+        };
+      } catch (error) {
+        console.error("Failed to authorize or connect to Mercure:", error);
+        toast.error("Chyba spojení s notifikačním serverem.");
       }
-
-      console.log("Received event:", data);
-      eventSource.close();
     };
+
+    connectToMercure();
 
     return () => {
-      eventSource.close();
+      if (eventSource) {
+        console.log("Closing Mercure connection for payment:", qrData.vs);
+        eventSource.close();
+      }
     };
-  }, [qrData, status, queryClient, matchID]);
+  }, [qrData, status, queryClient, matchID, fetchData]);
 
   const onCancelClick = () => {
     if (status === "pending") {
