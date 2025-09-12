@@ -1,0 +1,32 @@
+FROM composer:2 as vendor
+
+WORKDIR /app
+COPY composer.json composer.lock ./
+
+RUN composer install --no-dev --no-interaction --optimize-autoloader
+
+FROM php:8.2-fpm-alpine
+
+WORKDIR /var/www/html
+
+RUN apk add --no-cache icu-dev libzip-dev mariadb-client
+
+RUN docker-php-ext-install intl pdo pdo_mysql zip opcache
+
+# COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+RUN addgroup -g 1000 appuser && \
+    adduser -u 1000 -G appuser -s /bin/sh -D appuser
+
+# Copy composer dependencies from the first stage
+COPY --from=vendor /app/vendor/ ./vendor/
+
+COPY . .
+
+RUN chown -R appuser:appuser /var/www/html/var /var/www/html/public
+
+USER appuser
+
+# ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["php-fpm"]
