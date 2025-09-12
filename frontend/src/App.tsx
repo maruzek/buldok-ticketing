@@ -25,8 +25,6 @@ function App() {
   const [matchCreateStatus, setMatchCreateStatus] = useState<EditStatus | null>(
     null
   );
-  const [entranceEditStatus, setEntranceEditStatus] =
-    useState<EditStatus | null>(null);
 
   // TODO: zamyslet se nad nutnosti app, nebo rovou jit na ticketing
   return (
@@ -43,37 +41,18 @@ function App() {
                 element={<MatchList matchCreateStatus={matchCreateStatus} />}
               />
               <Route path="create" element={<CreateMatch />} />
-              <Route
-                path=":matchID/edit"
-                element={<EditMatch onEditMatch={setMatchCreateStatus} />}
-              />
+              <Route path=":matchID/edit" element={<EditMatch />} />
               <Route path=":matchID/stats" element={<MatchDashboard />} />
             </Route>
             <Route path="users">
               <Route index element={<UserList userEdit={userEditStatus} />} />
-              <Route
-                path=":userID/edit"
-                element={<EditUser onUserSave={setUserEditStatus} />}
-              />
+              <Route path=":userID/edit" element={<EditUser />} />
               {/* <Route path="create" element={<h1>Create User</h1>} /> */}
             </Route>
             <Route path="entrances">
-              <Route
-                index
-                element={<EntranceList entranceStatus={entranceEditStatus} />}
-              />
-              <Route
-                path=":entranceID/edit"
-                element={
-                  <EditEntrance onEntranceEdit={setEntranceEditStatus} />
-                }
-              />
-              <Route
-                path="create"
-                element={
-                  <CreateEntrance onEntranceCreate={setEntranceEditStatus} />
-                }
-              />
+              <Route index element={<EntranceList />} />
+              <Route path=":entranceID/edit" element={<EditEntrance />} />
+              <Route path="create" element={<CreateEntrance />} />
             </Route>
             <Route path="tickets">
               <Route index element={<TicketList />} />
