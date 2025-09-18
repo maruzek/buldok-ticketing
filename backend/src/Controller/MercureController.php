@@ -26,7 +26,7 @@ class MercureController extends AbstractController
 
         $mercureAuth->setCookie(
             $request,
-            ['subscribe' => [$topic]]
+            ['https://buldok.app/payments/' . $paymentId]
         );
 
         return $this->json([]);

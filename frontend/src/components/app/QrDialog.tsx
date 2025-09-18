@@ -74,7 +74,7 @@ export default function QrDialog({
   console.log("status state", status);
   const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
   function beep() {
-    const snd = new Audio("../../../public/pay-success.mp3");
+    const snd = new Audio("pay-success.mp3");
     snd.play();
   }
   console.log(status, paymentStatus);
