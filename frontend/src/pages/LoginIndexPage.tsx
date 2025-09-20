@@ -23,7 +23,7 @@ const LoginIndexPage = () => {
       </div>
       <div className="bg-muted relative hidden lg:block">
         <img
-          src="../../public/login-image.jpg"
+          src="login-image.jpg"
           alt="Hráč Buldoků s číslem 10 na drese"
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
         />
