@@ -3,8 +3,10 @@
 namespace App\Repository;
 
 use App\Entity\Game;
+use App\Enum\MatchStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\Query\Expr\Join;
 
 /**
  * @extends ServiceEntityRepository<Game>
@@ -16,7 +18,6 @@ class GameRepository extends ServiceEntityRepository
         parent::__construct($registry, Game::class);
     }
 
-    // List all matches order by date from the most recent
     public function findAllMatches(): array
     {
         return $this->createQueryBuilder('g')
@@ -29,11 +30,66 @@ class GameRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('g')
             ->andWhere('g.status = :status')
-            ->setParameter('status', 'Otevřený')
-            ->orderBy('g.played_at', 'DESC')
+            ->setParameter('status', MatchStatus::ACTIVE->value)
+            ->orderBy('g.playedAt', 'DESC')
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    public function findByStatus(string $status): array
+    {
+        return $this->createQueryBuilder('g')
+            ->andWhere('g.status = :status')
+            ->setParameter('status', $status)
+            ->orderBy('g.played_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    // public function findWithFilteredPurchases(int $matchId, ?int $entranceId = null): ?Game
+    // {
+    //     $qb = $this->createQueryBuilder('g')
+    //         ->leftJoin('g.purchases', 'p')
+    //         ->addSelect('p')
+    //         ->leftJoin('p.soldBy', 'sb')
+    //         ->addSelect('sb')
+    //         ->leftJoin('sb.entrance', 'e')
+    //         ->addSelect('e')
+    //         ->andWhere('g.id = :matchId')
+    //         ->setParameter('matchId', $matchId);
+
+    //     if ($entranceId !== null) {
+    //         $qb->andWhere('e.id = :entranceId')
+    //             ->setParameter('entranceId', $entranceId);
+    //     }
+
+    //     return $qb->getQuery()->getOneOrNullResult();
+    // }
+
+    public function findWithFilteredPurchases(int $matchId, ?int $entranceId = null): ?Game
+    {
+        $qb = $this->createQueryBuilder('g')
+            ->leftJoin(
+                'g.purchases',
+                'p',
+                $entranceId !== null ? Join::WITH : null,
+                $entranceId !== null ? 'p.soldBy IN (
+                SELECT u2.id FROM App\Entity\User u2
+                WHERE u2.entrance = :entranceId
+            )' : ''
+            )
+            ->addSelect('p')
+            ->leftJoin('p.soldBy', 'sb')
+            ->addSelect('sb')
+            ->andWhere('g.id = :matchId')
+            ->setParameter('matchId', $matchId);
+
+        if ($entranceId !== null) {
+            $qb->setParameter('entranceId', $entranceId);
+        }
+
+        return $qb->getQuery()->getOneOrNullResult();
     }
 
     //    /**

@@ -1,0 +1,57 @@
+FROM php:8.2-fpm-alpine AS base
+WORKDIR /var/www/html
+
+# install build-time deps, compile extensions, then remove them
+#RUN apk add --no-cache --virtual .build-deps \
+ #     icu-dev \
+  #    libzip-dev \
+   # && docker-php-ext-install intl pdo pdo_mysql zip opcache \
+    #&& apk del .build-deps \
+    #&& rm -rf /var/cache/apk/*
+
+RUN apk add --no-cache \
+      icu-libs \
+      libzip \
+    # 2) install build deps
+    && apk add --no-cache --virtual .build-deps \
+      icu-dev \
+      libzip-dev \
+    # 3) build & enable extensions
+    && docker-php-ext-install intl pdo pdo_mysql zip opcache \
+    # 4) remove only the build deps
+    && apk del .build-deps \
+    && rm -rf /var/cache/apk/*
+
+
+FROM composer:2 AS vendor
+WORKDIR /app
+COPY composer.json composer.lock ./
+# cache ~/.composer across builds
+RUN --mount=type=cache,target=/root/.composer \
+    composer install \
+      --no-dev \
+      --no-interaction \
+      --optimize-autoloader \
+	--no-scripts
+
+
+FROM base AS prod
+COPY --from=vendor /app/vendor ./vendor
+COPY --from=vendor /usr/bin/composer /usr/local/bin/composer
+COPY . .
+
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+RUN mkdir -p var/log public
+
+# dump real env and warm caches at build time
+RUN php bin/console-php cache:warmup --no-debug --env=prod
+
+# set the right permissions once
+RUN chown -R www-data:www-data var public
+USER www-data
+
+COPY docker/php-fpm/zz-custom.conf /usr/local/etc/php-fpm.d/
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["php-fpm"]

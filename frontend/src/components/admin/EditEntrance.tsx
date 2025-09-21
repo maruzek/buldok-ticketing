@@ -7,24 +7,22 @@ import { XCircle } from "lucide-react";
 import { useDebounce } from "react-use";
 import { User } from "../../types/User";
 import useApi from "../../hooks/useApi";
-import { EditStatus } from "../../types/EditStatus";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+import { Label } from "../ui/label";
 
-type EditEntranceProps = {
-  onEntranceEdit: (status: EditStatus) => void;
-};
-
-const EditEntrance = ({ onEntranceEdit }: EditEntranceProps) => {
-  const {
-    register,
-    handleSubmit,
-    setError,
-    setValue,
-    formState: { errors, isSubmitting },
-  } = useForm();
-
-  const [editedEntrance, setEditedEntrance] = useState<Entrance | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
+const EditEntrance = () => {
   const { entranceID } = useParams<{ entranceID: string }>();
 
   const { fetchData } = useApi();
@@ -32,39 +30,32 @@ const EditEntrance = ({ onEntranceEdit }: EditEntranceProps) => {
 
   const [userSearchResults, setUserSearchResults] = useState<User[]>([]);
   const [userList, setUserList] = useState<User[]>([]);
-  const [removedUser, setRemovedUser] = useState<User | null>(null);
   const [userSearchQuery, setUserSearchQuery] = useState<string>("");
 
-  useEffect(() => {
-    if (!entranceID) {
-      setError("root", {
-        type: "faker",
-        message: "Nastala chyba při načítání vstupu.",
-      });
-      return;
-    }
+  const { data: editedEntrance, isPending } = useQuery({
+    queryKey: ["entrances", entranceID],
+    queryFn: () =>
+      fetchData<Entrance>(`/admin/entrances/${entranceID}`, {
+        method: "GET",
+      }),
+  });
 
-    const fetchEntrance = async () => {
-      try {
-        setIsLoading(true);
-        const data = await fetchData<Entrance>(
-          `/admin/entrances/entrance/${entranceID}`,
-          {
-            method: "GET",
-          }
-        );
-        setEditedEntrance(data);
-        setUserList(data.users);
-        setValue("name", data.name);
-        setValue("location", data.location);
-      } catch (error) {
-        console.error("Error fetching entrance:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchEntrance();
-  }, [entranceID, fetchData, setError, setValue]);
+  const form = useForm({
+    defaultValues: {
+      name: editedEntrance ? editedEntrance.name : "",
+      location: editedEntrance ? editedEntrance.location : "",
+    },
+  });
+
+  useEffect(() => {
+    if (editedEntrance) {
+      setUserList(editedEntrance.users || []);
+      form.reset({
+        name: editedEntrance.name,
+        location: editedEntrance.location,
+      });
+    }
+  }, [editedEntrance, form]);
 
   useDebounce(
     () => {
@@ -92,77 +83,78 @@ const EditEntrance = ({ onEntranceEdit }: EditEntranceProps) => {
     [userSearchQuery, fetchData]
   );
 
-  const onSubmit = async (data: FieldValues) => {
-    if (!editedEntrance) {
-      setError("root", {
-        type: "faker",
-        message: "Nastala chyba při aktualizaci vstupu.",
-      });
-      console.error("No entrance data available for submission");
-      return;
-    }
+  const queryClient = useQueryClient();
 
-    try {
-      await fetchData<Entrance>(`/admin/entrances/entrance/${entranceID}`, {
+  const { mutate } = useMutation({
+    mutationFn: (data: FieldValues) =>
+      fetchData<Entrance>(`/admin/entrances/${entranceID}`, {
         method: "PUT",
         body: JSON.stringify({
           ...editedEntrance,
           name: data.name,
           location: data.location,
         }),
-      });
-
-      onEntranceEdit({
-        status: "ok",
-        message: `Vstup ${data.name} byl úspěšně upraven.`,
-      });
+      }),
+    onSuccess: (res, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["entrances"] });
+      queryClient.invalidateQueries({ queryKey: ["entrance", entranceID] });
+      console.log(res);
+      toast.success(`Vstup ${variables.name} byl úspěšně upraven.`);
       navigate("/admin/entrances");
-    } catch (error) {
-      setError("root", {
+    },
+    onError: (error: any) => {
+      toast.error("Nastala chyba při aktualizaci vstupu.");
+      form.setError("root", {
         type: "server",
         message: "Nastala chyba při aktualizaci vstupu.",
       });
       console.error("Error updating entrance:", error);
-    }
-  };
+    },
+  });
 
-  const handleUserAdd = async (user: User) => {
-    setUserList((prev) => [...prev, user]);
-    setUserSearchResults((prev) => prev.filter((u) => u.id !== user.id));
-    setUserSearchQuery("");
-    try {
-      await fetchData(`/admin/users/user/${user.id}/change-entrance`, {
+  const { mutate: handleUserAdd } = useMutation({
+    mutationFn: (user: User) =>
+      fetchData(`/admin/users/user/${user.id}/change-entrance`, {
         method: "PUT",
         body: JSON.stringify({
           entranceID: editedEntrance?.id,
         }),
-      });
-    } catch (error) {
-      setError("user", {
+      }),
+    onSuccess: (res, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["entrances", entranceID] });
+      setUserSearchQuery("");
+      toast.success(
+        `Uživatel ${variables.fullName} byl úspěšně přidán ke vstupu.`
+      );
+      console.log(res);
+    },
+    onError: (error: any) => {
+      form.setError("root", {
         type: "server",
         message: "Nastala chyba při přidávání uživatele.",
       });
-      setUserList((prev) => prev.filter((u) => u.id !== user.id));
       console.error("Error adding user:", error);
-    }
-  };
+    },
+  });
 
-  const handleUserRemove = async (user: User) => {
-    try {
-      await fetchData<User>(`/admin/users/user/${user.id}/remove-entrance`, {
+  const { mutate: handleUserRemove } = useMutation({
+    mutationFn: (user: User) =>
+      fetchData<User>(`/admin/users/user/${user.id}/remove-entrance`, {
         method: "PUT",
-      });
-      setRemovedUser(user);
-    } catch (error) {
-      setError("user", {
-        type: "server",
-        message: "Nastala chyba při odebírání uživatele.",
-      });
+      }),
+    onSuccess: (res, variables) => {
+      toast.success(
+        `Uživatel ${variables.fullName} byl úspěšně odebrán ze vstupu.`
+      );
+      queryClient.invalidateQueries({ queryKey: ["entrances", entranceID] });
+    },
+    onError: (error: any) => {
+      toast.error("Nastala chyba při odebírání uživatele.");
       console.error("Error removing user:", error);
-    }
-  };
+    },
+  });
 
-  if (isLoading)
+  if (isPending)
     return (
       <div className="flex justify-center h-screen bg-white w-full pt-20">
         <Spinner />
@@ -170,124 +162,114 @@ const EditEntrance = ({ onEntranceEdit }: EditEntranceProps) => {
     );
 
   return (
-    <div className="form-page-card">
-      <h1 className="font-bold text-2xl text-center">Úprava vstupu</h1>
-      {removedUser && (
-        <div className="form-success-box ">
-          Uživatel {removedUser.fullName} byl úspěšně odebrán ze vstupu.
-        </div>
-      )}
-      <form
-        onSubmit={handleSubmit((data) => onSubmit(data))}
-        className="space-y-4"
-      >
-        <div className="flex flex-col gap-1">
-          <label htmlFor="name">Název vstupu</label>
-          <input
-            type="text"
-            {...register("name", { required: "Toto pole je povinné" })}
-            className="form-input"
-            name="name"
-            id="name"
-          />
-          {errors.name && (
-            <span className="text-red-500 text-sm">
-              {errors.name.message as string}
-            </span>
-          )}
-        </div>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="loation">Lokace</label>
-          <input
-            type="text"
-            {...register("loation")}
-            className="form-input"
-            name="loation"
-            id="loation"
-          />
-          {errors.loation && (
-            <span className="text-red-500 text-sm">
-              {errors.loation.message as string}
-            </span>
-          )}
-        </div>
-        <div className="flex flex-col gap-1">
-          <h3 className="font-bold">Uživatelé přiřazení ke vstupu</h3>
-          <ul>
-            {userList &&
-              userList.map((user) => (
-                <li
-                  key={user.id}
-                  className="flex items-center justify-start gap-3"
-                >
-                  <span className="">{user.fullName}</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUserList((prev) =>
-                        prev.filter((u) => u.id !== user.id)
-                      );
-                      handleUserRemove(user);
-                    }}
-                    className="btn-red cursor-pointer text-red-500 hover:text-red-700"
-                  >
-                    <XCircle className="w-5 h-5 " />
-                  </button>
-                </li>
-              ))}
-          </ul>
-        </div>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="name">Přidat uživatele</label>
-          <div className="flex flex-row gap-2">
-            <input
-              type="text"
-              className="form-input"
-              name="user"
-              id="user"
-              placeholder="Zadejte jméno uživatele..."
-              onChange={(e) => {
-                setUserSearchQuery(e.target.value);
-              }}
-              value={userSearchQuery}
+    <Card className="w-full lg:max-w-3/5 mx-auto">
+      <CardHeader>
+        <CardTitle>Úprava vstupu</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form
+            className="w-full flex flex-col gap-4"
+            onSubmit={form.handleSubmit((data) => mutate(data))}
+          >
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Název vstupu</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Umístění</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {userSearchResults.length > 0 && (
-            <ul className="w-full border border-t-0 border-gray-300 rounded-b-md">
-              {userSearchResults
-                .filter((sr) => !userList.some((u) => u.id === sr.id))
-                .map((user) => (
-                  <li
-                    key={user.id}
-                    className="flex items-center justify-between p-2"
-                  >
-                    <span className="ml-2">{user.fullName}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleUserAdd(user);
-                      }}
-                      className="btn-lime"
+            <div className="flex flex-col gap-1">
+              <h4 className="font-medium">Uživatelé přiřazení ke vstupu</h4>
+              <ul>
+                {userList &&
+                  userList.map((user) => (
+                    <li
+                      key={user.id}
+                      className="flex items-center justify-start gap-3"
                     >
-                      Přidat
-                    </button>
-                  </li>
-                ))}
-            </ul>
-          )}
-        </div>
+                      <span className="">{user.fullName}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserList((prev) =>
+                            prev.filter((u) => u.id !== user.id)
+                          );
+                          handleUserRemove(user);
+                        }}
+                        className="btn-red cursor-pointer text-red-500 hover:text-red-700"
+                      >
+                        <XCircle className="w-5 h-5 " />
+                      </button>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="name">Přidat uživatele</Label>
+              <div className="flex flex-row gap-2">
+                <Input
+                  type="text"
+                  name="user"
+                  id="user"
+                  placeholder="Zadejte jméno uživatele..."
+                  onChange={(e) => {
+                    setUserSearchQuery(e.target.value);
+                  }}
+                  value={userSearchQuery}
+                />
+              </div>
 
-        <button
-          type="submit"
-          className={`${
-            isSubmitting ? "btn-disabled w-full mt-3" : "btn-lime w-full mt-3"
-          }`}
-        >
-          Uložit změny
-        </button>
-      </form>
-    </div>
+              {userSearchResults.length > 0 && (
+                <ul className="w-full border border-t-0 border-gray-300 rounded-b-md">
+                  {userSearchResults
+                    .filter((sr) => !userList.some((u) => u.id === sr.id))
+                    .map((user) => (
+                      <li
+                        key={user.id}
+                        className="flex itemsditen-center justify-between p-2"
+                      >
+                        <span className="ml-2">{user.fullName}</span>
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            handleUserAdd(user);
+                          }}
+                          variant={"secondary"}
+                        >
+                          Přidat
+                        </Button>
+                      </li>
+                    ))}
+                </ul>
+              )}
+            </div>
+
+            <Button type="submit">Uložit změny</Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };
 

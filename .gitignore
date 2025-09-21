@@ -1,0 +1,5 @@
+bruno/
+.env
+.env.prod
+backend/Dockerfile.prod.old
+docker-compose.prod.yml.old

@@ -1,36 +1,63 @@
-# Use an official PHP image with Apache
-FROM php:8.2-apache
+# # Use an official PHP image with Apache
+# FROM php:8.2-apache
 
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+# ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+# RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+# RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Install PHP extensions and other dependencies needed for Symfony
-RUN apt-get update && apt-get install -y \
-    libicu-dev \
-    libpq-dev \
-    libonig-dev \
-    zip \
-    unzip \
-  && docker-php-ext-install intl pdo pdo_pgsql pdo_mysql opcache
+# # Install PHP extensions and other dependencies needed for Symfony
+# RUN apt-get update && apt-get install -y \
+#     libicu-dev \
+#     libpq-dev \
+#     libonig-dev \
+#     zip \
+#     unzip \
+#   && docker-php-ext-install intl pdo pdo_pgsql pdo_mysql opcache
 
-# ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+# # ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
+# RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 
-# Enable Apache mod_rewrite for Symfony’s routing
-RUN a2enmod rewrite
+# # Enable Apache mod_rewrite for Symfony’s routing
+# RUN a2enmod rewrite
 
-#RUN docker-php-ext-install zip bcmath pdo pdo_mysql
+# #RUN docker-php-ext-install zip bcmath pdo pdo_mysql
 
-# Copy custom PHP configuration (optional)
-# COPY ./php.ini /usr/local/etc/php/
+# # Copy custom PHP configuration (optional)
+# # COPY ./php.ini /usr/local/etc/php/
 
-###> recipes ###
-###< recipes ###
+# ###> recipes ###
+# ###< recipes ###
 
-# Set working directory (adjust if needed)
+# # Set working directory (adjust if needed)
+# WORKDIR /var/www/html
+
+# # Expose port 80 (the default Apache port)
+# EXPOSE 80
+
+FROM php:8.2-fpm-alpine
+
 WORKDIR /var/www/html
 
-# Expose port 80 (the default Apache port)
-EXPOSE 80
+RUN apk add --no-cache \
+    icu-dev \
+    libzip-dev \
+    mariadb-client
+
+RUN docker-php-ext-install \
+    intl \
+    pdo pdo_mysql \
+    zip \
+    opcache 
+
+# RUN apk add --no-cache pcre-dev $PHPIZE_DEPS \
+# && pecl install redis \
+# && docker-php-ext-enable redis.so
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+RUN addgroup -g 1000 appuser && \
+    adduser -u 1000 -G appuser -s /bin/sh -D appuser
+USER appuser
+
+EXPOSE 9000

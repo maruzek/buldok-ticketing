@@ -3,4 +3,4 @@
 cd "$(dirname "$(which "$0")")/.." # Exit if cd fails
 
 # Execute the command using the absolute path
-docker exec -it buldok_webserver bin/console-php "$@"
+docker exec -it buldok_backend bin/console-php "$@"

@@ -17,8 +17,8 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType>({
   auth: { user: null },
-  login: () => { },
-  logout: () => { },
+  login: () => {},
+  logout: () => {},
 });
 
 // es-lint-disable-next-line @typescript-eslint/no-explicit-any
@@ -60,13 +60,16 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     setAuth({ user: null });
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/auth/logout`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Logout failed");

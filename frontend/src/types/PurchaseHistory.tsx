@@ -1,14 +1,17 @@
+import { Entrance } from "./Entrance";
+
 export type PurchaseHistory = {
-  id?: number;
-  purchased_at?: string;
+  id: number;
+  purchasedAt: string;
+  entrance: Entrance;
+  paymentType: "cash" | "qr";
   purchaseItems: {
     id: number;
     quantity: number;
-    price_at_purchase: number;
-    ticket_type: {
+    priceAtPurchase: number;
+    ticketType: {
       id: number;
       name: string;
-      price: number;
     };
   }[];
 };

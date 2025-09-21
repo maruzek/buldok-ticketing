@@ -10,23 +10,15 @@ import Ticketing from "./pages/Ticketing";
 import UserMatchList from "./pages/UserMatchList";
 import NotFound from "./pages/errors/NotFound";
 import Register from "./pages/Register";
-import { useState } from "react";
-import { EditStatus } from "./types/EditStatus";
 import EntranceList from "./components/admin/EntranceList";
 import CreateEntrance from "./components/admin/CreateEntrance";
 import EditEntrance from "./components/admin/EditEntrance";
 import EditMatch from "./components/admin/EditMatch";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TicketList from "./components/admin/TicketList";
+import MatchDashboard from "./components/admin/MatchDashboard";
 
 function App() {
-  const [userEditStatus, setUserEditStatus] = useState<EditStatus | null>(null);
-  const [matchCreateStatus, setMatchCreateStatus] = useState<EditStatus | null>(
-    null
-  );
-  const [entranceEditStatus, setEntranceEditStatus] =
-    useState<EditStatus | null>(null);
-
   // TODO: zamyslet se nad nutnosti app, nebo rovou jit na ticketing
   return (
     <BrowserRouter>
@@ -37,44 +29,20 @@ function App() {
           <Route path="admin" element={<Dashboard />}>
             <Route index element={<AdminBasicInfo />} />
             <Route path="matches">
-              <Route
-                index
-                element={<MatchList matchCreateStatus={matchCreateStatus} />}
-              />
-              <Route
-                path="create"
-                element={<CreateMatch onCreateMatch={setMatchCreateStatus} />}
-              />
-              <Route
-                path=":matchID/edit"
-                element={<EditMatch onEditMatch={setMatchCreateStatus} />}
-              />
+              <Route index element={<MatchList />} />
+              <Route path="create" element={<CreateMatch />} />
+              <Route path=":matchID/edit" element={<EditMatch />} />
+              <Route path=":matchID/stats" element={<MatchDashboard />} />
             </Route>
             <Route path="users">
-              <Route index element={<UserList userEdit={userEditStatus} />} />
-              <Route
-                path=":userID/edit"
-                element={<EditUser onUserSave={setUserEditStatus} />}
-              />
+              <Route index element={<UserList />} />
+              <Route path=":userID/edit" element={<EditUser />} />
               {/* <Route path="create" element={<h1>Create User</h1>} /> */}
             </Route>
             <Route path="entrances">
-              <Route
-                index
-                element={<EntranceList entranceStatus={entranceEditStatus} />}
-              />
-              <Route
-                path=":entranceID/edit"
-                element={
-                  <EditEntrance onEntranceEdit={setEntranceEditStatus} />
-                }
-              />
-              <Route
-                path="create"
-                element={
-                  <CreateEntrance onEntranceCreate={setEntranceEditStatus} />
-                }
-              />
+              <Route index element={<EntranceList />} />
+              <Route path=":entranceID/edit" element={<EditEntrance />} />
+              <Route path="create" element={<CreateEntrance />} />
             </Route>
             <Route path="tickets">
               <Route index element={<TicketList />} />

@@ -1,229 +1,174 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { FieldValues, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
-// import { useParams } from "react-router";
-
 import { User } from "../../types/User";
 import Spinner from "../Spinner";
-import { EditStatus } from "../../types/EditStatus";
 import useApi from "../../hooks/useApi";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
+import { Button } from "../ui/button";
+import { Label } from "../ui/label";
+import { Checkbox } from "../ui/checkbox";
 
 type UserData = Omit<User, "registeredAt">;
 
-type EditUserProps = {
-  onUserSave: (status: EditStatus) => void;
-};
-
-const EditUser = ({ onUserSave }: EditUserProps) => {
-  //   const { userID } = useParams();
-  const {
-    register,
-    handleSubmit,
-    setError,
-    setValue,
-    formState: { errors, isSubmitting, isSubmitSuccessful },
-  } = useForm();
-
+const EditUser = () => {
   const { userID } = useParams<{ userID: string }>();
-  const [editedUser, setEditedUser] = useState<UserData | null>(null);
-  // const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const { fetchData, isLoading } = useApi();
+  const { fetchData } = useApi();
+
+  const { data: editedUser, isPending } = useQuery({
+    queryKey: ["user", userID],
+    queryFn: () =>
+      fetchData<UserData>(`/admin/users/user/${userID}`, { method: "GET" }),
+  });
+
+  const form = useForm({
+    defaultValues: {
+      verified: editedUser ? editedUser.verified : false,
+      admin: editedUser ? editedUser.roles.includes("ROLE_ADMIN") : false,
+    },
+  });
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const userData = await fetchData<UserData>(
-          `/admin/users/user/${userID}`,
-          {
-            method: "GET",
-          }
-        );
-        setEditedUser(userData);
-        setValue("verified", userData.verified);
-        setValue("admin", userData.roles.includes("ROLE_ADMIN"));
-      } catch (error) {
-        console.error("Error fetching user:", error);
-
-        setEditedUser(null);
-      }
-    };
-
-    fetchUser();
-  }, [userID, setValue, fetchData]);
-
-  const onSubmit = async (data: FieldValues) => {
-    if (!editedUser) {
-      setError("root", {
-        type: "faker",
-        message: "Nastala chyba při aktualizaci uživatele.",
+    if (editedUser) {
+      form.reset({
+        verified: editedUser.verified,
+        admin: editedUser.roles.includes("ROLE_ADMIN"),
       });
-      console.error("No user data available for submission");
-      return;
     }
+  }, [editedUser, form]);
 
-    let newRoles = [...editedUser.roles];
+  const queryClient = useQueryClient();
 
-    if (data.admin && !editedUser.roles.includes("ROLE_ADMIN")) {
-      newRoles = [...newRoles, "ROLE_ADMIN"];
-    } else if (!data.admin && editedUser.roles.includes("ROLE_ADMIN")) {
-      newRoles = newRoles.filter((role) => role !== "ROLE_ADMIN");
-    }
-
-    // try {
-    //   console.log(editedUser);
-    //   const response = await fetch(
-    //     `http://localhost:8080/api/admin/users/user/${userID}`,
-    //     {
-    //       method: "PUT",
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //       },
-    //       body: JSON.stringify({
-    //         ...editedUser,
-    //         roles: newRoles,
-    //         verified: data.verified,
-    //       }),
-    //       credentials: "include",
-    //     }
-    //   );
-
-    //   if (!response.ok) {
-    //     const errorData = await response.json();
-    //     const err = `Nastala chyba při aktualizaci uživatele. ${errorData.message}`;
-    //     setError("root", {
-    //       type: "server",
-    //       message: err,
-    //     });
-    //     throw new Error(err);
-    //   }
-
-    //   onUserSave({
-    //     status: "ok",
-    //     message: `Uživatel ${editedUser.fullName} byl úspěšně upraven!`,
-    //   });
-    //   navigate("/admin/users");
-    // } catch (error: unknown) {
-    //   if (error instanceof Error) {
-    //     setError("root", {
-    //       type: "server",
-    //       message: error?.message as string,
-    //     });
-    //     console.error("Error updating user:", error?.message as string);
-    //   }
-    // }
-
-    try {
-      const response = await fetchData<EditStatus>(
+  const { mutate, isPending: isSubmitting } = useMutation({
+    mutationFn: (data: FieldValues) => {
+      return fetchData<{ status: string; message: string; updatedUser: User }>(
         `/admin/users/user/${userID}`,
         {
           method: "PUT",
           body: JSON.stringify({
             ...editedUser,
-            roles: newRoles,
+            roles: data.admin
+              ? [...(editedUser?.roles || []), "ROLE_ADMIN"]
+              : (editedUser?.roles || []).filter(
+                  (role) => role !== "ROLE_ADMIN"
+                ),
             verified: data.verified,
           }),
         }
       );
-
-      console.log(response);
-
-      onUserSave(response);
+    },
+    onSuccess: (res, variables) => {
+      console.log(res, variables);
+      queryClient.invalidateQueries({ queryKey: ["user", userID] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success(
+        `Uživatel ${res?.updatedUser.fullName} byl úspěšně upraven!`
+      );
       navigate("/admin/users");
-    } catch (error) {
-      if (error instanceof Error) {
-        setError("root", {
-          type: "server",
-          message: error?.message as string,
-        });
-        console.error("Error updating user:", error?.message as string);
-      }
-    }
-  };
+    },
+    onError: (error: any) => {
+      console.error("Error updating user:", error);
+      toast.error(
+        error?.message ||
+          "Nastala chyba při aktualizaci uživatele. Zkuste to prosím znovu."
+      );
+    },
+  });
+
+  if (isPending) {
+    return (
+      <Card className="w-full lg:max-w-2/5 h-screen lg:max-h-2/5 mx-auto flex justify-center items-center">
+        <CardContent className="flex justify-center items-center">
+          <Spinner />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div className="form-page-card">
-      {isLoading && (
-        <div className="flex justify-center items-center h-full">
-          <Spinner />
-        </div>
-      )}
-      {!isLoading && editedUser && (
-        <>
-          <h2 className="text-2xl font-bold text-center">
-            Upravit uživatele{` ${editedUser.fullName} (${editedUser.email})`}
-          </h2>
-          {errors.root && (
-            <div className="bg-red-100 text-red-700 p-4 mb-4 rounded-md">
-              {errors.root.message as string}
-            </div>
-          )}
-          {isSubmitSuccessful && (
-            <div className="bg-green-100 text-green-700 p-4 mb-4 rounded-md">
-              Uživatel byl úspěšně upraven!
-            </div>
-          )}
+    <Card className="w-full lg:max-w-2/5 mx-auto">
+      <CardHeader>
+        <CardTitle>
+          Upravit uživatele {`${editedUser?.fullName} (${editedUser?.email})`}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
           <form
-            onSubmit={handleSubmit((data) => onSubmit(data))}
-            className="space-y-4"
+            className="w-full flex gap-2 flex-col"
+            onSubmit={form.handleSubmit((data) => mutate(data))}
           >
-            <div className="flex flex-col gap-1">
-              <h3 className="font-bold">Ověření</h3>
-
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  {...register("verified")}
-                  className="form-checkbox"
-                />
-                <label className="ml-2">Uživatel ověřen</label>
-              </div>
-              {errors.verified && (
-                <span className="text-red-500 text-sm">
-                  {errors.verified.message as string}
-                </span>
+            <FormField
+              control={form.control}
+              name="verified"
+              render={({ field }) => (
+                <FormItem className="flex flex-col mb-4">
+                  <FormLabel>Ověření</FormLabel>
+                  <FormControl>
+                    <div className="flex items-center">
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={(checked) => field.onChange(!!checked)}
+                      />
+                      <Label className="ml-2">Uživatel ověřen</Label>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
-            {/* TODO: Add entrance selection */}
-            <div className="flex flex-col gap-1">
-              <h3 className="font-bold ">Role</h3>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  className="form-checkbox"
-                  disabled
-                  checked
-                />
-                <label className="ml-2">Pokladník (běžný uživatel)</label>
-              </div>
+            />
+            <FormField
+              control={form.control}
+              name="admin"
+              render={({ field }) => (
+                <FormItem className="flex flex-col mb-4">
+                  <FormLabel>Role</FormLabel>
+                  <FormControl>
+                    <div className="flex flex-col">
+                      <div className="flex items-center mb-2">
+                        <Checkbox checked disabled />
+                        <Label className="ml-2">
+                          Pokladník (běžný uživatel)
+                        </Label>
+                      </div>
 
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  {...register("admin")}
-                  className="form-checkbox"
-                />
-                <label className="ml-2">Správce</label>
-              </div>
-              {errors.admin && (
-                <span className="text-red-500 text-sm">
-                  {errors.admin.message as string}
-                </span>
+                      <div className="flex items-center">
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={(checked) =>
+                            field.onChange(!!checked)
+                          }
+                        />
+                        <Label className="ml-2">Správce</Label>
+                      </div>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
-            <button
+            />
+            <Button
+              className="w-full mt-3"
               type="submit"
-              className={`${isSubmitting
-                ? "btn-disabled w-full mt-3"
-                : "btn-lime w-full mt-3"
-                }`}
+              disabled={isSubmitting}
             >
               Uložit
-            </button>
+            </Button>
           </form>
-        </>
-      )}
-    </div>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };
 

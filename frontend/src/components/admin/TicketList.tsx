@@ -1,92 +1,97 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { FieldValues, useForm } from "react-hook-form";
 import useApi from "../../hooks/useApi";
 import { TicketPrices } from "../../types/TicketPrices";
 import Spinner from "../Spinner";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
+import { Input } from "@/components/ui/input";
+
+import { Button } from "@/components/ui/button";
 
 const TicketList = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [status, setStatus] = useState<string>("");
-  const {
-    register,
-    handleSubmit,
-    setError,
-    setValue,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm();
-
   const { fetchData } = useApi();
 
-  const fullTicketValue = watch("fullTicket");
+  const {
+    data: ticketPrices,
+    isPending,
+    error: fetchError,
+  } = useQuery({
+    queryKey: ["ticket-prices"],
+    queryFn: () => fetchData<TicketPrices>("/ticket-prices", { method: "GET" }),
+  });
+
+  const form = useForm({
+    defaultValues: {
+      fullTicket: ticketPrices ? ticketPrices.fullTicket.toString() : "",
+      halfTicket: ticketPrices ? ticketPrices.halfTicket.toString() : "",
+    },
+  });
+
+  useEffect(() => {
+    if (ticketPrices) {
+      form.reset({
+        fullTicket: ticketPrices.fullTicket.toString(),
+        halfTicket: ticketPrices.halfTicket.toString(),
+      });
+    }
+  }, [ticketPrices, form]);
+
+  useEffect(() => {
+    if (fetchError) {
+      toast.error("Nastala chyba při načítání cen vstupenek.");
+    }
+  }, [fetchError]);
+
+  const fullTicketValue = form.watch("fullTicket");
 
   useEffect(() => {
     const fullTicketPrice = parseFloat(fullTicketValue);
 
     if (!isNaN(fullTicketPrice)) {
-      setValue("halfTicket", (fullTicketPrice / 2).toString());
+      form.setValue("halfTicket", (fullTicketPrice / 2).toString());
     } else {
-      setValue("halfTicket", "");
+      form.setValue("halfTicket", "");
     }
-  }, [fullTicketValue, setValue]);
+  }, [fullTicketValue, form]);
 
-  useEffect(() => {
-    const fetchTicketPrices = async () => {
-      try {
-        setIsLoading(true);
-        const data = await fetchData<TicketPrices>("/ticket-prices", {
-          method: "GET",
-        });
-        console.log(data);
-        setValue("fullTicket", data.fullTicket);
-        setValue("halfTicket", data.halfTicket);
-      } catch (error) {
-        console.error("Error fetching ticket prices:", error);
-        setError("root", {
-          type: "server",
-          message: "Nastala chyba při načítání cen vstupenek.",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTicketPrices();
-  }, [fetchData, setValue, setError]);
-
-  const onSubmit = async (data: FieldValues) => {
-    try {
-      const response = await fetchData<{ status: string; message: string }>(
-        "/ticket-prices/",
-        {
-          method: "PUT",
-          body: JSON.stringify({
-            fullTicket: data.fullTicket,
-            halfTicket: data.halfTicket,
-          }),
-        }
-      );
-      if (!response) {
-        setError("root", {
-          type: "server",
-          message: "Nastala chyba při aktualizaci cen vstupenek.",
-        });
-        return;
-      }
-
+  const { mutate, isPending: isSaving } = useMutation({
+    mutationFn: (data: FieldValues) =>
+      fetchData<{ status: string; message: string }>("/ticket-prices/", {
+        method: "PUT",
+        body: JSON.stringify({
+          fullTicket: data.fullTicket,
+          halfTicket: data.halfTicket,
+        }),
+      }),
+    onSuccess: (response) => {
       if (response.status == "ok") {
-        setStatus(response.message);
+        toast.success("Ceny vstupenek byly úspěšně aktualizovány.");
       }
-    } catch (error) {
+    },
+    onError: (error: any) => {
       console.error("Error updating ticket prices:", error);
-      setError("root", {
+      form.setError("root", {
         type: "server",
         message: "Nastala chyba při aktualizaci cen vstupenek.",
       });
-    }
-  };
+      toast.error(
+        error?.message ||
+          "Nastala chyba při aktualizaci cen vstupenek. Zkuste to prosím znovu."
+      );
+    },
+  });
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className="form-page-card flex justify-center">
         <Spinner />
@@ -95,45 +100,54 @@ const TicketList = () => {
   }
 
   return (
-    <div className="form-page-card">
-      <h2 className="text-2xl font-bold text-center">Ceny vstupenek</h2>
-      {status && <div className="form-success-box">{status}</div>}
-      {errors.root && (
-        <div className="form-error-box">{errors.root.message}</div>
-      )}
-      <form
-        className="w-full flex flex-col gap-4"
-        onSubmit={handleSubmit(onSubmit)}
-      >
-        <div className="flex flex-col gap-1">
-          <label htmlFor="">Plné vstupenky</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              className="form-input"
-              {...register("fullTicket")}
-            />
-            <span className="text-2xl">Kč</span>
+    <Card className="w-full lg:max-w-3/5 mx-auto">
+      <CardHeader>
+        <CardTitle>Upravit ceny vstupenek</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {form.formState.errors.root && (
+          <div className="form-error-box">
+            {form.formState.errors.root.message}
           </div>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label htmlFor="">Poloviční vstupenky</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              className="form-input"
-              {...register("halfTicket")}
+        )}
+        <Form {...form}>
+          <form
+            className="w-full flex flex-col gap-4"
+            onSubmit={form.handleSubmit((data) => mutate(data))}
+          >
+            <FormField
+              control={form.control}
+              name="fullTicket"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Plné vstupenky</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Cena" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            <span className="text-2xl">Kč</span>
-          </div>
-        </div>
-
-        <button className={`${isSubmitting ? "btn-disabled" : "btn-lime"}`}>
-          Uložit
-        </button>
-      </form>
-    </div>
+            <FormField
+              control={form.control}
+              name="halfTicket"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Poloviční vstupenky</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Cena" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" disabled={isSaving}>
+              Uložit
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -43,8 +43,12 @@ const useApi = (): ApiHook => {
           );
 
           if (!auth.user) {
-            setError("Nesprávný email nebo heslo.");
-            err = new Error("Nesprávný email nebo heslo.");
+            setError(
+              "Nesprávné uživatelské jméno nebo heslo, nebo vašemu účtu chybí ověření od správce."
+            );
+            err = new Error(
+              "Nesprávné uživatelské jméno nebo heslo, nebo vašemu účtu chybí ověření od správce."
+            );
           }
 
           logout();
@@ -57,8 +61,12 @@ const useApi = (): ApiHook => {
         }
 
         if (!response.ok) {
+          const errorBody = await response.json();
+          const backendError =
+            errorBody.message ?? JSON.stringify(errorBody.message);
+
           throw new Error(
-            `Error: Při načítání dat došlo k chybě ${response.status}`
+            `Error: Při načítání dat došlo k chybě ${response.status} - ${backendError}`
           );
         }
 

@@ -1,0 +1,323 @@
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import QrDialog from "./QrDialog";
+import { Controller, FieldValues, useForm } from "react-hook-form";
+import { PurchaseHistory } from "@/types/PurchaseHistory";
+import { TicketPrices } from "@/types/TicketPrices";
+import useApi from "@/hooks/useApi";
+import { Card, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { Input } from "../ui/input";
+import { Slider } from "../ui/slider";
+import { Label } from "../ui/label";
+import { useState } from "react";
+import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+type PurchaseDrawerProps = {
+  matchID: string | undefined;
+  ticketPrices: TicketPrices | null;
+};
+
+export default function PurchaseDrawer({
+  matchID,
+  ticketPrices,
+}: PurchaseDrawerProps) {
+  const [open, setOpen] = useState(false);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button className="w-full">Zaznamenat nákup</Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Zaznamenat nákup</DialogTitle>
+          </DialogHeader>
+          <PaymentForm
+            ticketPrices={ticketPrices}
+            matchID={matchID}
+            setPurchaseFormOpened={setOpen}
+          />
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
+        <Button className="w-full">Zaznamenat nákup</Button>
+      </DrawerTrigger>
+      <DrawerContent>
+        <DrawerHeader className="text-left">
+          <DrawerTitle>Zaznamenat nákup</DrawerTitle>
+        </DrawerHeader>
+        <PaymentForm
+          ticketPrices={ticketPrices}
+          matchID={matchID}
+          setPurchaseFormOpened={setOpen}
+        />
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
+function PaymentForm({
+  ticketPrices,
+  matchID,
+  setPurchaseFormOpened,
+}: {
+  ticketPrices: TicketPrices | null;
+  matchID: string | undefined;
+  setPurchaseFormOpened: (open: boolean) => void;
+}) {
+  const { watch, handleSubmit, control } = useForm({
+    defaultValues: { fullTickets: 0, halfTickets: 0 },
+  });
+
+  const { fetchData } = useApi();
+
+  const queryClient = useQueryClient();
+  const [qrData, setQrData] = useState<PaymentResponse | null>(null);
+  const [isQrLoading, setIsQrLoading] = useState(false);
+  const { mutate: purchase, mutateAsync: purchaseAsync } = useMutation({
+    mutationFn: (data: FieldValues) =>
+      fetchData<PurchaseHistory>(`/purchase/mark`, {
+        method: "POST",
+        body: JSON.stringify({
+          fullTickets: data.fullTickets,
+          halfTickets: data.halfTickets,
+          matchID: matchID,
+          paymentType: data.paymentType || "cash",
+        }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["match", matchID],
+      });
+      toast.success("Nákup byl úspěšně zaznamenán.");
+    },
+    onError: (error) => {
+      toast.error("Chyba při zaznamenávání nákupu.");
+      console.error("Error purchasing tickets:", error);
+    },
+  });
+
+  const { mutateAsync: paymentAsync } = useMutation<
+    PaymentResponse,
+    any,
+    { id: number; amount: number }
+  >({
+    mutationFn: (data) =>
+      fetchData<PaymentResponse>("/payment", {
+        method: "POST",
+        body: JSON.stringify({
+          amount: data.amount,
+          purchaseId: data.id,
+        }),
+      }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["payment"],
+      });
+      toast.success("Platba byla úspěšně vytvořena.");
+      console.log("Payment created:", data);
+    },
+    onError: (error) => {
+      toast.error("Chyba při vytváření platby.");
+      console.error("Error creating payment:", error);
+    },
+  });
+
+  const fullTicketsValue = watch("fullTickets", 0);
+  const halfTicketsValue = watch("halfTickets", 0);
+
+  const onQrRequest = async () => {
+    if (!ticketPrices) return;
+
+    try {
+      setIsQrLoading(true);
+      const { id, paymentType } = await purchaseAsync({
+        fullTickets: fullTicketsValue,
+        halfTickets: halfTicketsValue,
+        matchID,
+        paymentType: "qr",
+      });
+      console.log("id", id);
+      console.log("paymentType", paymentType);
+      const payment = await paymentAsync({
+        id,
+        amount:
+          fullTicketsValue * ticketPrices.fullTicket +
+          halfTicketsValue * ticketPrices.halfTicket,
+      });
+      setQrData(payment);
+    } catch {
+      toast.error("Chyba při vytváření platby");
+    } finally {
+      setIsQrLoading(false);
+    }
+  };
+
+  return (
+    <>
+      {ticketPrices && (
+        <>
+          <div className="grid grid-cols-2 gap-4 px-5 mb-4">
+            <Card className="max-h-[100px]">
+              <CardHeader>
+                <CardDescription>Plná cena</CardDescription>
+                <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
+                  {ticketPrices?.fullTicket} Kč
+                </CardTitle>
+              </CardHeader>
+              <p></p>
+              <span className="font-bold"></span>
+            </Card>
+            <Card className="max-h-[100px]">
+              <CardHeader>
+                <CardDescription>Poloviční cena</CardDescription>
+                <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
+                  {ticketPrices?.halfTicket} Kč
+                </CardTitle>
+              </CardHeader>
+              <p></p>
+              <span className="font-bold"></span>
+            </Card>
+          </div>
+          <form
+            className="flex flex-col gap-4"
+            // onSubmit={handleSubmit(onSubmit)}
+            onSubmit={handleSubmit((data) => purchase(data))}
+          >
+            <div className="px-5">
+              <div className="flex flex-col gap-3">
+                <Controller
+                  control={control}
+                  name="fullTickets"
+                  render={({ field }) => (
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="flex flex-row justify-between items-center w-full">
+                        <Label htmlFor="fullTickets">
+                          Počet plných vstupenek:{" "}
+                        </Label>
+                        <Input
+                          type="number"
+                          {...field}
+                          className="w-1/5"
+                          min={0}
+                        />
+                      </div>
+                      <Slider
+                        value={[field.value]}
+                        max={10}
+                        min={0}
+                        step={1}
+                        onValueChange={([v]) => field.onChange(v)}
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+              <div className="flex flex-col gap-3 mt-4">
+                <Controller
+                  control={control}
+                  name="halfTickets"
+                  render={({ field }) => (
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="flex flex-row justify-between items-center w-full">
+                        <Label htmlFor="halfTickets">
+                          Počet polovičních vstupenek:{" "}
+                        </Label>
+                        <Input
+                          type="number"
+                          {...field}
+                          className="w-1/5"
+                          min={0}
+                        />
+                      </div>
+                      <Slider
+                        value={[field.value]}
+                        max={10}
+                        step={1}
+                        min={0}
+                        onValueChange={([v]) => field.onChange(v)}
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+              <div className="flex flex-col gap-1 mt-4">
+                <div className="flex flex-row justify-between items-center">
+                  <p>Plné vstupenky: </p>
+                  <span className="font-bold">
+                    {fullTicketsValue * ticketPrices?.fullTicket} Kč
+                  </span>
+                </div>
+                <div className="flex flex-row justify-between items-center">
+                  <p>Poloviční vstupenky: </p>
+                  <span className="font-bold">
+                    {halfTicketsValue * ticketPrices?.halfTicket} Kč
+                  </span>
+                </div>
+                <hr className="my-2" />
+                <div className="flex flex-row justify-between items-center font-bold">
+                  <p>Cena celkem: </p>
+                  <span>
+                    {fullTicketsValue * ticketPrices?.fullTicket +
+                      halfTicketsValue * ticketPrices?.halfTicket}{" "}
+                    Kč
+                  </span>
+                </div>
+              </div>
+            </div>
+            <DrawerFooter className="">
+              <DrawerClose asChild>
+                <Button
+                  type="submit"
+                  className="w-full cursor-pointer"
+                  disabled={fullTicketsValue + halfTicketsValue === 0}
+                >
+                  Uložit
+                </Button>
+              </DrawerClose>
+
+              <DrawerClose asChild>
+                <Button variant="outline">Zrušit</Button>
+              </DrawerClose>
+              <QrDialog
+                fullPrice={
+                  fullTicketsValue * ticketPrices?.fullTicket +
+                  halfTicketsValue * ticketPrices?.halfTicket
+                }
+                onQrRequest={onQrRequest}
+                qrData={qrData}
+                isQrLoading={isQrLoading}
+                triggerDisabled={fullTicketsValue + halfTicketsValue === 0}
+                setPurchaseFormOpened={setPurchaseFormOpened}
+              />
+            </DrawerFooter>
+          </form>
+        </>
+      )}
+    </>
+  );
+}

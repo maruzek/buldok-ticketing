@@ -9,11 +9,20 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/ticket-prices', name: 'api_ticket_prices_')]
 final class TicketPricesController extends AbstractController
 {
     #[Route('/', name: 'get', methods: ['GET'])]
+    /**
+     * Get the current ticket prices.
+     *
+     * @param TicketTypeRepository $ticketTypeRepository Repository to fetch ticket types.
+     * @param EntityManagerInterface $em The entity manager to handle database operations.
+     *
+     * @return JsonResponse
+     */
     public function get(TicketTypeRepository $ticketTypeRepository, EntityManagerInterface $em): JsonResponse
     {
         $fullTicket = $ticketTypeRepository->findOneBy(['name' => 'fullTicket']);
@@ -32,6 +41,16 @@ final class TicketPricesController extends AbstractController
     }
 
     #[Route('/', name: 'update', methods: ['PUT'])]
+    #[IsGranted('ROLE_ADMIN')]
+    /**
+     * Update the ticket prices.
+     *
+     * @param TicketTypeRepository $ticketTypeRepository Repository to fetch ticket types.
+     * @param EntityManagerInterface $em The entity manager to handle database operations.
+     * @param Request $request The request containing the new prices.
+     *
+     * @return JsonResponse
+     */
     public function update(TicketTypeRepository $ticketTypeRepository, EntityManagerInterface $em, Request $request): JsonResponse
     {
         $fullTicket = $ticketTypeRepository->findOneBy(['name' => 'fullTicket']);
@@ -39,20 +58,20 @@ final class TicketPricesController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
-        // if (!$fullTicket || !$halfTicket) {
-        //     $fullTicket = new TicketType();
-        //     $fullTicket->setName('fullTicket');
-        //     $fullTicket->setPrice(0);
-        //     $halfTicket = new TicketType();
-        //     $halfTicket->setName('halfTicket');
-        //     $halfTicket->setPrice(0);
-        //     $em->persist($fullTicket);
-        //     $em->persist($halfTicket);
-        //     $em->flush();
-        //     return $this->json([
-        //         'message' => 'Ticket types not found, created new ones',
-        //     ], 404);
-        // }
+        if (!$fullTicket || !$halfTicket) {
+            $fullTicket = new TicketType();
+            $fullTicket->setName('fullTicket');
+            $fullTicket->setPrice(0);
+            $halfTicket = new TicketType();
+            $halfTicket->setName('halfTicket');
+            $halfTicket->setPrice(0);
+            $em->persist($fullTicket);
+            $em->persist($halfTicket);
+            $em->flush();
+            return $this->json([
+                'message' => 'Ticket types not found, created new ones',
+            ], 404);
+        }
 
         if (!isset($data['fullTicket'])) {
             return $this->json([

@@ -12,6 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 
 //TODO: refactor controller to match admin structure
@@ -20,6 +21,15 @@ use Symfony\Component\Serializer\SerializerInterface;
 final class MatchController extends AbstractController
 {
     #[Route('/api/admin/match/create', name: 'create', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    /**
+     * Create a new match.
+     *
+     * @param Request $request The request containing the match data.
+     * @param EntityManagerInterface $em The entity manager to persist the new match.
+     *
+     * @return JsonResponse
+     */
     public function createMatch(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -44,8 +54,18 @@ final class MatchController extends AbstractController
 
         $match = new Game();
         $match->setRival($data['rival']);
-        $match->setPlayedAt(new \DateTime($data['matchDate']));
-        $match->setDescription($data['description'] || null);
+
+        try {
+            // parse ISO8601 date (including timezone) in UTC to prevent local offset
+            $date = new \DateTime($data['matchDate']);
+        } catch (\Exception $e) {
+            return $this->json([
+                'error' => 'Invalid date format, expected ISO8601',
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $match->setPlayedAt($date);
+        $match->setDescription($data['description'] ?? null);
         $match->setStatus(MatchStatus::ACTIVE);
 
         try {
@@ -70,26 +90,52 @@ final class MatchController extends AbstractController
         ], JsonResponse::HTTP_CREATED);
     }
 
-    #[Route('/api/admin/match/list', name: 'list_match', methods: ['GET'])]
-    public function listMatch(GameRepository $gameRepository): JsonResponse
+    // #[Route('/api/admin/matches/list', name: 'list_matches', methods: ['GET'])]
+    #[Route('/api/matches', name: 'list_matches', methods: ['GET'])]
+    /**
+     * List all matches.
+     *
+     * @param GameRepository $gameRepository
+     * @return JsonResponse
+     */
+    public function listMatches(GameRepository $gameRepository, Request $request, SerializerInterface $serializer): JsonResponse
     {
-        $matches = $gameRepository->findAllMatches();
+        $criteria = [];
 
-        $matchList = [];
-        foreach ($matches as $match) {
-            $matchList[] = [
-                'id' => $match->getId(),
-                'rival' => $match->getRival(),
-                'playedAt' => $match->getPlayedAt()->format('d.m.Y H:i'),
-                'description' => $match->getDescription(),
-                'status' => $match->getStatus(),
-            ];
+        if ($this->isGranted("ROLE_ADMIN")) {
+            $statusParam = $request->query->get('status');
+            if ($statusParam) {
+                $statusEnum = MatchStatus::tryFrom($statusParam);
+
+                if (!$statusEnum) {
+                    return $this->json([
+                        'error' => 'Invalid status value, must be one of: ' . implode(', ', array_column(MatchStatus::cases(), 'value')),
+                    ], JsonResponse::HTTP_BAD_REQUEST);
+                }
+
+                $criteria['status'] = $statusEnum;
+            }
+        } else {
+            $criteria['status'] = MatchStatus::ACTIVE;
         }
 
-        return $this->json($matchList, JsonResponse::HTTP_OK);
+        $matches =  $gameRepository->findBy($criteria, ['playedAt' => 'DESC']);
+
+        $result = $serializer->serialize($matches, 'json', ['groups' => ['match:read']]);
+
+        return JsonResponse::fromJsonString($result, JsonResponse::HTTP_OK);
     }
 
     #[Route('/api/match/{id}', name: 'get_match', methods: ['GET'])]
+    /**
+     * Get match by ID.
+     *
+     * @param int $id The ID of the match.
+     * @param GameRepository $gameRepository The repository to fetch the match.
+     * @param SerializerInterface $serializer The serializer to format the response.
+     *
+     * @return JsonResponse
+     */
     public function getMatchById(int $id, GameRepository $gameRepository, SerializerInterface $serializer): JsonResponse
     {
         $match = $gameRepository->find($id);
@@ -116,6 +162,17 @@ final class MatchController extends AbstractController
     }
 
     #[Route('/api/admin/match/{id}', name: 'edit_match', methods: ['PUT'])]
+    #[IsGranted('ROLE_ADMIN')]
+    /**
+     * Edit a match by ID.
+     *
+     * @param int $id The ID of the match to edit.
+     * @param GameRepository $gameRepository The repository to fetch the match.
+     * @param Request $request The request containing the updated match data.
+     * @param EntityManagerInterface $em The entity manager to persist the changes.
+     *
+     * @return JsonResponse
+     */
     public function editMatchById(int $id, GameRepository $gameRepository, Request $request, EntityManagerInterface $em): JsonResponse
     {
         $match = $gameRepository->find($id);
@@ -174,6 +231,13 @@ final class MatchController extends AbstractController
     }
 
     #[Route('/api/users-matches', name: 'users_matches', methods: ['GET'])]
+    /**
+     * Get matches for the authenticated user.
+     *
+     * @param GameRepository $gameRepository The repository to fetch matches.
+     *
+     * @return JsonResponse
+     */
     public function getUsersMatches(GameRepository $gameRepository): JsonResponse
     {
         /** @var User $authUser */
@@ -206,9 +270,66 @@ final class MatchController extends AbstractController
     }
 
     #[Route('/api/admin/matches/last-active-match', name: 'last_active_match', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    /**
+     * Get the last active match.
+     *
+     * @param GameRepository $gameRepository The repository to fetch the last active match.
+     * @param SerializerInterface $serializer The serializer to format the response.
+     *
+     * @return JsonResponse
+     */
     public function getLastActiveMatch(GameRepository $gameRepository, SerializerInterface $serializer): JsonResponse
     {
         $match = $gameRepository->findLastActiveMatch();
+
+        if (!$match) {
+            return $this->json([
+                'error' => 'No active matches found',
+            ], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $match = $serializer->serialize($match, 'json', [
+            'groups' => ['game:admin_dashboard', 'purchase:admin_game_summary'],
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
+
+        return JsonResponse::fromJsonString($match, JsonResponse::HTTP_OK);
+    }
+
+    #[Route('/api/matches/{id}/stats', name: 'full_match_stats', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    /**
+     * Get full statistics for a match by ID.
+     *
+     * @param GameRepository $gameRepository The repository to fetch the last active match.
+     * @param SerializerInterface $serializer The serializer to format the response.
+     *
+     * @return JsonResponse
+     */
+    public function getFullMatchStats(int $id, GameRepository $gameRepository, SerializerInterface $serializer, Request $request): JsonResponse
+    {
+        $isAdmin = $this->isGranted('ROLE_ADMIN');
+        /** @var User $authUser */
+        $authUser = $this->getUser();
+
+        $limit = $request->query->get('userEntranceLimit') == 1 ? true : false;
+
+        $entrance = $authUser->getEntrance();
+        if (!$entrance) {
+            return $this->json(
+                ['error' => 'No entrance defined for this user'],
+                JsonResponse::HTTP_UNAUTHORIZED
+            );
+        }
+
+        if ($limit || (!$isAdmin && !$limit)) {
+            $match = $gameRepository->findWithFilteredPurchases($id, $entrance->getId());
+        } else if ($isAdmin && !$limit) {
+            $match = $gameRepository->find($id);
+        }
 
         if (!$match) {
             return $this->json([

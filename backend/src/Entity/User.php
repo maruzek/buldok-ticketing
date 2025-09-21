@@ -9,6 +9,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
+use Symfony\Component\Validator\Constraints as Assert;
+
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
@@ -20,6 +22,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
+    #[Assert\NotBlank]
+    #[Assert\Email]
+    #[Assert\Length(max: 180)]
     private ?string $email = null;
 
     /**
@@ -32,21 +37,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 255)]
     private ?string $password = null;
 
     /**
      * @var Collection<int, Purchase>
      */
-    #[ORM\OneToMany(targetEntity: Purchase::class, mappedBy: 'sold_by')]
+    #[ORM\OneToMany(targetEntity: Purchase::class, mappedBy: 'soldBy')]
     private Collection $purchases;
 
     #[ORM\Column]
+    #[Assert\Type('bool')]
+    #[Assert\NotNull]
     private ?bool $verified = null;
 
     #[ORM\Column]
+    #[Assert\NotNull]
+    #[Assert\Type(\DateTimeImmutable::class)]
+    #[Assert\DateTime]
     private ?\DateTimeImmutable $registered_at = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 255)]
+    #[Assert\Type('string')]
+    #[Assert\Regex(
+        pattern: '/^[a-zA-Z\s]+$/',
+        message: 'Full name can only contain letters and spaces.'
+    )]
     private ?string $fullName = null;
 
     #[ORM\ManyToOne(inversedBy: 'users')]
@@ -208,5 +227,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->entrance = $entrance;
 
         return $this;
+    }
+
+    public function isAdmin(): bool
+    {
+        return in_array('ROLE_ADMIN', $this->getRoles(), true);
     }
 }

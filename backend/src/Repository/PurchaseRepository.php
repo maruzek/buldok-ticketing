@@ -32,13 +32,13 @@ class PurchaseRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('p') // Purchase
             ->addSelect('pi', 'tt')
             ->leftJoin('p.purchaseItems', 'pi')    // ' PurchaseItem
-            ->leftJoin('pi.ticket_type', 'tt')      // TicketType
+            ->leftJoin('pi.ticketType', 'tt')      // TicketType
             ->andWhere('p.match = :matchEntity')
             ->andWhere('p.entrance = :entranceEntity')
             ->setParameter('matchEntity', $match)
             ->setParameter('entranceEntity', $entrance);
 
-        return $qb->orderBy('p.purchased_at', 'DESC')
+        return $qb->orderBy('p.purchasedAt', 'DESC')
             ->getQuery()
             ->getResult();
     }
@@ -56,14 +56,14 @@ class PurchaseRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('p') // Purchase
             ->addSelect('pi', 'tt')
             ->leftJoin('p.purchaseItems', 'pi')    // ' PurchaseItem
-            ->leftJoin('pi.ticket_type', 'tt')      // TicketType
+            ->leftJoin('pi.ticketType', 'tt')      // TicketType
             ->andWhere('p.match = :matchEntity')
             ->andWhere('p.entrance = :entranceEntity')
             ->setParameter('matchEntity', $match)
             ->setParameter('entranceEntity', $entrance);
 
 
-        return $qb->orderBy('p.purchased_at', 'DESC')
+        return $qb->orderBy('p.purchasedAt', 'DESC')
             ->setMaxResults(1) // Limit to one result
             ->getQuery()
             ->getOneOrNullResult(); // Get a single result or null

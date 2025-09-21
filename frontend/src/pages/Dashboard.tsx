@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router";
-import {
-  DoorOpen,
-  LayoutDashboard,
-  Logs,
-  Plus,
-  Ticket,
-  Users,
-} from "lucide-react";
+import { Outlet, useLocation } from "react-router";
 import Header from "../components/Header";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "../components/ui/sidebar";
+import { AppSidebar } from "../components/app-sidebar";
+import { Separator } from "@/components/ui/separator";
 
 const getTitleFromPathname = (pathname: string): string => {
   switch (pathname) {
@@ -36,7 +35,6 @@ const getTitleFromPathname = (pathname: string): string => {
 
 const Dashboard = () => {
   const [headerTitle, setHeaderTitle] = useState("Dashboard");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
 
   useEffect(() => {
@@ -46,108 +44,175 @@ const Dashboard = () => {
     setHeaderTitle(getTitleFromPathname(location.pathname));
   }, [location.pathname]);
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen((prev) => !prev);
-  };
-
   return (
-    <div className="flex h-screen bg-green-50" id="admin-dashboard">
-      {/* Sidebar */}
-      <aside
-        // className="w-64 bg-emerald-950 text-white flex flex-col sticky top-0 h-screen overflow-y-auto"
-        className={`bg-emerald-950 text-white flex flex-col sticky top-0 h-screen transition-all duration-300 ease-in-out ${
-          isSidebarOpen ? "w-64" : "w-0"
-        } overflow-hidden`}
-        id="admin-dashboard-aside"
+    <SidebarProvider defaultOpen={true}>
+      <div
+        className="flex h-screen w-screen text-foreground"
+        id="admin-dashboard"
       >
-        <div className="p-4 text-xl font-bold h-15">
-          <h1 className="text-xl font-bold">Buldok Ticketing</h1>
-        </div>
-        <div className="p-4 text-sm tracking-widest uppercase">Menu</div>
-        <nav className="flex flex-col w-full flex-1 overflow-y-auto">
-          <div className="sidebar-group w-full flex flex-col">
-            <NavLink to="/admin" className="sidebar-group-item" end>
-              <LayoutDashboard className="mr-2" />
-              Přehled
-            </NavLink>
-            {/* <NavLink
-              to="/admin/current-season"
-              className="sidebar-group-item"
-              end
-            >
-              <CalendarDays className="mr-2" />
-              Současná sezóna
-            </NavLink> */}
-          </div>
+        {/* Sidebar */}
+        {/* <Sidebar
+          variant="sidebar"
+          className="bg-sidebar border-r border-sidebar-border"
+        >
+          <SidebarHeader className="p-4">
+            <h1 className="text-xl font-bold text-sidebar-foreground">
+              Buldok Ticketing
+            </h1>
+          </SidebarHeader>
 
-          <div className="sidebar-group w-full flex flex-col">
-            <span className="pt-4 pb-0 px-4 mb-1 text-gray-400 text-sm">
-              Zápasy
-            </span>
-            <NavLink to="/admin/matches/create" className="sidebar-group-item">
-              <Plus className="mr-2" />
-              Vytvořit zápas
-            </NavLink>
-            <NavLink to="/admin/matches" className="sidebar-group-item" end>
-              <Logs className="mr-3" />
-              Seznam zápasů
-            </NavLink>
-          </div>
+          <SidebarContent>
+            <div className="p-4 text-sm tracking-widest uppercase text-sidebar-foreground/70">
+              Menu
+            </div>
 
-          <div className="sidebar-group w-full flex flex-col">
-            <span className="pt-4 pb-0 px-4 mb-1 text-gray-400 text-sm">
-              Uživatelé
-            </span>
-            <NavLink to="/admin/users" className="sidebar-group-item">
-              <Users className="mr-2" />
-              Seznam uživatelů
-            </NavLink>
-          </div>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground transition-colors"
+                    >
+                      <NavLink to="/admin" end>
+                        <LayoutDashboard className="mr-2" />
+                        Přehled
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-          <div className="sidebar-group w-full flex flex-col">
-            <span className="pt-4 pb-0 px-4 mb-1 text-gray-400 text-sm">
-              Ceny
-            </span>
-            <NavLink to="/admin/tickets" className="sidebar-group-item">
-              <Ticket className="mr-2" />
-              Upravit ceny vstupenek
-            </NavLink>
-          </div>
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-sidebar-foreground/70 text-sm pt-4 pb-0 px-4 mb-1">
+                Zápasy
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
+                    >
+                      <NavLink to="/admin/matches/create">
+                        <Plus className="mr-2" />
+                        Vytvořit zápas
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
+                    >
+                      <NavLink to="/admin/matches" end>
+                        <Logs className="mr-3" />
+                        Seznam zápasů
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-          <div className="sidebar-group w-full flex flex-col">
-            <span className="pt-4 pb-0 px-4 mb-1 text-gray-400 text-sm">
-              Vstupy
-            </span>
-            <NavLink to="/admin/entrances" className="sidebar-group-item" end>
-              <DoorOpen className="mr-2" />
-              Spravovat vstupy
-            </NavLink>
-            <NavLink
-              to="/admin/entrances/create"
-              className="sidebar-group-item"
-              end
-            >
-              <Plus className="mr-2" />
-              Vytvořit vstup
-            </NavLink>
-          </div>
-        </nav>
-      </aside>
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-sidebar-foreground/70 text-sm pt-4 pb-0 px-4 mb-1">
+                Uživatelé
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
+                    >
+                      <NavLink to="/admin/users">
+                        <Users className="mr-2" />
+                        Seznam uživatelů
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen ">
-        {/* Header */}
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-sidebar-foreground/70 text-sm pt-4 pb-0 px-4 mb-1">
+                Ceny
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
+                    >
+                      <NavLink to="/admin/tickets">
+                        <Ticket className="mr-2" />
+                        Upravit ceny vstupenek
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-        <Header onToggleSidebar={toggleSidebar}>
-          <h1 className="text-xl font-bold">{headerTitle}</h1>
-        </Header>
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-sidebar-foreground/70 text-sm pt-4 pb-0 px-4 mb-1">
+                Vstupy
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
+                    >
+                      <NavLink to="/admin/entrances" end>
+                        <DoorOpen className="mr-2" />
+                        Spravovat vstupy
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
+                    >
+                      <NavLink to="/admin/entrances/create" end>
+                        <Plus className="mr-2" />
+                        Vytvořit vstup
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+        </Sidebar> */}
 
-        {/* Main Content Area */}
-        <main className="flex-1 p-4 overflow-y-scroll">
-          <Outlet />
-        </main>
+        <AppSidebar />
+
+        {/* Main Content */}
+        <SidebarInset className="flex-1 flex flex-col text-foreground bg-background rounded-md overflow-y-auto">
+          {/* Header */}
+          <Header onToggleSidebar={() => {}}>
+            <SidebarTrigger className="mr-2 cursor-pointer" />
+            <Separator
+              orientation="vertical"
+              className="data-[orientation=vertical]:h-4 mr-4"
+            />
+            <h1 className="text-xl font-bold">{headerTitle}</h1>
+          </Header>
+
+          {/* Main Content Area */}
+          <main className="flex-1 p-4">
+            <Outlet />
+          </main>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 

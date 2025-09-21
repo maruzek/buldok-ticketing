@@ -18,7 +18,7 @@ class Purchase
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'purchases')]
-    private ?User $sold_by = null;
+    private ?User $soldBy = null;
 
     #[ORM\ManyToOne(inversedBy: 'purchases')]
     #[Groups(['purchase:admin_game_summary'])]
@@ -30,14 +30,22 @@ class Purchase
 
     #[ORM\Column]
     #[Groups(['purchase:read', 'purchase:admin_game_summary'])]
-    private ?\DateTimeImmutable $purchased_at = null;
+    private ?\DateTimeImmutable $purchasedAt = null;
 
     /**
      * @var Collection<int, PurchaseItem>
      */
-    #[ORM\OneToMany(targetEntity: PurchaseItem::class, mappedBy: 'purchase', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: PurchaseItem::class, mappedBy: 'purchase', orphanRemoval: true, cascade: ['remove'])]
     #[Groups(['purchase:read', 'purchase:admin_game_summary'])]
     private Collection $purchaseItems;
+
+    #[ORM\OneToOne(mappedBy: 'Purchase', cascade: ['persist', 'remove'])]
+    #[Groups(['purchase:read', 'purchase:admin_game_summary'])]
+    private ?Payment $payment = null;
+
+    #[ORM\Column(length: 20, nullable: true)]
+    #[Groups(['purchase:read', 'purchase:admin_game_summary'])]
+    private ?string $paymentType = null;
 
     public function __construct()
     {
@@ -51,12 +59,12 @@ class Purchase
 
     public function getSoldBy(): ?User
     {
-        return $this->sold_by;
+        return $this->soldBy;
     }
 
-    public function setSoldBy(?User $sold_by): static
+    public function setSoldBy(?User $soldBy): static
     {
-        $this->sold_by = $sold_by;
+        $this->soldBy = $soldBy;
 
         return $this;
     }
@@ -87,12 +95,12 @@ class Purchase
 
     public function getPurchasedAt(): ?\DateTimeImmutable
     {
-        return $this->purchased_at;
+        return $this->purchasedAt;
     }
 
-    public function setPurchasedAt(\DateTimeImmutable $purchased_at): static
+    public function setPurchasedAt(\DateTimeImmutable $purchasedAt): static
     {
-        $this->purchased_at = $purchased_at;
+        $this->purchasedAt = $purchasedAt;
 
         return $this;
     }
@@ -123,6 +131,35 @@ class Purchase
                 $purchaseItem->setPurchaseId(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getPayment(): ?Payment
+    {
+        return $this->payment;
+    }
+
+    public function setPayment(Payment $payment): static
+    {
+        // set the owning side of the relation if necessary
+        if ($payment->getPurchase() !== $this) {
+            $payment->setPurchase($this);
+        }
+
+        $this->payment = $payment;
+
+        return $this;
+    }
+
+    public function getPaymentType(): ?string
+    {
+        return $this->paymentType;
+    }
+
+    public function setPaymentType(?string $paymentType): static
+    {
+        $this->paymentType = $paymentType;
 
         return $this;
     }

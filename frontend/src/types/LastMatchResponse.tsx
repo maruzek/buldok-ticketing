@@ -6,13 +6,13 @@ export type LastMatchResponse = {
   played_at: string;
   purchases: {
     id: number;
-    purchased_at: string;
+    purchasedAt: string;
     entrance: Entrance;
     purchaseItems: {
       id: number;
       quantity: number;
-      price_at_purchase: number;
-      ticket_type: {
+      priceAtPurchase: number;
+      ticketType: {
         id: number;
         name: string;
       };
