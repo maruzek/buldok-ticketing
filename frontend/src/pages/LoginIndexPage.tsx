@@ -1,4 +1,6 @@
 import { LoginForm } from "@/components/login-form";
+import logo from "../assets/logo-buldok-transparent.png";
+import loginImage from "../assets/login-image.jpg";
 
 const LoginIndexPage = () => {
   return (
@@ -7,10 +9,7 @@ const LoginIndexPage = () => {
         <div className="flex justify-center gap-2 md:justify-start">
           <a href="#" className="flex items-center gap-2 font-medium">
             <div className="flex size-9 items-center justify-center">
-              <img
-                src="logo-buldok-transparent.png"
-                alt="Buldok logo"
-              />
+              <img src={logo} alt="Buldok logo" />
             </div>
             Buldok ticketing
           </a>
@@ -23,7 +22,7 @@ const LoginIndexPage = () => {
       </div>
       <div className="bg-muted relative hidden lg:block">
         <img
-          src="login-image.jpg"
+          src={loginImage}
           alt="Hráč Buldoků s číslem 10 na drese"
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
         />
