@@ -1,6 +1,7 @@
 import { Cog, LayoutDashboard, LogOut, User, Volleyball } from "lucide-react";
 import useAuth from "../hooks/useAuth";
 import { Link } from "react-router";
+import logo from "../assets/logo-buldok-transparent.png";
 
 import {
   DropdownMenu,
@@ -31,11 +32,7 @@ const Header = ({ children, color }: HeaderProps) => {
             <div className="flex items-center">{children}</div>
           ) : (
             <Link to="/app">
-              <img
-                src="/logo-buldok-transparent.png"
-                alt="Logo"
-                className="h-10 w-auto"
-              />
+              <img src={logo} alt="Logo" className="h-10 w-auto" />
             </Link>
           )}
         </div>

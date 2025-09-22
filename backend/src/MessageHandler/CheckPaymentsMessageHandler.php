@@ -85,7 +85,7 @@ final class CheckPaymentsMessageHandler
                 $this->entityManager->remove($payment->getPurchase());
                 $this->entityManager->flush();
 
-                $topic  = 'https://my-ticketing-app.com/payments/' . $payment->getVariableSymbol();
+                $topic  = 'https://buldok.app/payments/' . $payment->getVariableSymbol();
                 $update = new Update($topic, json_encode(['status' => 'failed', 'reason' => 'amount_mismatch']));
                 $this->hub->publish($update);
 
@@ -100,7 +100,7 @@ final class CheckPaymentsMessageHandler
             $payment->setPaidAt(new \DateTimeImmutable());
             $this->entityManager->flush();
 
-            $topic = 'https://my-ticketing-app.com/payments/' . $payment->getVariableSymbol();
+            $topic = 'https://buldok.app/payments/' . $payment->getVariableSymbol();
             $update = new Update(
                 $topic,
                 json_encode(['status' => 'completed'])
