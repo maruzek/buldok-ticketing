@@ -5,15 +5,24 @@ namespace App\Controller;
 use App\Entity\Entrance;
 use App\Repository\EntranceRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/admin/entrances', name: 'api_entrance_')]
 final class EntranceController extends AbstractController
 {
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly SerializerInterface $serializer
+    ) {}
+
     #[Route('/create', name: 'create', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN')]
     /**
@@ -29,21 +38,15 @@ final class EntranceController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return $this->json([
-                'message' => 'Invalid JSON',
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException('Invalid JSON');
         }
 
         if (!$data['name']) {
-            return $this->json([
-                'message' => 'Name is required',
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException('Name is required');
         }
 
         if ($em->getRepository(Entrance::class)->findOneBy(['name' => $data['name']])) {
-            return $this->json([
-                'message' => 'Vstup s tímto názvem již existuje',
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException('Entrance with this name already exists');
         }
 
         $entrance = new Entrance();
@@ -55,17 +58,17 @@ final class EntranceController extends AbstractController
             $em->persist($entrance);
             $em->flush();
         } catch (\Exception $e) {
-            return $this->json([
-                'error' => 'Failed to create entrance',
-            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+            throw new Exception('Failed to create entrance', 500);
         }
 
-        return $this->json([
-            'message' => 'Entrance created successfully',
-            'entrance' => [
-                'name' => $entrance->getName(),
-            ],
-        ], JsonResponse::HTTP_CREATED);
+        $json = $this->serializer->serialize($entrance, 'json', [
+            'groups' => ['entrance:read'],
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
+
+        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_CREATED);
     }
 
     #[Route('/', name: 'list_all', methods: ['GET'])]
@@ -80,29 +83,15 @@ final class EntranceController extends AbstractController
     public function all(EntranceRepository $entranceRepository): JsonResponse
     {
         $entrances = $entranceRepository->findAll();
-        $entranceData = [];
 
-        foreach ($entrances as $entrance) {
-            $users = [];
-            foreach ($entrance->getUsers() as $user) {
-                if ($user->isVerified()) {
-                    $users[] = [
-                        'id' => $user->getId(),
-                        'email' => $user->getEmail(),
-                        'fullName' => $user->getFullName(),
-                        'verified' => $user->isVerified(),
-                    ];
-                }
-            }
-            $entranceData[] = [
-                'id' => $entrance->getId(),
-                'name' => $entrance->getName(),
-                'location' => $entrance->getLocation(),
-                'users' => $users,
-            ];
-        }
+        $json = $this->serializer->serialize($entrances, 'json', [
+            'groups' => ['entrance:read'],
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
 
-        return $this->json($entranceData, JsonResponse::HTTP_OK);
+        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
     }
 
 
@@ -128,21 +117,14 @@ final class EntranceController extends AbstractController
 
         $users = [];
 
-        foreach ($entrance->getUsers() as $user) {
-            $users[] = [
-                'id' => $user->getId(),
-                'email' => $user->getEmail(),
-                'fullName' => $user->getFullName(),
-                'verified' => $user->isVerified(),
-            ];
-        }
+        $json = $this->serializer->serialize($entrance, 'json', [
+            'groups' => ['entrance:read'],
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
 
-        return $this->json([
-            'id' => $entrance->getId(),
-            'name' => $entrance->getName(),
-            'location' => $entrance->getLocation(),
-            'users' => $users,
-        ], JsonResponse::HTTP_OK);
+        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
     }
 
     #[Route('/{id}', name: 'edit_by_id', methods: ['PUT'])]
@@ -157,22 +139,18 @@ final class EntranceController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function editById(int $id, EntranceRepository $entranceRepository, Request $request, EntityManagerInterface $em): JsonResponse
+    public function editById(Entrance $entrance, int $id, EntranceRepository $entranceRepository, Request $request, EntityManagerInterface $em): JsonResponse
     {
-        $entrance = $entranceRepository->findOneBy(['id' => $id]);
+        // $entrance = $entranceRepository->findOneBy(['id' => $id]);
 
         if (!$entrance) {
-            return $this->json([
-                'error' => 'Entrance not found',
-            ], JsonResponse::HTTP_NOT_FOUND);
+            throw new NotFoundHttpException('Entrance not found');
         }
 
         $data = json_decode($request->getContent(), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return $this->json([
-                'error' => 'Invalid JSON',
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException('Invalid JSON');
         }
 
         $entrance->setName($data['name'] ?? $entrance->getName());
@@ -181,19 +159,16 @@ final class EntranceController extends AbstractController
         try {
             $em->flush();
         } catch (\Exception $e) {
-            return $this->json([
-                'error' => 'Failed to update entrance',
-                'message' => $e->getMessage(),
-            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+            throw new Exception('Failed to update entrance', 500);
         }
 
-        return $this->json([
-            'message' => 'Entrance updated successfully',
-            'entrance' => [
-                'id' => $entrance->getId(),
-                'name' => $entrance->getName(),
-                'location' => $entrance->getLocation(),
-            ],
-        ], JsonResponse::HTTP_OK);
+        $json = $this->serializer->serialize($entrance, 'json', [
+            'groups' => ['entrance:read'],
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
+
+        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
     }
 }

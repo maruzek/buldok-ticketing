@@ -21,6 +21,12 @@ use Symfony\Component\Serializer\SerializerInterface;
 // #[Route('/api/match', name: 'app_match_')]
 final class MatchController extends AbstractController
 {
+    public function __construct(
+        private readonly GameRepository $gameRepository,
+        private readonly EntityManagerInterface $em,
+        private readonly SerializerInterface $serializer
+    ) {}
+
     #[Route('/api/admin/match/create', name: 'create', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN')]
     /**
@@ -51,12 +57,9 @@ final class MatchController extends AbstractController
         $match->setRival($data['rival']);
 
         try {
-            // parse ISO8601 date (including timezone) in UTC to prevent local offset
             $date = new \DateTime($data['matchDate']);
         } catch (\Exception $e) {
-            return $this->json([
-                'error' => 'Invalid date format',
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException('Invalid date format');
         }
 
         $match->setPlayedAt($date);
@@ -70,20 +73,11 @@ final class MatchController extends AbstractController
             throw new BadRequestHttpException('Failed to create match');
         }
 
-        return $this->json([
-            'message' => 'Match created successfully',
-            'match' => [
-                'id' => $match->getId(),
-                'rival' => $match->getRival(),
-                'playedAt' => $match->getPlayedAt(),
-                'description' => $match->getDescription(),
-                'status' => $match->getStatus(),
-            ],
+        $json = $this->serializer->serialize($match, 'json', ['groups' => ['match:read']]);
 
-        ], JsonResponse::HTTP_CREATED);
+        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_CREATED);
     }
 
-    // #[Route('/api/admin/matches/list', name: 'list_matches', methods: ['GET'])]
     #[Route('/api/matches', name: 'list_matches', methods: ['GET'])]
     /**
      * List all matches.
@@ -127,10 +121,8 @@ final class MatchController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function getMatchById(int $id, GameRepository $gameRepository, SerializerInterface $serializer): JsonResponse
+    public function getMatchById(Game $match, int $id, GameRepository $gameRepository, SerializerInterface $serializer): JsonResponse
     {
-        $match = $gameRepository->find($id);
-
         if (!$match) {
             throw new NotFoundHttpException('Match not found');
         }
@@ -160,10 +152,8 @@ final class MatchController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function editMatchById(int $id, GameRepository $gameRepository, Request $request, EntityManagerInterface $em): JsonResponse
+    public function editMatchById(Game $match, GameRepository $gameRepository, Request $request, EntityManagerInterface $em): JsonResponse
     {
-        $match = $gameRepository->find($id);
-
         if (!$match) {
             throw new NotFoundHttpException('Match not found');
         }
@@ -197,50 +187,9 @@ final class MatchController extends AbstractController
             throw new BadRequestHttpException('Failed to update match');
         }
 
-        return $this->json([
-            'id' => $match->getId(),
-            'rival' => $match->getRival(),
-            'playedAt' => $match->getPlayedAt(),
-            'description' => $match->getDescription(),
-            'status' => $match->getStatus(),
-        ], JsonResponse::HTTP_OK);
-    }
+        $json = $this->serializer->serialize($match, 'json', ['groups' => ['match:read']]);
 
-    #[Route('/api/users-matches', name: 'users_matches', methods: ['GET'])]
-    /**
-     * Get matches for the authenticated user.
-     *
-     * @param GameRepository $gameRepository The repository to fetch matches.
-     *
-     * @return JsonResponse
-     */
-    public function getUsersMatches(GameRepository $gameRepository): JsonResponse
-    {
-        /** @var User $authUser */
-        $authUser = $this->getUser();
-
-        if (!$authUser || !$authUser->getEntrance()) {
-            return $this->json(['error' => 'Uživatel nenalezen nebo nemá definovaný vchod'], JsonResponse::HTTP_UNAUTHORIZED);
-        }
-
-        $matches = $gameRepository->findBy(['status' => MatchStatus::ACTIVE], ['played_at' => 'ASC']);
-
-        if (!$matches) {
-            return $this->json([], JsonResponse::HTTP_OK);
-        }
-
-        $matchList = [];
-        foreach ($matches as $match) {
-            $matchList[] = [
-                'id' => $match->getId(),
-                'rival' => $match->getRival(),
-                'playedAt' => $match->getPlayedAt(),
-                'description' => $match->getDescription(),
-                'status' => $match->getStatus(),
-            ];
-        }
-
-        return $this->json($matchList, JsonResponse::HTTP_OK);
+        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
     }
 
     #[Route('/api/admin/matches/last-active-match', name: 'last_active_match', methods: ['GET'])]
@@ -253,22 +202,20 @@ final class MatchController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function getLastActiveMatch(GameRepository $gameRepository, SerializerInterface $serializer): JsonResponse
+    public function getLastActiveMatch(Game $match, GameRepository $gameRepository, SerializerInterface $serializer): JsonResponse
     {
-        $match = $gameRepository->findLastActiveMatch();
-
         if (!$match) {
             throw new NotFoundHttpException('No active match found');
         }
 
-        $match = $serializer->serialize($match, 'json', [
+        $json = $serializer->serialize($match, 'json', [
             'groups' => ['game:admin_dashboard', 'purchase:admin_game_summary'],
             'circular_reference_handler' => function ($object) {
                 return $object->getId();
             },
         ]);
 
-        return JsonResponse::fromJsonString($match, JsonResponse::HTTP_OK);
+        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
     }
 
     #[Route('/api/matches/{id}/stats', name: 'full_match_stats', methods: ['GET'])]

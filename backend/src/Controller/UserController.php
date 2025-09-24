@@ -5,11 +5,16 @@ namespace App\Controller;
 use App\Repository\EntranceRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/admin/users', name: 'api_users_')]
@@ -20,6 +25,11 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  */
 final class UserController extends AbstractController
 {
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly SerializerInterface $serializer
+    ) {}
+
     #[Route('/all', name: 'all', methods: ['GET'])]
     /**
      * Fetch all users.
@@ -32,21 +42,15 @@ final class UserController extends AbstractController
     {
         $users = $userRepository->findAll();
         $userData = [];
-        foreach ($users as $user) {
-            $userData[] = [
-                'id' => $user->getId(),
-                'email' => $user->getEmail(),
-                'roles' => $user->getRoles(),
-                'registeredAt' => $user->getRegisteredAt()->format('d.n.Y H:i'),
-                'entrance' => $user->getEntrance() ? [
-                    'id' => $user->getEntrance()->getId(),
-                    'name' => $user->getEntrance()->getName(),
-                ] : null,
-                'fullName' => $user->getFullName(),
-            ];
-        }
 
-        return $this->json($userData, JsonResponse::HTTP_OK);
+        $json = $this->serializer->serialize($users, 'json', [
+            'groups' => ['user:read'],
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
+
+        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
     }
 
     #[Route('/user/{id}', name: 'get_by_id', methods: ['GET'])]
@@ -63,23 +67,17 @@ final class UserController extends AbstractController
         $user = $userRepository->findOneBy(['id' => $id]);
 
         if (!$user) {
-            return $this->json([
-                'error' => 'User not found',
-            ], JsonResponse::HTTP_NOT_FOUND);
+            throw new NotFoundHttpException('User not found');
         }
-        $userData = [
-            'id' => $user->getId(),
-            'email' => $user->getEmail(),
-            'roles' => $user->getRoles(),
-            'fullName' => $user->getFullName(),
-            'verified' => $user->isVerified(),
-            'entrance' => $user->getEntrance() ? [
-                'id' => $user->getEntrance()->getId(),
-                'name' => $user->getEntrance()->getName(),
-            ] : null,
-        ];
 
-        return $this->json($userData, JsonResponse::HTTP_OK);
+        $json = $this->serializer->serialize($user, 'json', [
+            'groups' => ['user:read'],
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
+
+        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
     }
 
     #[Route('/user/{id}', name: 'edit_by_id', methods: ['PUT'])]
@@ -166,23 +164,14 @@ final class UserController extends AbstractController
             ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        $userData = [
-            'id' => $user->getId(),
-            'email' => $user->getEmail(),
-            'roles' => $user->getRoles(),
-            'fullName' => $user->getFullName(),
-            'verified' => $user->isVerified(),
-            'entrance' => $user->getEntrance() ? [
-                'id' => $user->getEntrance()->getId(),
-                'name' => $user->getEntrance()->getName(),
-            ] : null,
-        ];
+        $json = $this->serializer->serialize($user, 'json', [
+            'groups' => ['user:read'],
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
 
-        return $this->json([
-            'status' => 'ok',
-            'message' => 'Uživatel ' . $user->getFullName()  . ' byl úspěšně upraven',
-            'updatedUser' => $userData,
-        ], JsonResponse::HTTP_OK);
+        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
     }
 
     #[Route('/search', name: 'searchUser', methods: ['GET'])]
@@ -198,22 +187,19 @@ final class UserController extends AbstractController
     {
         $query = $request->query->get('q');
         if (!$query) {
-            return $this->json([
-                'error' => 'Query parameter "q" is required',
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestException('Query parameter "q" is required');
         }
 
         $users = $userRepository->searchByEmailOrName($query);
-        $userData = [];
-        foreach ($users as $user) {
-            $userData[] = [
-                'id' => $user->getId(),
-                'email' => $user->getEmail(),
-                'fullName' => $user->getFullName(),
-            ];
-        }
 
-        return $this->json($userData, JsonResponse::HTTP_OK);
+        $json = $this->serializer->serialize($users, 'json', [
+            'groups' => ['user:search'],
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
+
+        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
     }
 
     #[Route('/user/{id}/remove-entrance', name: 'remove_entrance', methods: ['PUT'])]
@@ -231,7 +217,7 @@ final class UserController extends AbstractController
         $user = $userRepository->find($id);
 
         if (!$user) {
-            return $this->json(['error' => 'User not found'], JsonResponse::HTTP_NOT_FOUND);
+            throw new NotFoundHttpException('User not found');
         }
 
         $user->setEntrance(null);
@@ -239,13 +225,10 @@ final class UserController extends AbstractController
         try {
             $em->flush();
         } catch (\Exception $e) {
-            return $this->json([
-                'error' => 'Failed to remove entrance',
-                'message' => $e->getMessage(),
-            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+            throw new Exception('Failed to remove entrance from user', 500);
         }
 
-        return $this->json(['status' => 'OK'], JsonResponse::HTTP_OK);
+        return $this->json(['status' => 'ok'], JsonResponse::HTTP_OK);
     }
 
     #[Route('/user/{id}/change-entrance', name: 'change_entrance', methods: ['PUT'])]
@@ -265,22 +248,19 @@ final class UserController extends AbstractController
         $user = $userRepository->find($id);
 
         if (!$user) {
-            return $this->json([
-                'error' => 'User not found',
-                'message' => 'Uživatel nenalezen'
-            ], JsonResponse::HTTP_NOT_FOUND);
+            throw new NotFoundHttpException('User not found');
         }
 
         $data = json_decode($request->getContent(), true);
 
         if (!isset($data['entranceID'])) {
-            return $this->json(['error' => 'Entrance ID is required'], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException('Entrance ID is required');
         }
 
         $entrance = $entranceRepository->find($data['entranceID']);
 
         if (!$entrance) {
-            return $this->json(['error' => 'Entrance not found'], JsonResponse::HTTP_NOT_FOUND);
+            throw new NotFoundHttpException('Entrance not found');
         }
 
         $user->setEntrance($entrance);
@@ -288,12 +268,9 @@ final class UserController extends AbstractController
         try {
             $em->flush();
         } catch (\Exception $e) {
-            return $this->json([
-                'error' => 'Failed to change entrance',
-                'message' => $e->getMessage(),
-            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+            throw new Exception('Failed to change entrance for user', 500);
         }
 
-        return $this->json(['status' => 'OK'], JsonResponse::HTTP_OK);
+        return $this->json(['status' => 'ok'], JsonResponse::HTTP_OK);
     }
 }

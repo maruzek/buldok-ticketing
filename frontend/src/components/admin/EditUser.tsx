@@ -26,10 +26,16 @@ const EditUser = () => {
   const navigate = useNavigate();
   const { fetchData } = useApi();
 
-  const { data: editedUser, isPending } = useQuery({
+  const {
+    data: editedUser,
+    isPending,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ["user", userID],
     queryFn: () =>
       fetchData<UserData>(`/admin/users/user/${userID}`, { method: "GET" }),
+    retry: false,
   });
 
   const form = useForm({
@@ -52,29 +58,22 @@ const EditUser = () => {
 
   const { mutate, isPending: isSubmitting } = useMutation({
     mutationFn: (data: FieldValues) => {
-      return fetchData<{ status: string; message: string; updatedUser: User }>(
-        `/admin/users/user/${userID}`,
-        {
-          method: "PUT",
-          body: JSON.stringify({
-            ...editedUser,
-            roles: data.admin
-              ? [...(editedUser?.roles || []), "ROLE_ADMIN"]
-              : (editedUser?.roles || []).filter(
-                  (role) => role !== "ROLE_ADMIN"
-                ),
-            verified: data.verified,
-          }),
-        }
-      );
+      return fetchData<User>(`/admin/users/user/${userID}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          ...editedUser,
+          roles: data.admin
+            ? [...(editedUser?.roles || []), "ROLE_ADMIN"]
+            : (editedUser?.roles || []).filter((role) => role !== "ROLE_ADMIN"),
+          verified: data.verified,
+        }),
+      });
     },
     onSuccess: (res, variables) => {
       console.log(res, variables);
       queryClient.invalidateQueries({ queryKey: ["user", userID] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success(
-        `Uživatel ${res?.updatedUser.fullName} byl úspěšně upraven!`
-      );
+      toast.success(`Uživatel ${res?.fullName} byl úspěšně upraven!`);
       navigate("/admin/users");
     },
     onError: (error: any) => {
@@ -91,6 +90,18 @@ const EditUser = () => {
       <Card className="w-full lg:max-w-2/5 h-screen lg:max-h-2/5 mx-auto flex justify-center items-center">
         <CardContent className="flex justify-center items-center">
           <Spinner />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className="w-full lg:max-w-2/5 h-screen lg:max-h-2/5 mx-auto flex justify-center items-center">
+        <CardContent className="flex justify-center items-center">
+          <p className="text-red-500">
+            {error?.message || "Nastala chyba při načítání uživatele."}
+          </p>
         </CardContent>
       </Card>
     );

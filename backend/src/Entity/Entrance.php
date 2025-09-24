@@ -14,14 +14,15 @@ class Entrance
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['purchase:admin_game_summary'])]
+    #[Groups(['purchase:admin_game_summary', "user:read", "entrance:read"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 40)]
-    #[Groups(['purchase:admin_game_summary'])]
+    #[Groups(['purchase:admin_game_summary', "user:read", "entrance:read"])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["entrance:read"])]
     private ?string $location = null;
 
     /**
@@ -34,6 +35,7 @@ class Entrance
      * @var Collection<int, User>
      */
     #[ORM\OneToMany(targetEntity: User::class, mappedBy: 'entrance')]
+    #[Groups(["entrance:read"])]
     private Collection $users;
 
     public function __construct()

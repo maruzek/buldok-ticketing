@@ -8,7 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -19,18 +19,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["user:read", "user:search", "entrance:read"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
     #[Assert\NotBlank]
     #[Assert\Email]
     #[Assert\Length(max: 180)]
+    #[Groups(["user:read", "user:search", "entrance:read"])]
     private ?string $email = null;
 
     /**
      * @var list<string> The user roles
      */
     #[ORM\Column]
+    #[Groups(["user:read"])]
     private array $roles = [];
 
     /**
@@ -50,12 +53,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     #[Assert\Type('bool')]
     #[Assert\NotNull]
+    #[Groups(["user:read"])]
     private ?bool $verified = null;
 
     #[ORM\Column]
     #[Assert\NotNull]
     #[Assert\Type(\DateTimeImmutable::class)]
     #[Assert\DateTime]
+    #[Groups(["user:read"])]
     private ?\DateTimeImmutable $registered_at = null;
 
     #[ORM\Column(length: 255)]
@@ -66,9 +71,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         pattern: '/^[a-zA-Z\s]+$/',
         message: 'Full name can only contain letters and spaces.'
     )]
+    #[Groups(["user:read", "user:search", "entrance:read"])]
     private ?string $fullName = null;
 
     #[ORM\ManyToOne(inversedBy: 'users')]
+    #[Groups(["user:read"])]
     private ?Entrance $entrance = null;
 
     public function __construct()

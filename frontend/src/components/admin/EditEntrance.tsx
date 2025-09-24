@@ -3,7 +3,7 @@ import { FieldValues, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
 import { Entrance } from "../../types/Entrance";
 import Spinner from "../Spinner";
-import { XCircle } from "lucide-react";
+import { Frown, ShieldBan, TriangleAlert, XCircle } from "lucide-react";
 import { useDebounce } from "react-use";
 import { User } from "../../types/User";
 import useApi from "../../hooks/useApi";
@@ -21,6 +21,8 @@ import {
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
+import { ApiError } from "@/types/ApiError";
+import BasicError from "../errors/BasicError";
 
 const EditEntrance = () => {
   const { entranceID } = useParams<{ entranceID: string }>();
@@ -32,12 +34,18 @@ const EditEntrance = () => {
   const [userList, setUserList] = useState<User[]>([]);
   const [userSearchQuery, setUserSearchQuery] = useState<string>("");
 
-  const { data: editedEntrance, isPending } = useQuery({
+  const {
+    data: editedEntrance,
+    isPending,
+    isError: loadIsError,
+    error: loadError,
+  } = useQuery<Entrance, ApiError>({
     queryKey: ["entrances", entranceID],
     queryFn: () =>
       fetchData<Entrance>(`/admin/entrances/${entranceID}`, {
         method: "GET",
       }),
+    retry: false,
   });
 
   const form = useForm({
@@ -160,6 +168,50 @@ const EditEntrance = () => {
         <Spinner />
       </div>
     );
+
+  if (loadIsError) {
+    if (loadError.status === 404) {
+      return (
+        <BasicError
+          title="Vstup nenalezen"
+          icon={<Frown />}
+          message={`Vstup s ID ${entranceID} nebyl nalezen.`}
+        />
+      );
+    } else if (loadError.status === 403) {
+      return (
+        <BasicError
+          title="Přístup odepřen"
+          icon={<ShieldBan />}
+          message="Nemáte oprávnění upravovat tento vstup."
+        />
+      );
+    } else if (loadError.status === 500) {
+      return (
+        <BasicError
+          title="Chyba serveru"
+          icon={<Frown />}
+          message="Došlo k chybě na serveru. Zkuste to prosím znovu později."
+        />
+      );
+    } else if (loadError.status === 400) {
+      return (
+        <BasicError
+          title="Chyba klienta"
+          icon={<TriangleAlert />}
+          message="Došlo k chybě na straně klienta. Zkontrolujte prosím svá data."
+        />
+      );
+    }
+
+    return (
+      <BasicError
+        title="Nastala chyba při načítání vstupu"
+        icon={<TriangleAlert />}
+        message={loadError.message}
+      />
+    );
+  }
 
   return (
     <Card className="w-full lg:max-w-3/5 mx-auto">
