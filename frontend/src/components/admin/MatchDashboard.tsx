@@ -30,6 +30,7 @@ import { Link, useParams } from "react-router";
 import Spinner from "../Spinner";
 import { useMatchDashboard } from "@/hooks/useMatchDashboard";
 import { toast } from "sonner";
+import MatchError from "../errors/MatchError";
 
 const chartDataTime = [
   { month: "January", desktop: 186 },
@@ -71,6 +72,8 @@ const MatchDashboard = () => {
     halfTicketsEarnings,
     isPending,
     refetch,
+    isError,
+    error,
   } = useMatchDashboard(matchID!);
 
   console.log(uniqueEntranceNames);
@@ -108,6 +111,11 @@ const MatchDashboard = () => {
       </div>
     );
   }
+
+  if (isError) {
+    return <MatchError error={error!} matchID={matchID!} />;
+  }
+
   // TODO: use skeleton loader
   //TODO: pridat tabluku se vsemi nakupy uplne dolu
   return (

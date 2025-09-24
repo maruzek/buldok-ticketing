@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import useApi from "@/hooks/useApi";
 import { Match } from "@/types/Match";
+import { ApiError } from "@/types/ApiError";
 
 export type MatchDashboardData = {
   match: Match;
@@ -16,14 +17,21 @@ export type MatchDashboardData = {
 export function useMatchDashboard(matchID: string) {
   const { fetchData } = useApi();
 
-  const match = useQuery<Match>({
+  const {
+    data: match,
+    isPending,
+    isError,
+    error,
+    refetch,
+  } = useQuery<Match, ApiError>({
     queryKey: ["match", matchID],
     queryFn: () =>
       fetchData<Match>(`/matches/${matchID}/stats`, { method: "GET" }),
     enabled: !!matchID,
+    retry: false,
   });
 
-  if (match.isLoading || match.isError || !match.data) {
+  if (isPending || isError || !match) {
     return {
       match: null,
       uniqueEntranceNames: [],
@@ -33,16 +41,17 @@ export function useMatchDashboard(matchID: string) {
       totalEarnings: "0",
       fullTicketsEarnings: "0",
       halfTicketsEarnings: "0",
-
-      isPending: match.isPending,
+      isError,
+      error,
+      isPending,
     };
   }
 
-  const purchases = match.data.purchases;
+  const purchases = match.purchases;
 
   if (!purchases || purchases.length === 0) {
     return {
-      match: match.data,
+      match: match,
       uniqueEntranceNames: [],
       numOfFullTickets: 0,
       numOfHalfTickets: 0,
@@ -51,7 +60,9 @@ export function useMatchDashboard(matchID: string) {
       fullTicketsEarnings: "0",
       halfTicketsEarnings: "0",
 
-      isPending: match.isPending,
+      isError,
+      error,
+      isPending,
     };
   }
 
@@ -105,7 +116,7 @@ export function useMatchDashboard(matchID: string) {
     .reduce((sum, it) => sum + Number(it.priceAtPurchase), 0);
 
   return {
-    match: match.data,
+    match: match,
     uniqueEntranceNames,
     numOfFullTickets,
     numOfHalfTickets,
@@ -113,6 +124,6 @@ export function useMatchDashboard(matchID: string) {
     totalEarnings,
     fullTicketsEarnings,
     halfTicketsEarnings,
-    refetch: match.refetch,
+    refetch: refetch,
   };
 }

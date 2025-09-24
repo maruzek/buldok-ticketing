@@ -8,6 +8,7 @@ import { columns } from "./MatchTable/columns";
 import { Button } from "../ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { ApiError } from "@/types/ApiError";
 
 interface Match {
   id: number;
@@ -24,22 +25,39 @@ const MatchList = () => {
   const {
     data: matches,
     isPending,
+    isError,
     error,
-  } = useQuery<Match[]>({
+  } = useQuery<Match[], ApiError>({
     queryKey: ["matches"],
     queryFn: () => fetchData<Match[]>("/matches", { method: "GET" }),
   });
 
-  // TODO: Custom component for loading screens?
+  // TODO: Custom global component for loading screens?
   if (isPending)
     return (
-      <div className="flex justify-center h-screen  w-full pt-20">
+      <div className="flex justify-center h-screen w-full pt-20">
         <Spinner />
       </div>
     );
 
-  if (error) {
+  if (isError) {
     toast.error(error.message);
+
+    if (error.status === 403) {
+      return (
+        <div className="flex justify-center h-screen  w-full pt-20">
+          <p className="text-red-500">Nemáte oprávnění zobrazit zápasy.</p>
+        </div>
+      );
+    } else if (error.status === 500) {
+      return (
+        <div className="flex justify-center h-screen  w-full pt-20">
+          <p className="text-red-500">
+            Nastala chyba na straně serveru. Zkuste to prosím znovu později.
+          </p>
+        </div>
+      );
+    }
 
     return (
       <div className="flex justify-center h-screen  w-full pt-20">

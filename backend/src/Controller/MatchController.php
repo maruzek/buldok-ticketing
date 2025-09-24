@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\Game;
-use App\Entity\Purchase;
 use App\Entity\User;
 use App\Enum\MatchStatus;
 use App\Repository\GameRepository;
@@ -11,6 +10,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -35,21 +36,15 @@ final class MatchController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return $this->json([
-                'error' => 'Invalid JSON',
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException('Invalid JSON');
         }
 
         if (!isset($data['rival'])) {
-            return $this->json([
-                'error' => 'Rival is required',
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException('Rival is required');
         }
 
         if (!isset($data['matchDate'])) {
-            return $this->json([
-                'error' => 'Date is required',
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException('Date is required');
         }
 
         $match = new Game();
@@ -60,7 +55,7 @@ final class MatchController extends AbstractController
             $date = new \DateTime($data['matchDate']);
         } catch (\Exception $e) {
             return $this->json([
-                'error' => 'Invalid date format, expected ISO8601',
+                'error' => 'Invalid date format',
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
@@ -72,9 +67,7 @@ final class MatchController extends AbstractController
             $em->persist($match);
             $em->flush();
         } catch (\Exception $e) {
-            return $this->json([
-                'error' => 'Failed to create match',
-            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+            throw new BadRequestHttpException('Failed to create match');
         }
 
         return $this->json([
@@ -108,9 +101,7 @@ final class MatchController extends AbstractController
                 $statusEnum = MatchStatus::tryFrom($statusParam);
 
                 if (!$statusEnum) {
-                    return $this->json([
-                        'error' => 'Invalid status value, must be one of: ' . implode(', ', array_column(MatchStatus::cases(), 'value')),
-                    ], JsonResponse::HTTP_BAD_REQUEST);
+                    throw new BadRequestHttpException('Invalid status value, must be one of: ' . implode(', ', array_column(MatchStatus::cases(), 'value')));
                 }
 
                 $criteria['status'] = $statusEnum;
@@ -141,15 +132,11 @@ final class MatchController extends AbstractController
         $match = $gameRepository->find($id);
 
         if (!$match) {
-            return $this->json([
-                'error' => 'Match not found',
-            ], JsonResponse::HTTP_NOT_FOUND);
+            throw new NotFoundHttpException('Match not found');
         }
 
         if ($match->getStatus() === MatchStatus::FINISHED && !in_array("ROLE_ADMIN", $this->getUser()->getRoles())) {
-            return $this->json([
-                'error' => 'Match is canceleddd',
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException('Match is canceled');
         }
 
         return $this->json([
@@ -178,22 +165,16 @@ final class MatchController extends AbstractController
         $match = $gameRepository->find($id);
 
         if (!$match) {
-            return $this->json([
-                'error' => 'Match not found',
-            ], JsonResponse::HTTP_NOT_FOUND);
+            throw new NotFoundHttpException('Match not found');
         }
 
         $data = json_decode($request->getContent(), true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return $this->json([
-                'error' => 'Invalid JSON',
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException('Invalid JSON');
         }
 
         if (!isset($data['rival'])) {
-            return $this->json([
-                'error' => 'Rival is required',
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException('Rival is required');
         }
 
         if (isset($data['status'])) {
@@ -201,9 +182,7 @@ final class MatchController extends AbstractController
                 $enumStatus = MatchStatus::from($data['status']);
                 $match->setStatus($enumStatus);
             } catch (\ValueError $e) {
-                return $this->json([
-                    'error' => 'Invalid status value, must be one of: ' . implode(', ', array_column(MatchStatus::cases(), 'value')),
-                ], JsonResponse::HTTP_BAD_REQUEST);
+                throw new BadRequestHttpException('Invalid status value, must be one of: ' . implode(', ', array_column(MatchStatus::cases(), 'value')));
             }
         }
 
@@ -215,10 +194,7 @@ final class MatchController extends AbstractController
         try {
             $em->flush();
         } catch (\Exception $e) {
-            return $this->json([
-                'error' => 'Failed to update match',
-                'message' => $e->getMessage(),
-            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+            throw new BadRequestHttpException('Failed to update match');
         }
 
         return $this->json([
@@ -250,9 +226,7 @@ final class MatchController extends AbstractController
         $matches = $gameRepository->findBy(['status' => MatchStatus::ACTIVE], ['played_at' => 'ASC']);
 
         if (!$matches) {
-            return $this->json([
-                'error' => 'No matches found',
-            ], JsonResponse::HTTP_NOT_FOUND);
+            return $this->json([], JsonResponse::HTTP_OK);
         }
 
         $matchList = [];
@@ -284,9 +258,7 @@ final class MatchController extends AbstractController
         $match = $gameRepository->findLastActiveMatch();
 
         if (!$match) {
-            return $this->json([
-                'error' => 'No active matches found',
-            ], JsonResponse::HTTP_NOT_FOUND);
+            throw new NotFoundHttpException('No active match found');
         }
 
         $match = $serializer->serialize($match, 'json', [
@@ -319,10 +291,7 @@ final class MatchController extends AbstractController
 
         $entrance = $authUser->getEntrance();
         if (!$entrance) {
-            return $this->json(
-                ['error' => 'No entrance defined for this user'],
-                JsonResponse::HTTP_UNAUTHORIZED
-            );
+            throw new BadRequestHttpException('User does not have an entrance assigned');
         }
 
         if ($limit || (!$isAdmin && !$limit)) {
@@ -332,9 +301,11 @@ final class MatchController extends AbstractController
         }
 
         if (!$match) {
-            return $this->json([
-                'error' => 'No active matches found',
-            ], JsonResponse::HTTP_NOT_FOUND);
+            throw new NotFoundHttpException('Match not found');
+        }
+
+        if ($match->getStatus() === MatchStatus::FINISHED && !$isAdmin) {
+            throw new BadRequestHttpException('Match has finished');
         }
 
         $match = $serializer->serialize($match, 'json', [

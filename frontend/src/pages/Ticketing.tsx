@@ -8,18 +8,26 @@ import { TicketPrices } from "../types/TicketPrices";
 import PurchaseDrawer from "@/components/app/PurchaseDrawer";
 import PurchaseCard from "@/components/app/PurchaseCard";
 import { useQuery } from "@tanstack/react-query";
+import { ApiError } from "@/types/ApiError";
+import MatchError from "../components/errors/MatchError";
 
 const Ticketing = () => {
   const { fetchData } = useApi();
   const { matchID } = useParams<{ matchID: string }>();
 
-  const { data: match, isPending: isMatchDataLoading } = useQuery<Match>({
+  const {
+    data: match,
+    isPending: isMatchDataLoading,
+    isError: isMatchDataError,
+    error: matchError,
+  } = useQuery<Match, ApiError>({
     queryKey: ["match", matchID],
     queryFn: () =>
       fetchData<Match>(`/matches/${matchID}/stats?userEntranceLimit=1`, {
         method: "GET",
       }),
     enabled: !!matchID,
+    retry: false,
   });
 
   const { data: ticketPrices } = useQuery<TicketPrices>({
@@ -46,14 +54,11 @@ const Ticketing = () => {
     );
   }
 
-  if (!match && !isMatchDataLoading) {
+  if (isMatchDataError) {
     return (
-      <div className="w-full h-full">
+      <div className="w-full h-min-screen">
         <Header />
-        <div className="flex flex-col items-center justify-center h-screen">
-          <h1 className="text-2xl font-bold">Zápas nenalezen</h1>
-          <p className="text-gray-500">Zkontrolujte prosím vaše připojení.</p>
-        </div>
+        <MatchError error={matchError!} matchID={matchID!} />
       </div>
     );
   }

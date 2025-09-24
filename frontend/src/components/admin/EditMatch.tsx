@@ -31,15 +31,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "../ui/textarea";
+import { ApiError } from "@/types/ApiError";
+import MatchError from "../errors/MatchError";
 
 const EditMatch = () => {
   const { matchID } = useParams<{ matchID: string }>();
   const navigate = useNavigate();
   const { fetchData } = useApi();
 
-  const { data: editedMatch, isPending } = useQuery({
+  const {
+    data: editedMatch,
+    isPending,
+    isError,
+    error,
+  } = useQuery<Match, ApiError>({
     queryKey: ["match", matchID],
     queryFn: () => fetchData<Match>(`/match/${matchID}`, { method: "GET" }),
+    retry: false,
   });
 
   const form = useForm({
@@ -50,7 +58,7 @@ const EditMatch = () => {
         ? new Date(editedMatch.playedAt).toTimeString().split(" ")[0]
         : "10:30:00",
       description: editedMatch ? editedMatch.description : "",
-      status: editedMatch ? editedMatch.status : "active",
+      status: editedMatch && editedMatch.status,
     },
   });
 
@@ -68,11 +76,13 @@ const EditMatch = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending: isSubmitting } = useMutation({
-    mutationFn: (data: FieldValues) =>
-      fetchData<Match>(`/admin/match/${matchID}`, {
+    mutationFn: (data: FieldValues) => {
+      console.log(data);
+      return fetchData<Match>(`/admin/match/${matchID}`, {
         method: "PUT",
         body: JSON.stringify(data),
-      }),
+      });
+    },
     onSuccess: (res, variables) => {
       queryClient.invalidateQueries({ queryKey: ["match", matchID] });
       queryClient.invalidateQueries({ queryKey: ["matches"] });
@@ -96,6 +106,34 @@ const EditMatch = () => {
         </h1>
       </div>
     );
+  }
+
+  if (isError) {
+    return <MatchError error={error!} matchID={matchID!} />;
+    // if (error?.status === 404) {
+    //   return (
+    //     <div className="flex justify-center items-center flex-col h-full">
+    //       <h1 className="text-2xl font-bold">Zápas nebyl nalezen</h1>
+    //       <p className="mt-2">Zápas s ID {matchID} nebyl nalezen.</p>
+    //     </div>
+    //   );
+    // }
+
+    // if (error?.status === 403) {
+    //   return (
+    //     <div className="flex justify-center items-center flex-col h-full">
+    //       <h1 className="text-2xl font-bold">Přístup odepřen</h1>
+    //       <p className="mt-2">Nemáte oprávnění upravovat tento zápas.</p>
+    //     </div>
+    //   );
+    // }
+
+    // return (
+    //   <div className="flex justify-center items-center flex-col h-full">
+    //     <h1 className="text-2xl font-bold">Chyba při načítání zápasu</h1>
+    //     <p className="mt-2">{error.body?.detail}</p>
+    //   </div>
+    // );
   }
 
   return (
@@ -186,7 +224,10 @@ const EditMatch = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Status</FormLabel>
-                  <Select {...field}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger className="w-full md:max-w-1/3">
                         <SelectValue placeholder="Vyberte stav zápasu" />
@@ -221,7 +262,7 @@ const EditMatch = () => {
                 isSubmitting ? "btn-disabled cursor-progress" : ""
               } w-full`}
             >
-              Vytvořit
+              Uložit změny
             </Button>
           </form>
         </Form>
