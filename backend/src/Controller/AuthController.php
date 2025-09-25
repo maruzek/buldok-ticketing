@@ -2,23 +2,36 @@
 
 namespace App\Controller;
 
+use App\DTO\RegisterUserDto;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
+// use Symfony\Component\ObjectMapper\ObjectMapperInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-#[Route('/api/auth',  name: 'api_auth_')]
+#[Route('/api/auth',  name: 'api_auth_', defaults: ['_format' => 'json'])]
 /**
  * AuthController handles user registration and logout operations.
  * It allows users to register with an email and password, and to log out.
  */
 final class AuthController extends AbstractController
 {
+    public function __construct(
+        private readonly UserPasswordHasherInterface $hasher,
+        private readonly EntityManagerInterface $em,
+        private readonly ValidatorInterface $validator,
+        // private readonly ObjectMapperInterface $mapper,
+        private readonly UserRepository $userRepository
+    ) {}
+
     #[Route('/register', name: 'register', methods: ['POST'])]
     /**
      * Register a new user.
@@ -30,64 +43,80 @@ final class AuthController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function register(Request $request, UserPasswordHasherInterface $hasher, EntityManagerInterface $em, UserRepository $userRepository, ValidatorInterface $validator): JsonResponse
+    public function register(Request $request, #[MapRequestPayload()] RegisterUserDto $dto): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return $this->json([
-                'error' => 'Invalid JSON',
-            ], JsonResponse::HTTP_BAD_REQUEST);
-        }
+        // if (json_last_error() !== JSON_ERROR_NONE) {
+        //     throw new BadRequestException('Invalid JSON');
+        // }
 
-        if (!isset($data['email'])) {
-            return $this->json([
-                'error' => 'Username is required',
-            ], JsonResponse::HTTP_BAD_REQUEST);
-        }
+        // if (!isset($data['email'])) {
+        //     throw new BadRequestException('Email is required');
+        // }
 
-        if (!isset($data['password'])) {
-            return $this->json([
-                'error' => 'Password is required',
-            ], JsonResponse::HTTP_BAD_REQUEST);
-        }
+        // if (!isset($data['password'])) {
+        //     throw new BadRequestException('Password is required');
+        // }
 
-        if (!isset($data['confirmPassword'])) {
-            return $this->json([
-                'error' => 'Password confirmation is required',
-            ], JsonResponse::HTTP_BAD_REQUEST);
-        }
+        // if (!isset($data['confirmPassword'])) {
+        //     throw new BadRequestException('Confirm Password is required');
+        // }
 
-        if ($data['password'] !== $data['confirmPassword']) {
-            return $this->json([
-                'error' => 'Passwords do not match',
-            ], JsonResponse::HTTP_BAD_REQUEST);
-        }
+        // if ($data['password'] !== $data['confirmPassword']) {
+        //     throw new BadRequestException('Passwords do not match');
+        // }
 
-        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            return $this->json([
-                'error' => 'Invalid email format',
-            ], JsonResponse::HTTP_BAD_REQUEST);
-        }
+        // if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+        //     throw new BadRequestException('Invalid email format');
+        // }
 
-        if ($userRepository->findOneBy(['email' => $data['email']])) {
-            return $this->json([
-                'error' => 'Email already exists',
-            ], JsonResponse::HTTP_BAD_REQUEST);
-        }
+        // if ($this->userRepository->findOneBy(['email' => $data['email']])) {
+        //     throw new BadRequestException('Email is already in use',);
+        // }
+
+        // $user = new User();
+        // $user->setEmail($data['email']);
+        // $user->setFullName($data['fullName'] ?? null);
+        // $user->setPassword($this->hasher->hashPassword($user, $data['password']));
+        // $user->setRoles(['ROLE_USER']);
+        // $user->setVerified(false);
+        // $user->setRegisteredAt(new \DateTimeImmutable());
+
+        // if ($this->userRepository->findOneBy(['email' => $dto->email])) {
+        //     return $this->json([
+        //         'title' => 'An error occurred',
+        //         'detail' => 'Tento email je již používán.',
+        //         'violations' => [[
+        //             'propertyPath' => 'email',
+        //             'message' => 'Tento email je již používán.'
+        //         ]]
+        //     ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
+        // }
 
         $user = new User();
-        $user->setEmail($data['email']);
-        $user->setFullName($data['fullName'] ?? null);
-        $user->setPassword($hasher->hashPassword($user, $data['password']));
+        $user->setEmail($dto->email);
+        $user->setFullName($dto->fullName);
+        $user->setPassword($this->hasher->hashPassword($user, $dto->password));
         $user->setRoles(['ROLE_USER']);
         $user->setVerified(false);
         $user->setRegisteredAt(new \DateTimeImmutable());
 
+        $errors = $this->validator->validate($user);
+
+        if (count($errors) > 0) {
+            // Let Symfony create the standard 422 Unprocessable Entity response.
+            // The (string) cast on $errors formats the violation list perfectly.
+            throw new UnprocessableEntityHttpException((string) $errors);
+        }
+
+        // $this->em->persist($user);
+        // $this->em->flush();
+
 
         try {
-            $em->persist($user);
-            $em->flush();
+            $this->em->persist($user);
+            $this->em->flush();
         } catch (\Exception $e) {
             return $this->json([
                 'error' => 'An error occurred while saving the user',

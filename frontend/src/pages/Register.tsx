@@ -1,150 +1,154 @@
+import { useMutation } from "@tanstack/react-query";
 import Header from "../components/Header";
 import { FieldValues, useForm } from "react-hook-form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import useApi from "@/hooks/useApi";
+import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { useNavigate } from "react-router";
 
 const Register = () => {
-  const {
-    register,
-    handleSubmit,
-    getValues,
-    setError,
-    formState: { errors, isSubmitting, isSubmitSuccessful },
-  } = useForm();
+  const form = useForm();
+  const { fetchData } = useApi();
+  const navigate = useNavigate();
 
-  const onSubmit = async (data: FieldValues) => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/register`, {
+  const { mutate, isPending: isSubmitting } = useMutation({
+    mutationFn: (data: FieldValues) =>
+      fetchData("/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        setError("root", {
+      }),
+    onError: (error: any) => {
+      if (error.status === 422) {
+        toast.error("Vámi zadané údaje nejsou platné.");
+        form.setError("root", {
+          type: "server",
+          message:
+            "Vámi zadaný email je již používán. Je možné, že spráce zatím váš účet nepotvrdil.",
+        });
+      } else {
+        toast.error("Nastala chyba při registraci.");
+        form.setError("root", {
           type: "server",
           message:
             "Nastala chyba při registraci, zkuste to prosím znovu později.",
         });
-        throw new Error("Chyba při registraci");
       }
-
-      const result = await response.json();
-      console.log(result);
-    } catch (error) {
-      setError("root", {
-        type: "server",
-        message:
-          "Nastala chyba při registraci, zkuste to prosím znovu později.",
-      });
-      console.error("Error:", error);
-    }
-  };
+    },
+    onSuccess: () => {
+      toast.success(
+        "Registrace proběhla úspěšně! Nyní bude potvrzen váš účet správcem."
+      );
+      form.reset();
+      navigate("/");
+    },
+  });
 
   return (
     <div>
       <Header />
-      <main className="p-4">
-        <h1 className="font-bold text-xl mb-3">
+      <main className="p-4 w-full md:max-w-3/5 lg:max-w-1/3 mx-auto">
+        <h1 className="font-bold text-xl my-3 text-center">
           Registrace do ticketing systému
         </h1>
-        {errors.root?.type === "server" && (
-          <div className="bg-red-100 text-red-700 p-4 mb-4 rounded-md">
-            {errors.root.message as string}
-          </div>
+        {form.formState.errors.root?.type === "server" && (
+          <>
+            <Alert variant="destructive">
+              <AlertCircle />
+              <AlertTitle>Nastala chyba</AlertTitle>
+              <AlertDescription>
+                {form.formState.errors.root.message as string}
+              </AlertDescription>
+            </Alert>
+          </>
         )}
-        {isSubmitSuccessful && (
-          <div className="bg-green-100 text-green-700 p-4 mb-4 rounded-md">
-            Registrace proběhla úspěšně! Nyní vám bude potvren váš účet
-            správcem.
-          </div>
-        )}
-        <form
-          className="flex flex-col gap-4"
-          onSubmit={handleSubmit((data) => onSubmit(data))}
-        >
-          {/* Registration Form with useForm */}
-          <div className="">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              {...register("email", { required: "Email je povinný" })}
-              className="form-input"
-            />
-            {errors.email && (
-              <span className="text-red-500 text-sm">
-                {errors.email.message as string}
-              </span>
-            )}
-          </div>
-          <div className="">
-            <label htmlFor="fullName">Celé jméno</label>
-            <input
-              type="text"
-              id="fullName"
-              {...register("fullName", {
-                required: "Jméno je povinné",
-                validate: (value) =>
-                  value.trim().split(" ").length > 1 || "Zadejte celé jméno",
-                minLength: {
-                  value: 5,
-                  message: "Jméno musí mít alespoň 5 znaků",
-                },
-              })}
-              className="form-input"
-            />
-            {errors.fullName && (
-              <span className="text-red-500 text-sm">
-                {errors.fullName.message as string}
-              </span>
-            )}
-          </div>
-          <div className="">
-            <label htmlFor="password">Heslo</label>
-            <input
-              type="password"
-              id="password"
-              {...register("password", {
-                required: "Heslo je povinné",
-                minLength: {
-                  value: 10,
-                  message: "Heslo musí mít alespoň 10 znaků",
-                },
-              })}
-              className="form-input"
-            />
-            {errors.password && (
-              <span className="text-red-500 text-sm">
-                {errors.password.message as string}
-              </span>
-            )}
-          </div>
-          <div className="">
-            <label htmlFor="confirmPassword">Potvrzení hesla</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              {...register("confirmPassword", {
-                required: "Potvrzení hesla je povinné",
-                validate: (value) =>
-                  value === getValues("password") || "Hesla se neshodují",
-              })}
-              className="form-input"
-            />
-            {errors.confirmPassword && (
-              <span className="text-red-500 text-sm">
-                {errors.confirmPassword.message as string}
-              </span>
-            )}
-          </div>
-          <button
-            type="submit"
-            className={isSubmitting ? "btn-disabled" : "btn-lime"}
+        <Form {...form}>
+          <form
+            className="flex flex-col gap-2 w-full mt-3"
+            onSubmit={form.handleSubmit((data) => mutate(data))}
           >
-            Registrovat se
-          </button>
-        </form>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem className="flex flex-col mb-4 w-full">
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="vas@email.cz" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem className="flex flex-col mb-4 w-full">
+                  <FormLabel>Celé jméno</FormLabel>
+                  <FormControl>
+                    <Input type="text" placeholder="Jan Novák" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem className="flex flex-col mb-4 w-full">
+                  <FormLabel>Heslo</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Vaše heslo"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem className="flex flex-col mb-4 w-full">
+                  <FormLabel>Potvrzení hesla</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Heslo znovu"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-auto self-end"
+            >
+              Registrovat se
+            </Button>
+          </form>
+        </Form>
       </main>
     </div>
   );

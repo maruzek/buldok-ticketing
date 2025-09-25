@@ -10,8 +10,10 @@ use App\Service\VariableSymbolService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Mercure\Update;
@@ -24,23 +26,17 @@ final class PaymentController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return $this->json([
-                'message' => 'Invalid JSON',
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestException('Invalid JSON');
         }
 
         if ($data['amount'] <= 0) {
-            return $this->json([
-                'message' => 'Amount must be greater than zero',
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestException('Amount must be greater than zero');
         }
 
         $purchase = $purchaseRepository->find($data['purchaseId'] ?? 0);
 
         if (!$purchase) {
-            return $this->json([
-                'message' => 'Purchase not found',
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new NotFoundHttpException('Purchase not found');
         }
 
         $vs = $vsGenerator->generateUnique();
@@ -52,7 +48,6 @@ final class PaymentController extends AbstractController
         $payment->setPaidAt(null);
         $payment->setGeneratedAt(new \DateTimeImmutable());
         $payment->setPurchase($purchase);
-
 
         $em->persist($payment);
         $em->flush();
@@ -67,8 +62,6 @@ final class PaymentController extends AbstractController
     public function getTest(EntityManagerInterface $em, FioApiService $fioApiService): JsonResponse
     {
         $result = $fioApiService->fetchNewTransactions();
-
-
 
         return $this->json($result);
     }
@@ -88,8 +81,6 @@ final class PaymentController extends AbstractController
             $hub->publish($update);
         }
 
-
-
         return $this->json($paymentId);
     }
 
@@ -99,9 +90,7 @@ final class PaymentController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $paymentId = $data['vs'] ?? null;
         if ($paymentId === null) {
-            return $this->json([
-                'message' => 'Variable symbol (vs) is required',
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestException('Variable symbol (vs) is required');
         }
 
         /** @var Payment $payment */

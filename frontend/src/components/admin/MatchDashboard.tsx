@@ -129,7 +129,8 @@ const MatchDashboard = () => {
                 toast.success("Data znovu načtena");
               }
             }}
-            className="cursor-pointer text-gray-600 hover:text-gray-900"
+            className={`cursor-pointer text-gray-600 hover:text-gray-900`}
+            aria-label="Obnovit data"
           />
           <Link
             to={`/admin/matches/${match?.id}/edit`}

@@ -17,6 +17,8 @@ import {
 import { Input } from "@/components/ui/input";
 
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "../ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const TicketList = () => {
   const { fetchData } = useApi();
@@ -24,6 +26,7 @@ const TicketList = () => {
   const {
     data: ticketPrices,
     isPending,
+    isError: isFetchError,
     error: fetchError,
   } = useQuery({
     queryKey: ["ticket-prices"],
@@ -47,10 +50,15 @@ const TicketList = () => {
   }, [ticketPrices, form]);
 
   useEffect(() => {
-    if (fetchError) {
+    if (isFetchError) {
+      console.error("Error fetching ticket prices:", fetchError);
       toast.error("Nastala chyba při načítání cen vstupenek.");
+      form.setError("root", {
+        type: "server",
+        message: "Nastala chyba při načítání cen vstupenek.",
+      });
     }
-  }, [fetchError]);
+  }, [isFetchError, fetchError, form]);
 
   const fullTicketValue = form.watch("fullTicket");
 
@@ -106,9 +114,12 @@ const TicketList = () => {
       </CardHeader>
       <CardContent>
         {form.formState.errors.root && (
-          <div className="form-error-box">
-            {form.formState.errors.root.message}
-          </div>
+          <Alert variant={"destructive"}>
+            <AlertCircle />
+            <AlertDescription>
+              {form.formState.errors.root.message}
+            </AlertDescription>
+          </Alert>
         )}
         <Form {...form}>
           <form

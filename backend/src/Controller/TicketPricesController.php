@@ -6,8 +6,10 @@ use App\Entity\TicketType;
 use App\Repository\TicketTypeRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -29,9 +31,7 @@ final class TicketPricesController extends AbstractController
         $halfTicket = $ticketTypeRepository->findOneBy(['name' => 'halfTicket']);
 
         if (!$fullTicket || !$halfTicket) {
-            return $this->json([
-                'message' => 'Ticket types not found',
-            ], 404);
+            throw new NotFoundHttpException('Ticket types not found');
         }
 
         return $this->json([
@@ -74,14 +74,10 @@ final class TicketPricesController extends AbstractController
         }
 
         if (!isset($data['fullTicket'])) {
-            return $this->json([
-                'message' => 'fullTicket is required',
-            ], 400);
+            throw new BadRequestException('fullTicketPrice is required');
         }
         if (!isset($data['halfTicket'])) {
-            return $this->json([
-                'message' => 'halfTicketPrice is required',
-            ], 400);
+            throw new BadRequestException('halfTicketPrice is required');
         }
 
         try {
@@ -89,10 +85,7 @@ final class TicketPricesController extends AbstractController
             $halfTicket->setPrice((float)$data['halfTicket']);
             $em->flush();
         } catch (\Exception $e) {
-            return $this->json([
-                'message' => 'Error updating prices',
-                'error' => $e->getMessage(),
-            ], 500);
+            throw new BadRequestException('Failed to update ticket prices');
         }
 
         return $this->json([

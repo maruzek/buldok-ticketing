@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Mercure\Authorization;
@@ -19,7 +20,7 @@ class MercureController extends AbstractController
         $paymentId = $payload['paymentId'] ?? null;
 
         if (!$paymentId) {
-            return $this->json(['error' => 'Payment ID is required.'], 400);
+            throw new BadRequestException('Payment ID is required');
         }
 
         $topic = 'https://buldok.app/payments/' . $paymentId;

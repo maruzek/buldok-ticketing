@@ -202,8 +202,10 @@ final class MatchController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function getLastActiveMatch(Game $match, GameRepository $gameRepository, SerializerInterface $serializer): JsonResponse
+    public function getLastActiveMatch(GameRepository $gameRepository, SerializerInterface $serializer): JsonResponse
     {
+        $match = $gameRepository->findLastActiveMatch();
+
         if (!$match) {
             throw new NotFoundHttpException('No active match found');
         }

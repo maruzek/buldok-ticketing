@@ -2,11 +2,13 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Repository\EntranceRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Config\Definition\Exception\ForbiddenOverwriteException;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,7 +29,10 @@ final class UserController extends AbstractController
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
-        private readonly SerializerInterface $serializer
+        private readonly SerializerInterface $serializer,
+        private readonly ValidatorInterface $validator,
+        private readonly EntranceRepository $entranceRepository,
+        private readonly UserRepository $userRepository
     ) {}
 
     #[Route('/all', name: 'all', methods: ['GET'])]
@@ -62,9 +67,9 @@ final class UserController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function getById(int $id, UserRepository $userRepository): JsonResponse
+    public function getById(int $id): JsonResponse
     {
-        $user = $userRepository->findOneBy(['id' => $id]);
+        $user = $this->userRepository->findOneBy(['id' => $id]);
 
         if (!$user) {
             throw new NotFoundHttpException('User not found');
@@ -92,24 +97,20 @@ final class UserController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function editById(int $id, UserRepository $userRepository, Request $request, EntityManagerInterface $em, EntranceRepository $entranceRepository, ValidatorInterface $validator): JsonResponse
+    public function editById(User $user, int $id, Request $request): JsonResponse
     {
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return $this->json([
-                'error' => 'Invalid JSON',
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestException('Invalid JSON data');
         }
 
-        $user = $userRepository->findOneBy(['id' => $id]);
+        // $user = $userRepository->findOneBy(['id' => $id]);
         $data = json_decode($request->getContent(), true);
 
         if (!$user) {
-            return $this->json([
-                'error' => 'User not found',
-            ], JsonResponse::HTTP_NOT_FOUND);
+            throw new NotFoundHttpException('User not found');
         }
 
-        $validations = $validator->validate($data);
+        $validations = $this->validator->validate($data);
 
         if (count($validations) > 0) {
             $errors = [];
@@ -119,10 +120,7 @@ final class UserController extends AbstractController
                     'message' => $violation->getMessage(),
                 ];
             }
-            return $this->json([
-                'error' => 'Validation errors',
-                'errors' => $errors,
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestException('Validation failed: ' . json_encode($errors));
         }
 
         $newRoles = $data['roles'] ?? [];
@@ -131,10 +129,7 @@ final class UserController extends AbstractController
         $authUser = $this->getUser();
 
         if (in_array("ROLE_ADMIN", $user->getRoles()) && !in_array("ROLE_ADMIN", $newRoles) && $user->getId() == $authUser->getId()) {
-            return $this->json([
-                'error' => 'Cannot remove admin role from yourself',
-                'message' => 'Nemůžete odebrat roli admina sami sobě',
-            ], JsonResponse::HTTP_FORBIDDEN);
+            throw new ForbiddenOverwriteException('You cannot remove your own admin role');
         }
 
         if (!in_array("ROLE_USER", $newRoles)) {
@@ -144,7 +139,7 @@ final class UserController extends AbstractController
         $newEntrance = null;
 
         if ($data['entrance']) {
-            $newEntrance = $entranceRepository->findOneBy(['id' => $data['entrance']['id']]);
+            $newEntrance = $this->entranceRepository->findOneBy(['id' => $data['entrance']['id']]);
         } else if ($data['entrance'] === null && $user->getEntrance()) {
             $newEntrance = $user->getEntrance();
         } else {
@@ -156,12 +151,9 @@ final class UserController extends AbstractController
         $user->setEntrance($newEntrance);
 
         try {
-            $em->flush();
+            $this->em->flush();
         } catch (\Exception $e) {
-            return $this->json([
-                'error' => 'Error updating user',
-                'message' => $e->getMessage(),
-            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+            throw new \Exception('Error updating user', 500);
         }
 
         $json = $this->serializer->serialize($user, 'json', [

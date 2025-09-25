@@ -16,7 +16,7 @@ import useApi from "@/hooks/useApi";
 import { User } from "@/types/User";
 import useAuth from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { Alert, AlertDescription } from "./ui/alert";
 import { AlertCircleIcon } from "lucide-react";
 import { useEffect } from "react";
 
@@ -50,11 +50,11 @@ export function LoginForm({ className }: React.ComponentProps<"form">) {
         return;
       }
       toast.success("Byli jste úspěšně přihlášeni.");
-      if (data.user.roles.includes("ROLE_ADMIN")) {
-        navigate("/admin");
-        return;
-      }
-      navigate("/app");
+      // if (data.user.roles.includes("ROLE_ADMIN")) {
+      //   navigate("/admin");
+      //   return;
+      // }
+      // navigate("/app");
     },
     onError: (error) => {
       console.error("Login failed:", error);
@@ -101,7 +101,7 @@ export function LoginForm({ className }: React.ComponentProps<"form">) {
           {form.formState.errors.root && (
             <Alert variant={"destructive"}>
               <AlertCircleIcon />
-              <AlertTitle>Chyba při přihlášení</AlertTitle>
+              {/* <AlertTitle>Chyba při přihlášení</AlertTitle> */}
               <AlertDescription>
                 {form.formState.errors.root.message}
               </AlertDescription>

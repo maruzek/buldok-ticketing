@@ -23,6 +23,7 @@ export function useMatchDashboard(matchID: string) {
     isError,
     error,
     refetch,
+    isRefetching,
   } = useQuery<Match, ApiError>({
     queryKey: ["match", matchID],
     queryFn: () =>
@@ -44,6 +45,8 @@ export function useMatchDashboard(matchID: string) {
       isError,
       error,
       isPending,
+      isRefetching,
+      refetch,
     };
   }
 
@@ -63,6 +66,8 @@ export function useMatchDashboard(matchID: string) {
       isError,
       error,
       isPending,
+      isRefetching,
+      refetch,
     };
   }
 
@@ -124,6 +129,7 @@ export function useMatchDashboard(matchID: string) {
     totalEarnings,
     fullTicketsEarnings,
     halfTicketsEarnings,
-    refetch: refetch,
+    refetch,
+    isRefetching,
   };
 }
