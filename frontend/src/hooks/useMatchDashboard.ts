@@ -3,16 +3,16 @@ import useApi from "@/hooks/useApi";
 import { Match } from "@/types/Match";
 import { ApiError } from "@/types/ApiError";
 
-export type MatchDashboardData = {
-  match: Match;
-  uniqueEntranceNames: string[];
-  numOfFullTickets: number;
-  numOfHalfTickets: number;
-  ticketsPerEntrance: { entranceName: string; count: number }[];
-  totalEarnings: string;
-  fullTicketsEarnings: string;
-  halfTicketsEarnings: string;
-};
+// export type MatchDashboardData = {
+//   match: Match;
+//   uniqueEntranceNames: string[];
+//   numOfFullTickets: number;
+//   numOfHalfTickets: number;
+//   ticketsPerEntrance: { entranceName: string; count: number }[];
+//   totalEarnings: string;
+//   fullTicketsEarnings: string;
+//   halfTicketsEarnings: string;
+// };
 
 export function useMatchDashboard(matchID: string) {
   const { fetchData } = useApi();
@@ -27,10 +27,12 @@ export function useMatchDashboard(matchID: string) {
   } = useQuery<Match, ApiError>({
     queryKey: ["match", matchID],
     queryFn: () =>
-      fetchData<Match>(`/matches/${matchID}/stats`, { method: "GET" }),
+      fetchData<Match>(`/matches/${matchID}/dash-stats`, { method: "GET" }),
     enabled: !!matchID,
     retry: false,
   });
+
+  console.log(match);
 
   if (isPending || isError || !match) {
     return {
@@ -120,6 +122,36 @@ export function useMatchDashboard(matchID: string) {
     .filter((it) => it.ticketType.name === "halfTicket")
     .reduce((sum, it) => sum + Number(it.priceAtPurchase), 0);
 
+  const salesByMinute = new Map<string, number>();
+  const fiveMinuteInterval = 5 * 60 * 1000;
+
+  purchases.forEach((p) => {
+    const purchaseTime = new Date(p.purchasedAt).getTime();
+
+    const intervalStart = new Date(
+      Math.floor(purchaseTime / fiveMinuteInterval) * fiveMinuteInterval
+    );
+
+    const timeKey = intervalStart.toLocaleTimeString("cs-CZ", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const ticketsInPurchase = p.purchaseItems.reduce(
+      (sum, item) => sum + Number(item.quantity),
+      0
+    );
+
+    salesByMinute.set(
+      timeKey,
+      (salesByMinute.get(timeKey) || 0) + ticketsInPurchase
+    );
+  });
+
+  const salesOverTime = Array.from(salesByMinute.entries())
+    .map(([time, sales]) => ({ time, sales }))
+    .sort((a, b) => a.time.localeCompare(b.time));
+
   return {
     match: match,
     uniqueEntranceNames,
@@ -131,5 +163,6 @@ export function useMatchDashboard(matchID: string) {
     halfTicketsEarnings,
     refetch,
     isRefetching,
+    salesOverTime,
   };
 }

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\DTO\MatchStatisticsDto;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\MatchStatus;
@@ -265,5 +266,73 @@ final class MatchController extends AbstractController
         ]);
 
         return JsonResponse::fromJsonString($match, JsonResponse::HTTP_OK);
+    }
+
+    #[Route('/api/matches/{id}/dash-stats', name: 'full_match_dash_stats', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function getFullMatchDashboardStats(Game $match): JsonResponse
+    {
+        $statsData = $this->gameRepository->getMatchStatistics($match->getId());
+
+        $totalEarnings = 0;
+        $fullTicketsCount = 0;
+        $halfTicketsCount = 0;
+        $fullTicketsEarnings = 0;
+        $halfTicketsEarnings = 0;
+        $entrancesStats = [];
+
+        $entranceData = [];
+        foreach ($statsData['entranceBreakdown'] as $row) {
+            $eName = $row['entranceName'];
+            if (!isset($entranceData[$eName])) {
+                $entranceData[$eName] = [
+                    'name' => $eName,
+                    'totalEarnings' => 0,
+                    'totalTickets' => 0,
+                    'fullTicketsCount' => 0,
+                    'fullTicketsEarnings' => 0,
+                    'halfTicketsCount' => 0,
+                    'halfTicketsEarnings' => 0,
+                ];
+            }
+            $earnings = (float) $row['earnings'];
+            $ticketCount = (int) $row['ticketCount'];
+
+            $entranceData[$eName]['totalEarnings'] += $earnings;
+            $entranceData[$eName]['totalTickets'] += $ticketCount;
+            $totalEarnings += $earnings;
+
+            if ($row['ticketTypeName'] === 'fullTicket') {
+                $entranceData[$eName]['fullTicketsCount'] += $ticketCount;
+                $entranceData[$eName]['fullTicketsEarnings'] += $earnings;
+                $fullTicketsCount += $ticketCount;
+                $fullTicketsEarnings += $earnings;
+            } else { // halfTicket
+                $entranceData[$eName]['halfTicketsCount'] += $ticketCount;
+                $entranceData[$eName]['halfTicketsEarnings'] += $earnings;
+                $halfTicketsCount += $ticketCount;
+                $halfTicketsEarnings += $earnings;
+            }
+        }
+
+        foreach ($entranceData as &$e) {
+            $e['totalEarnings'] = number_format($e['totalEarnings'], 0, ',', ' ');
+            $e['fullTicketsEarnings'] = number_format($e['fullTicketsEarnings'], 0, ',', ' ');
+            $e['halfTicketsEarnings'] = number_format($e['halfTicketsEarnings'], 0, ',', ' ');
+        }
+
+        $dto = new MatchStatisticsDto(
+            match: $match,
+            totalEarnings: number_format($totalEarnings, 0, ',', ' '),
+            totalTickets: $fullTicketsCount + $halfTicketsCount,
+            fullTicketsCount: $fullTicketsCount,
+            fullTicketsEarnings: number_format($fullTicketsEarnings, 0, ',', ' '),
+            halfTicketsCount: $halfTicketsCount,
+            halfTicketsEarnings: number_format($halfTicketsEarnings, 0, ',', ' '),
+            salesOverTime: $statsData['salesOverTime'],
+            entrancesStats: array_values($entranceData)
+        );
+
+        return $this->json($dto, context: ['groups' => ['match:stats']]);
     }
 }

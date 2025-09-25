@@ -92,6 +92,51 @@ class GameRepository extends ServiceEntityRepository
         return $qb->getQuery()->getOneOrNullResult();
     }
 
+    public function getMatchStatistics(int $matchId): array
+    {
+        $entityManager = $this->getEntityManager();
+
+        $sql = "
+            SELECT
+                DATE_FORMAT(FROM_UNIXTIME(FLOOR(UNIX_TIMESTAMP(p.purchased_at) / 300) * 300), '%H:%i') as time_interval,
+                SUM(pi.quantity) as sales
+            FROM purchase p
+            JOIN purchase_item pi ON p.id = pi.purchase_id
+            WHERE p.match_id = :matchId
+            GROUP BY time_interval
+            ORDER BY time_interval;
+        ";
+        $rsm = new \Doctrine\ORM\Query\ResultSetMapping();
+        $rsm->addScalarResult('time_interval', 'time');
+        $rsm->addScalarResult('sales', 'sales', 'integer');
+        $nativeQuery = $entityManager->createNativeQuery($sql, $rsm);
+        $nativeQuery->setParameter('matchId', $matchId);
+        $salesOverTime = $nativeQuery->getResult();
+
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        $stats = $qb
+            ->select(
+                'e.name as entranceName',
+                'tt.name as ticketTypeName',
+                'SUM(pi.quantity) as ticketCount',
+                'SUM(pi.priceAtPurchase) as earnings'
+            )
+            ->from('App\Entity\Purchase', 'p')
+            ->join('p.purchaseItems', 'pi')
+            ->join('pi.ticketType', 'tt')
+            ->join('p.entrance', 'e')
+            ->where('p.match = :matchId')
+            ->setParameter('matchId', $matchId)
+            ->groupBy('e.name', 'tt.name')
+            ->getQuery()
+            ->getResult();
+
+        return [
+            'salesOverTime' => $salesOverTime,
+            'entranceBreakdown' => $stats,
+        ];
+    }
+
     //    /**
     //     * @return Game[] Returns an array of Game objects
     //     */

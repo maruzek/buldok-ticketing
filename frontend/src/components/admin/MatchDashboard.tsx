@@ -10,6 +10,7 @@ import {
   RadialBar,
   RadialBarChart,
   XAxis,
+  YAxis,
 } from "recharts";
 import ContentBoard from "./ContentBoard";
 import {
@@ -28,9 +29,13 @@ import {
 import { RefreshCw, Settings2 } from "lucide-react";
 import { Link, useParams } from "react-router";
 import Spinner from "../Spinner";
-import { useMatchDashboard } from "@/hooks/useMatchDashboard";
 import { toast } from "sonner";
 import MatchError from "../errors/MatchError";
+import useApi from "@/hooks/useApi";
+import { useQuery } from "@tanstack/react-query";
+import { ApiError } from "@/types/ApiError";
+import { MatchDashboardStats } from "@/types/MatchDashboardStats";
+import { useMemo } from "react";
 
 const chartDataTime = [
   { month: "January", desktop: 186 },
@@ -58,25 +63,91 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
+const salesChartConfig = {
+  sales: {
+    label: "Prodané lístky",
+    color: "var(--chart-1)",
+  },
+} satisfies ChartConfig;
+
 const MatchDashboard = () => {
   const { matchID } = useParams<{ matchID: string }>();
 
+  // const {
+  //   match,
+  //   uniqueEntranceNames,
+  //   numOfFullTickets,
+  //   numOfHalfTickets,
+  //   ticketsPerEntrance,
+  //   totalEarnings,
+  //   fullTicketsEarnings,
+  //   halfTicketsEarnings,
+  //   isPending,
+  //   refetch,
+  //   isError,
+  //   error,
+  //   salesOverTime,
+  // } = useMatchDashboard(matchID!);
+
+  // console.log(salesOverTime);
+
+  const { fetchData } = useApi();
+
   const {
-    match,
-    uniqueEntranceNames,
-    numOfFullTickets,
-    numOfHalfTickets,
-    ticketsPerEntrance,
-    totalEarnings,
-    fullTicketsEarnings,
-    halfTicketsEarnings,
+    data: matchData,
     isPending,
-    refetch,
     isError,
     error,
-  } = useMatchDashboard(matchID!);
+    refetch,
+  } = useQuery<MatchDashboardStats, ApiError>({
+    queryKey: ["match", matchID],
+    queryFn: () =>
+      fetchData<MatchDashboardStats>(`/matches/${matchID}/dash-stats`, {
+        method: "GET",
+      }),
+    enabled: !!matchID,
+    retry: false,
+  });
 
-  console.log(uniqueEntranceNames);
+  if (!matchData) {
+    return null;
+  }
+
+  const {
+    match,
+    totalEarnings,
+    totalTickets,
+    fullTicketsCount,
+    fullTicketsEarnings,
+    halfTicketsCount,
+    halfTicketsEarnings,
+    salesOverTime,
+    entrancesStats,
+  } = matchData;
+
+  const localizedSalesOverTime = useMemo(() => {
+    if (!salesOverTime) {
+      return [];
+    }
+    // For each data point, convert the UTC time string to local time
+    return salesOverTime.map((point) => {
+      // Create a date object by pretending the time is today, in UTC
+      const [hours, minutes] = point.time.split(":");
+      const utcDate = new Date();
+      utcDate.setUTCHours(Number(hours), Number(minutes), 0, 0);
+
+      // Format the date into the user's local time string (e.g., "13:15")
+      const localTime = utcDate.toLocaleTimeString("cs-CZ", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      return {
+        ...point,
+        time: localTime, // Replace the original time with the localized one
+      };
+    });
+  }, [salesOverTime]);
 
   const DashboardHeader = (
     <div>
@@ -155,7 +226,7 @@ const MatchDashboard = () => {
           <CardHeader>
             <CardDescription>Celkem prodáno lístků</CardDescription>
             <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-              {numOfFullTickets + numOfHalfTickets} ks
+              {totalTickets} ks
             </CardTitle>
           </CardHeader>
         </Card>
@@ -163,7 +234,7 @@ const MatchDashboard = () => {
           <CardHeader>
             <CardDescription>Celkem plné</CardDescription>
             <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-              {numOfFullTickets} ks &bull; {fullTicketsEarnings} Kč
+              {fullTicketsCount} ks &bull; {fullTicketsEarnings} Kč
             </CardTitle>
           </CardHeader>
         </Card>
@@ -172,7 +243,7 @@ const MatchDashboard = () => {
           <CardHeader>
             <CardDescription>Celkem poloviční</CardDescription>
             <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-              {numOfHalfTickets} ks &bull; {halfTicketsEarnings} Kč
+              {halfTicketsCount} ks &bull; {halfTicketsEarnings} Kč
             </CardTitle>
           </CardHeader>
         </Card>
@@ -193,8 +264,8 @@ const MatchDashboard = () => {
                 data={[
                   {
                     month: "january",
-                    plne: numOfFullTickets,
-                    polovicni: numOfHalfTickets,
+                    plne: fullTicketsCount,
+                    polovicni: halfTicketsCount,
                   },
                 ]}
                 endAngle={180}
@@ -220,9 +291,7 @@ const MatchDashboard = () => {
                               y={(viewBox.cy || 0) - 16}
                               className="fill-foreground text-2xl font-bold"
                             >
-                              {(
-                                numOfFullTickets + numOfHalfTickets
-                              ).toLocaleString()}
+                              {totalTickets.toLocaleString()}
                             </tspan>
                             <tspan
                               x={viewBox.cx}
@@ -269,13 +338,13 @@ const MatchDashboard = () => {
               <PieChart>
                 <ChartTooltip content={<ChartTooltipContent hideLabel />} />
                 <Pie
-                  data={ticketsPerEntrance}
-                  dataKey="count"
+                  data={entrancesStats}
+                  dataKey="totalTickets"
                   label
-                  nameKey="entranceName"
+                  nameKey="name"
                   className="border-4 border-background"
                 >
-                  {ticketsPerEntrance.map((_, idx) => (
+                  {entrancesStats.map((_, idx) => (
                     <Cell
                       key={`cell-${idx}`}
                       fill={pieColors[idx % pieColors.length]}
@@ -296,12 +365,12 @@ const MatchDashboard = () => {
           </CardHeader>
           <CardContent>
             <ChartContainer
-              config={chartConfigTime}
+              config={salesChartConfig}
               className="max-h-[500px] w-full"
             >
               <AreaChart
                 accessibilityLayer
-                data={chartDataTime}
+                data={localizedSalesOverTime}
                 margin={{
                   left: 12,
                   right: 12,
@@ -309,175 +378,138 @@ const MatchDashboard = () => {
               >
                 <CartesianGrid vertical={false} />
                 <XAxis
-                  dataKey="month"
+                  dataKey="time"
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
-                  tickFormatter={(value) => value.slice(0, 3)}
+                  interval={0}
+                  padding={{ left: 20, right: 20 }}
                 />
+                <YAxis hide={true} padding={{ top: 20 }} />
                 <ChartTooltip
                   cursor={false}
                   content={<ChartTooltipContent indicator="line" />}
                 />
                 <Area
-                  dataKey="desktop"
+                  dataKey="sales"
                   type="natural"
-                  fill="var(--color-desktop)"
+                  fill="var(--color-sales)"
+                  stroke="var(--color-sales)"
                   fillOpacity={0.4}
-                  stroke="var(--color-desktop)"
                 />
               </AreaChart>
             </ChartContainer>
           </CardContent>
         </Card>
-        <Card className="@container/card">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold tabular-nums ">
-              Přední brána
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-6">
-            <div className="grid xl:grid-cols-3 gap-6 grid-cols-1">
-              <div className="col-span-1">
-                {/* Výdělek za kasu
-                    celkem prodaných vstupenek
-                    počet Plných
-                    výdělek za plné
-                    počet polovičních
-                    výděletk za poloviční
-                */}
-                <p className="text-lg">Utrženo celkem</p>
-                <p className="text-3xl font-semibold mb-5">1350 Kč</p>
+        {entrancesStats.map((entrance) => (
+          <Card key={entrance.name} className="@container/card">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold tabular-nums ">
+                {entrance.name}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-6">
+              <div className="grid xl:grid-cols-3 gap-6 grid-cols-1">
+                <div className="col-span-1">
+                  <p className="text-lg">Utrženo celkem</p>
+                  <p className="text-3xl font-semibold mb-5">
+                    {entrance.totalEarnings} Kč
+                  </p>
 
-                <p className="text-lg">Celkem prodáno lístků</p>
-                <p className="text-2xl font-semibold mb-3">17 ks</p>
+                  <p className="text-lg">Celkem prodáno lístků</p>
+                  <p className="text-2xl font-semibold mb-3">
+                    {entrance.totalTickets} ks
+                  </p>
 
-                <p className="text-lg">7 ks polovičních</p>
-                <p className="text-2xl font-semibold mb-3">350 Kč</p>
+                  <p className="text-lg">
+                    {entrance.halfTicketsCount} ks polovičních
+                  </p>
+                  <p className="text-2xl font-semibold mb-3">
+                    {entrance.halfTicketsEarnings} Kč
+                  </p>
 
-                <p className="text-lg">10 ks plných</p>
-                <p className="text-2xl font-semibold">1000 Kč</p>
-              </div>
-              <div className="col-span-2">
-                <ChartContainer
-                  config={chartConfig}
-                  className="mx-auto w-full min-h-[200px]"
-                >
-                  <RadialBarChart
-                    data={[
-                      {
-                        plne: numOfFullTickets,
-                        polovicni: numOfHalfTickets,
-                      },
-                    ]}
-                    endAngle={180}
-                    innerRadius="60%"
-                    outerRadius="100%"
+                  <p className="text-lg">
+                    {entrance.fullTicketsCount} ks plných
+                  </p>
+                  <p className="text-2xl font-semibold">
+                    {entrance.fullTicketsEarnings} Kč
+                  </p>
+                </div>
+                <div className="col-span-2">
+                  <ChartContainer
+                    config={chartConfig}
+                    className="mx-auto w-full min-h-[200px]"
                   >
-                    <ChartTooltip
-                      cursor={false}
-                      content={<ChartTooltipContent hideLabel />}
-                    />
-                    <PolarRadiusAxis
-                      tick={false}
-                      tickLine={false}
-                      axisLine={false}
+                    <RadialBarChart
+                      data={[
+                        {
+                          plne: entrance.fullTicketsCount,
+                          polovicni: entrance.halfTicketsCount,
+                        },
+                      ]}
+                      endAngle={180}
+                      innerRadius="60%"
+                      outerRadius="100%"
                     >
-                      <Label
-                        content={({ viewBox }) => {
-                          if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                            return (
-                              <text
-                                x={viewBox.cx}
-                                y={viewBox.cy}
-                                textAnchor="middle"
-                              >
-                                <tspan
-                                  x={viewBox.cx}
-                                  y={(viewBox.cy || 0) - 16}
-                                  className="fill-foreground text-2xl font-bold"
-                                >
-                                  {(
-                                    numOfFullTickets + numOfHalfTickets
-                                  ).toLocaleString()}
-                                </tspan>
-                                <tspan
-                                  x={viewBox.cx}
-                                  y={(viewBox.cy || 0) + 4}
-                                  className="fill-muted-foreground"
-                                >
-                                  Návštěvníků
-                                </tspan>
-                              </text>
-                            );
-                          }
-                        }}
+                      <ChartTooltip
+                        cursor={false}
+                        content={<ChartTooltipContent hideLabel />}
                       />
-                    </PolarRadiusAxis>
-                    <RadialBar
-                      dataKey="plne"
-                      stackId="a"
-                      cornerRadius={5}
-                      fill="var(--color-plne)"
-                      className="stroke-transparent stroke-2"
-                    />
-                    <RadialBar
-                      dataKey="polovicni"
-                      fill="var(--color-polovicni)"
-                      stackId="a"
-                      cornerRadius={5}
-                      className="stroke-transparent stroke-2"
-                    />
-                  </RadialBarChart>
-                </ChartContainer>
+                      <PolarRadiusAxis
+                        tick={false}
+                        tickLine={false}
+                        axisLine={false}
+                      >
+                        <Label
+                          content={({ viewBox }) => {
+                            if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                              return (
+                                <text
+                                  x={viewBox.cx}
+                                  y={viewBox.cy}
+                                  textAnchor="middle"
+                                >
+                                  <tspan
+                                    x={viewBox.cx}
+                                    y={(viewBox.cy || 0) - 16}
+                                    className="fill-foreground text-2xl font-bold"
+                                  >
+                                    {entrance.totalTickets.toLocaleString()}
+                                  </tspan>
+                                  <tspan
+                                    x={viewBox.cx}
+                                    y={(viewBox.cy || 0) + 4}
+                                    className="fill-muted-foreground"
+                                  >
+                                    Vstupenek
+                                  </tspan>
+                                </text>
+                              );
+                            }
+                          }}
+                        />
+                      </PolarRadiusAxis>
+                      <RadialBar
+                        dataKey="plne"
+                        stackId="a"
+                        cornerRadius={5}
+                        fill="var(--color-plne)"
+                        className="stroke-transparent stroke-2"
+                      />
+                      <RadialBar
+                        dataKey="polovicni"
+                        fill="var(--color-polovicni)"
+                        stackId="a"
+                        cornerRadius={5}
+                        className="stroke-transparent stroke-2"
+                      />
+                    </RadialBarChart>
+                  </ChartContainer>
+                </div>
               </div>
-            </div>
-            <h4 className="text-xl font-medium">Prodeje v průběhu času</h4>
-            <div>
-              <ChartContainer
-                config={chartConfigTime}
-                className="max-h-[500px] w-full"
-              >
-                <AreaChart
-                  accessibilityLayer
-                  data={chartDataTime}
-                  margin={{
-                    left: 12,
-                    right: 12,
-                  }}
-                >
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="month"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    tickFormatter={(value) => value.slice(0, 3)}
-                  />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent indicator="line" />}
-                  />
-                  <Area
-                    dataKey="desktop"
-                    type="natural"
-                    fill="var(--color-desktop)"
-                    fillOpacity={0.4}
-                    stroke="var(--color-desktop)"
-                  />
-                </AreaChart>
-              </ChartContainer>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="@container/card">
-          <CardHeader>
-            <CardDescription>Celkem prodáno lístků</CardDescription>
-            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-              6350 Kč
-            </CardTitle>
-          </CardHeader>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </ContentBoard>
   );

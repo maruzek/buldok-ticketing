@@ -16,23 +16,23 @@ class Game
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['game:admin_dashboard', "match:read"])]
+    #[Groups(['game:admin_dashboard', "match:read", "match:stats"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['game:admin_dashboard', "match:read"])]
+    #[Groups(['game:admin_dashboard', "match:read", "match:stats"])]
     private ?string $rival = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["match:read"])]
+    #[Groups(["match:read", "match:stats"])]
     private ?string $description = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    #[Groups(['game:admin_dashboard', "match:read"])]
+    #[Groups(['game:admin_dashboard', "match:read", "match:stats"])]
     private ?\DateTimeInterface $playedAt = null;
 
     #[ORM\Column(length: 15, enumType: MatchStatus::class)]
-    #[Groups(["match:read"])]
+    #[Groups(["match:read", "match:stats"])]
     private ?MatchStatus $status = null;
 
     /**
