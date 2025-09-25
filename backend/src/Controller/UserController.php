@@ -175,14 +175,14 @@ final class UserController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function searchUser(UserRepository $userRepository, Request $request): JsonResponse
+    public function searchUser(Request $request): JsonResponse
     {
         $query = $request->query->get('q');
         if (!$query) {
             throw new BadRequestException('Query parameter "q" is required');
         }
 
-        $users = $userRepository->searchByEmailOrName($query);
+        $users = $this->userRepository->searchByEmailOrName($query);
 
         $json = $this->serializer->serialize($users, 'json', [
             'groups' => ['user:search'],
@@ -204,9 +204,9 @@ final class UserController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function removeEntrance(int $id, UserRepository $userRepository, EntityManagerInterface $em): JsonResponse
+    public function removeEntrance(int $id): JsonResponse
     {
-        $user = $userRepository->find($id);
+        $user = $this->userRepository->find($id);
 
         if (!$user) {
             throw new NotFoundHttpException('User not found');
@@ -215,7 +215,7 @@ final class UserController extends AbstractController
         $user->setEntrance(null);
 
         try {
-            $em->flush();
+            $this->em->flush();
         } catch (\Exception $e) {
             throw new Exception('Failed to remove entrance from user', 500);
         }
@@ -235,9 +235,9 @@ final class UserController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function changeEntrance(int $id, UserRepository $userRepository, EntranceRepository $entranceRepository, EntityManagerInterface $em, Request $request): JsonResponse
+    public function changeEntrance(int $id, Request $request): JsonResponse
     {
-        $user = $userRepository->find($id);
+        $user = $this->userRepository->find($id);
 
         if (!$user) {
             throw new NotFoundHttpException('User not found');
@@ -249,7 +249,7 @@ final class UserController extends AbstractController
             throw new BadRequestHttpException('Entrance ID is required');
         }
 
-        $entrance = $entranceRepository->find($data['entranceID']);
+        $entrance = $this->entranceRepository->find($data['entranceID']);
 
         if (!$entrance) {
             throw new NotFoundHttpException('Entrance not found');
@@ -258,7 +258,7 @@ final class UserController extends AbstractController
         $user->setEntrance($entrance);
 
         try {
-            $em->flush();
+            $this->em->flush();
         } catch (\Exception $e) {
             throw new Exception('Failed to change entrance for user', 500);
         }
