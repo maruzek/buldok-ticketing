@@ -37,21 +37,6 @@ import { ApiError } from "@/types/ApiError";
 import { MatchDashboardStats } from "@/types/MatchDashboardStats";
 import { useMemo } from "react";
 
-const chartDataTime = [
-  { month: "January", desktop: 186 },
-  { month: "February", desktop: 305 },
-  { month: "March", desktop: 237 },
-  { month: "April", desktop: 73 },
-  { month: "May", desktop: 209 },
-  { month: "June", desktop: 214 },
-];
-const chartConfigTime = {
-  desktop: {
-    label: "Desktop",
-    color: "var(--chart-1)",
-  },
-} satisfies ChartConfig;
-
 const chartConfig = {
   plne: {
     label: "Plné",
@@ -109,6 +94,28 @@ const MatchDashboard = () => {
     retry: false,
   });
 
+  type LocalizedSalesPoint = {
+    time: string;
+    sales: number;
+  };
+
+  const localizedSalesOverTime: LocalizedSalesPoint[] = useMemo(() => {
+    const data = matchData?.salesOverTime ?? [];
+    return data.map((point): LocalizedSalesPoint => {
+      const [hours, minutes] = point.time.split(":");
+      const utcDate = new Date();
+      utcDate.setUTCHours(Number(hours), Number(minutes), 0, 0);
+
+      return {
+        sales: point.sales,
+        time: utcDate.toLocaleTimeString("cs-CZ", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+    });
+  }, [matchData?.salesOverTime]);
+
   if (!matchData) {
     return null;
   }
@@ -121,33 +128,9 @@ const MatchDashboard = () => {
     fullTicketsEarnings,
     halfTicketsCount,
     halfTicketsEarnings,
-    salesOverTime,
-    entrancesStats,
+    // provide a default so we never get undefined
+    entrancesStats = [],
   } = matchData;
-
-  const localizedSalesOverTime = useMemo(() => {
-    if (!salesOverTime) {
-      return [];
-    }
-    // For each data point, convert the UTC time string to local time
-    return salesOverTime.map((point) => {
-      // Create a date object by pretending the time is today, in UTC
-      const [hours, minutes] = point.time.split(":");
-      const utcDate = new Date();
-      utcDate.setUTCHours(Number(hours), Number(minutes), 0, 0);
-
-      // Format the date into the user's local time string (e.g., "13:15")
-      const localTime = utcDate.toLocaleTimeString("cs-CZ", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-
-      return {
-        ...point,
-        time: localTime, // Replace the original time with the localized one
-      };
-    });
-  }, [salesOverTime]);
 
   const DashboardHeader = (
     <div>
