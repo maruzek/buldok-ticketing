@@ -118,6 +118,7 @@ class GameRepository extends ServiceEntityRepository
             ->select(
                 'e.name as entranceName',
                 'tt.name as ticketTypeName',
+                'p.paymentType',
                 'SUM(pi.quantity) as ticketCount',
                 'SUM(pi.priceAtPurchase) as earnings'
             )
@@ -127,7 +128,7 @@ class GameRepository extends ServiceEntityRepository
             ->join('p.entrance', 'e')
             ->where('p.match = :matchId')
             ->setParameter('matchId', $matchId)
-            ->groupBy('e.name', 'tt.name')
+            ->groupBy('e.name', 'tt.name', 'p.paymentType')
             ->getQuery()
             ->getResult();
 

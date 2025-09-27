@@ -69,6 +69,24 @@ class PurchaseRepository extends ServiceEntityRepository
             ->getOneOrNullResult(); // Get a single result or null
     }
 
+    /**
+     * Finds all purchases for a given match, including related user, entrance, purchase items, and ticket types.
+     * @return Purchase[]
+     */
+    public function findForMatchDashboard(int $matchId): array
+    {
+        return $this->createQueryBuilder('p')
+            ->addSelect('e', 'pi', 'tt')
+            ->leftJoin('p.entrance', 'e')
+            ->leftJoin('p.purchaseItems', 'pi')
+            ->leftJoin('pi.ticketType', 'tt')
+            ->where('p.match = :matchId')
+            ->setParameter('matchId', $matchId)
+            ->orderBy('p.purchasedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return Purchase[] Returns an array of Purchase objects
     //     */

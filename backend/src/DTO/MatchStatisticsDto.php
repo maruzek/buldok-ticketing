@@ -33,6 +33,9 @@ final class MatchStatisticsDto
         public readonly array $salesOverTime,
 
         #[Groups(['match:stats'])]
-        public readonly array $entrancesStats
+        public readonly array $entrancesStats,
+
+        #[Groups(['match:stats'])]
+        public readonly array $paymentMethodStats
     ) {}
 }

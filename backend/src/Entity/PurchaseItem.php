@@ -13,7 +13,7 @@ class PurchaseItem
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['purchase:read', 'purchase_item:read', 'purchase:admin_game_summary'])]
+    #[Groups(['purchase:read', 'purchase_item:read', 'purchase:admin_game_summary', "purchase:table"])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'purchaseItems')]
@@ -22,15 +22,15 @@ class PurchaseItem
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['purchase:read', 'purchase_item:read', 'purchase:admin_game_summary'])]
+    #[Groups(['purchase:read', 'purchase_item:read', 'purchase:admin_game_summary', "purchase:table"])]
     private ?TicketType $ticketType = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
-    #[Groups(['purchase:read', 'purchase_item:read', 'purchase:admin_game_summary'])]
+    #[Groups(['purchase:read', 'purchase_item:read', 'purchase:admin_game_summary', "purchase:table"])]
     private ?string $priceAtPurchase = null;
 
     #[ORM\Column]
-    #[Groups(['purchase:read', 'purchase_item:read', 'purchase:admin_game_summary'])]
+    #[Groups(['purchase:read', 'purchase_item:read', 'purchase:admin_game_summary', "purchase:table"])]
     private ?int $quantity = null;
 
     public function getId(): ?int

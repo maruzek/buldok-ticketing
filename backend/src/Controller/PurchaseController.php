@@ -206,4 +206,17 @@ final class PurchaseController extends AbstractController
             'message' => 'Nákup byl úspěšně smazán',
         ], Response::HTTP_OK);
     }
+
+    #[Route('/match/{id}/purchases', name: 'match_purchases', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function getPurchasesForMatch(int $id): JsonResponse
+    {
+        $purchases = $this->purchaseRepository->findForMatchDashboard($id);
+
+        $json = $this->serializer->serialize($purchases, 'json', [
+            'groups' => ['purchase:table'],
+        ]);
+
+        return new JsonResponse($json, 200, [], true);
+    }
 }

@@ -14,11 +14,11 @@ class Entrance
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['purchase:admin_game_summary', "user:read", "entrance:read"])]
+    #[Groups(['purchase:admin_game_summary', "user:read", "entrance:read", "purchase:table"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 40)]
-    #[Groups(['purchase:admin_game_summary', "user:read", "entrance:read"])]
+    #[Groups(['purchase:admin_game_summary', "user:read", "entrance:read", "purchase:table"])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]

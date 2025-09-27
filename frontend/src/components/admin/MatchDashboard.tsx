@@ -32,10 +32,17 @@ import Spinner from "../Spinner";
 import { toast } from "sonner";
 import MatchError from "../errors/MatchError";
 import useApi from "@/hooks/useApi";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@/types/ApiError";
 import { MatchDashboardStats } from "@/types/MatchDashboardStats";
 import { useMemo } from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "../ui/accordion";
+import { PurchaseTable } from "./PurchaseTable/PurchaseTable";
 
 const chartConfig = {
   plne: {
@@ -57,35 +64,16 @@ const salesChartConfig = {
 
 const MatchDashboard = () => {
   const { matchID } = useParams<{ matchID: string }>();
-
-  // const {
-  //   match,
-  //   uniqueEntranceNames,
-  //   numOfFullTickets,
-  //   numOfHalfTickets,
-  //   ticketsPerEntrance,
-  //   totalEarnings,
-  //   fullTicketsEarnings,
-  //   halfTicketsEarnings,
-  //   isPending,
-  //   refetch,
-  //   isError,
-  //   error,
-  //   salesOverTime,
-  // } = useMatchDashboard(matchID!);
-
-  // console.log(salesOverTime);
-
   const { fetchData } = useApi();
+  const queryClient = useQueryClient();
 
   const {
     data: matchData,
     isPending,
     isError,
     error,
-    refetch,
   } = useQuery<MatchDashboardStats, ApiError>({
-    queryKey: ["match", matchID],
+    queryKey: ["match", matchID, "dashboard"],
     queryFn: () =>
       fetchData<MatchDashboardStats>(`/matches/${matchID}/dash-stats`, {
         method: "GET",
@@ -128,8 +116,8 @@ const MatchDashboard = () => {
     fullTicketsEarnings,
     halfTicketsCount,
     halfTicketsEarnings,
-    // provide a default so we never get undefined
     entrancesStats = [],
+    paymentMethodStats,
   } = matchData;
 
   const DashboardHeader = (
@@ -178,10 +166,8 @@ const MatchDashboard = () => {
         <div className="flex items-center gap-4">
           <RefreshCw
             onClick={() => {
-              if (refetch) {
-                refetch();
-                toast.success("Data znovu načtena");
-              }
+              queryClient.invalidateQueries({ queryKey: ["match", matchID] });
+              toast.success("Data znovu načtena");
             }}
             className={`cursor-pointer text-gray-600 hover:text-gray-900`}
             aria-label="Obnovit data"
@@ -230,6 +216,28 @@ const MatchDashboard = () => {
             </CardTitle>
           </CardHeader>
         </Card>
+      </div>
+      <div className="my-2 w-full">
+        {/* <div>Tabulka nakupu</div>
+        <div>Tabulka plateb</div> */}
+        <Accordion
+          type="single"
+          collapsible
+          className="px-4 bg-card border rounded-xl text-card-foreground shadow-sm"
+        >
+          <AccordionItem value="purchases">
+            <AccordionTrigger>Tabulka nákupů</AccordionTrigger>
+            <AccordionContent>
+              <PurchaseTable matchID={matchID!} />
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="payments">
+            <AccordionTrigger>Tabulka plateb</AccordionTrigger>
+            <AccordionContent>
+              Yes. It adheres to the WAI-ARIA design pattern.
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
       <div className="grid grid-cols-2 gap-4 max-[1410px]:grid-cols-1">
         <Card className="@container/card">
@@ -384,6 +392,53 @@ const MatchDashboard = () => {
             </ChartContainer>
           </CardContent>
         </Card>
+        <div className="grid grid-cols-2 gap-4 max-[1410px]:grid-cols-1">
+          <Card className="@container/card">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold tabular-nums ">
+                Rozdělení plateb podle metod
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer
+                config={chartConfig}
+                className="[&_.recharts-pie-label-text]:fill-foreground mx-auto aspect-square max-h-[80%] w-full min-h-[200px]"
+              >
+                <PieChart>
+                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                  <Pie
+                    data={paymentMethodStats}
+                    dataKey="value"
+                    label
+                    nameKey="name"
+                    className="border-4 border-background"
+                  >
+                    {paymentMethodStats &&
+                      paymentMethodStats.map((_, idx) => (
+                        <Cell
+                          key={`cell-${idx}`}
+                          fill={pieColors[idx % pieColors.length]}
+                        />
+                      ))}
+                  </Pie>
+                </PieChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+          <div className="flex flex-col gap-4">
+            {paymentMethodStats &&
+              paymentMethodStats.map((method) => (
+                <Card key={method.name}>
+                  <CardHeader>
+                    <CardDescription>{method.name}</CardDescription>
+                    <CardTitle className="text-2xl font-bold tabular-nums ">
+                      {method.value} Kč
+                    </CardTitle>
+                  </CardHeader>
+                </Card>
+              ))}
+          </div>
+        </div>
         {entrancesStats.map((entrance) => (
           <Card key={entrance.name} className="@container/card">
             <CardHeader>

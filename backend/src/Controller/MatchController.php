@@ -280,6 +280,7 @@ final class MatchController extends AbstractController
         $fullTicketsEarnings = 0;
         $halfTicketsEarnings = 0;
         $entrancesStats = [];
+        $paymentMethodStats = ['cash' => 0, 'qr' => 0];
 
         $entranceData = [];
         foreach ($statsData['entranceBreakdown'] as $row) {
@@ -293,14 +294,17 @@ final class MatchController extends AbstractController
                     'fullTicketsEarnings' => 0,
                     'halfTicketsCount' => 0,
                     'halfTicketsEarnings' => 0,
+                    'paymentMethods' => ['cash' => 0, 'qr' => 0]
                 ];
             }
             $earnings = (float) $row['earnings'];
             $ticketCount = (int) $row['ticketCount'];
+            $paymentType = $row['paymentType'];
 
             $entranceData[$eName]['totalEarnings'] += $earnings;
             $entranceData[$eName]['totalTickets'] += $ticketCount;
             $totalEarnings += $earnings;
+            $paymentMethodStats[$paymentType] += $earnings;
 
             if ($row['ticketTypeName'] === 'fullTicket') {
                 $entranceData[$eName]['fullTicketsCount'] += $ticketCount;
@@ -319,7 +323,14 @@ final class MatchController extends AbstractController
             $e['totalEarnings'] = number_format($e['totalEarnings'], 0, ',', ' ');
             $e['fullTicketsEarnings'] = number_format($e['fullTicketsEarnings'], 0, ',', ' ');
             $e['halfTicketsEarnings'] = number_format($e['halfTicketsEarnings'], 0, ',', ' ');
+            $e['paymentMethods']['cash'] = number_format($e['paymentMethods']['cash'], 0, ',', ' ');
+            $e['paymentMethods']['qr'] = number_format($e['paymentMethods']['qr'], 0, ',', ' ');
         }
+
+        $paymentMethodChartData = [
+            ['name' => 'Hotovost', 'value' => $paymentMethodStats['cash']],
+            ['name' => 'QR', 'value' => $paymentMethodStats['qr']]
+        ];
 
         $dto = new MatchStatisticsDto(
             match: $match,
@@ -330,7 +341,8 @@ final class MatchController extends AbstractController
             halfTicketsCount: $halfTicketsCount,
             halfTicketsEarnings: number_format($halfTicketsEarnings, 0, ',', ' '),
             salesOverTime: $statsData['salesOverTime'],
-            entrancesStats: array_values($entranceData)
+            entrancesStats: array_values($entranceData),
+            paymentMethodStats: $paymentMethodChartData
         );
 
         return $this->json($dto, context: ['groups' => ['match:stats']]);

@@ -14,14 +14,14 @@ class Purchase
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['purchase:read', 'purchase:admin_game_summary'])]
+    #[Groups(['purchase:read', 'purchase:admin_game_summary', "purchase:table"])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'purchases')]
     private ?User $soldBy = null;
 
     #[ORM\ManyToOne(inversedBy: 'purchases')]
-    #[Groups(['purchase:admin_game_summary'])]
+    #[Groups(['purchase:admin_game_summary', 'purchase:table'])]
     private ?Entrance $entrance = null;
 
     #[ORM\ManyToOne(inversedBy: 'purchases')]
@@ -29,22 +29,22 @@ class Purchase
     private ?Game $match = null;
 
     #[ORM\Column]
-    #[Groups(['purchase:read', 'purchase:admin_game_summary'])]
+    #[Groups(['purchase:read', 'purchase:admin_game_summary', 'purchase:table'])]
     private ?\DateTimeImmutable $purchasedAt = null;
 
     /**
      * @var Collection<int, PurchaseItem>
      */
     #[ORM\OneToMany(targetEntity: PurchaseItem::class, mappedBy: 'purchase', orphanRemoval: true, cascade: ['remove'])]
-    #[Groups(['purchase:read', 'purchase:admin_game_summary'])]
+    #[Groups(['purchase:read', 'purchase:admin_game_summary', "purchase:table"])]
     private Collection $purchaseItems;
 
     #[ORM\OneToOne(mappedBy: 'Purchase', cascade: ['persist', 'remove'])]
-    #[Groups(['purchase:read', 'purchase:admin_game_summary'])]
+    #[Groups(['purchase:read', 'purchase:admin_game_summary', 'purchase:table'])]
     private ?Payment $payment = null;
 
     #[ORM\Column(length: 20, nullable: true)]
-    #[Groups(['purchase:read', 'purchase:admin_game_summary'])]
+    #[Groups(['purchase:read', 'purchase:admin_game_summary', 'purchase:table'])]
     private ?string $paymentType = null;
 
     public function __construct()
