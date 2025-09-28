@@ -3,17 +3,6 @@ import useApi from "@/hooks/useApi";
 import { Match } from "@/types/Match";
 import { ApiError } from "@/types/ApiError";
 
-// export type MatchDashboardData = {
-//   match: Match;
-//   uniqueEntranceNames: string[];
-//   numOfFullTickets: number;
-//   numOfHalfTickets: number;
-//   ticketsPerEntrance: { entranceName: string; count: number }[];
-//   totalEarnings: string;
-//   fullTicketsEarnings: string;
-//   halfTicketsEarnings: string;
-// };
-
 export function useMatchDashboard(matchID: string) {
   const { fetchData } = useApi();
 

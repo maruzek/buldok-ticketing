@@ -19,20 +19,11 @@ final class CheckPaymentsMessageHandler
         private FioApiService $fioApi,
         private PaymentRepository $paymentRepository,
         private EntityManagerInterface $entityManager,
-        private HubInterface $hub, // <-- Add this
+        private HubInterface $hub,
         private LoggerInterface $logger
     ) {}
     public function __invoke(CheckPaymentsMessage $message): void
     {
-        // $conn = $this->entityManager->getConnection();
-        // try {
-        //     $conn->executeQuery('SELECT 1');
-        // } catch (\Throwable $e) {
-        //     $this->logger->warning('HANDLER: Lost DB connection, reconnecting...', ['exception' => $e->getMessage()]);
-        //     $conn->close();
-        //     $conn->connect();
-        // }
-
         $this->logger->info('HANDLER: Checking for new Fio transactions...');
 
         $transactions = $this->fioApi->fetchNewTransactions();
@@ -98,6 +89,16 @@ final class CheckPaymentsMessageHandler
 
             $payment->setStatus('paid');
             $payment->setPaidAt(new \DateTimeImmutable());
+            $payment->setBankAccountName($transaction['column10']['value'] ?? null);
+            $payment->setBankUserIdentification($transaction['column7']['value'] ?? null);
+            $payment->setBankInstructionId($transaction['column17']['value'] ?? null);
+            $payment->setBankPaymentCurrancy($transaction['column14']['value'] ?? null);
+            $payment->setBankAccountNumber($transaction['column2']['value'] ?? null);
+            $payment->setBankCode($transaction['column3']['value'] ?? null);
+            $payment->setBankMovementId($transaction['column22']['value'] ?? null);
+            $payment->setBankName($transaction['column12']['value'] ?? null);
+            $payment->setPaymentMessage($transaction['column16']['value'] ?? null);
+
             $this->entityManager->flush();
 
             $topic = 'https://buldok.app/payments/' . $payment->getVariableSymbol();

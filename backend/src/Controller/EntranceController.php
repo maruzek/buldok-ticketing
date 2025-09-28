@@ -141,8 +141,6 @@ final class EntranceController extends AbstractController
      */
     public function editById(Entrance $entrance, int $id, EntranceRepository $entranceRepository, Request $request, EntityManagerInterface $em): JsonResponse
     {
-        // $entrance = $entranceRepository->findOneBy(['id' => $id]);
-
         if (!$entrance) {
             throw new NotFoundHttpException('Entrance not found');
         }

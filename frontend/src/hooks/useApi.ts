@@ -6,14 +6,9 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 
 type ApiHook = {
   fetchData: <T>(endpoint: string, options: RequestInit) => Promise<T>;
-  // isLoading: boolean;
-  // error: string | null;
 };
 
 const useApi = (): ApiHook => {
-  // const [isLoading, setIsLoading] = useState<boolean>(false);
-  // const [error, setError] = useState<string | null>(null);
-
   const { logout } = useAuth();
 
   const fetchData = useCallback(
@@ -54,42 +49,6 @@ const useApi = (): ApiHook => {
           throw error;
         }
 
-        // if (response.status === 401) {
-        //   setError("Byli jste odhlášeni. Přihlašte se prosím znovu.");
-        //   let err = new Error(
-        //     "Byli jste odhlášeni. Přihlašte se prosím znovu."
-        //   );
-
-        //   if (!auth.user) {
-        //     setError(
-        //       "Nesprávné uživatelské jméno nebo heslo, nebo vašemu účtu chybí ověření od správce."
-        //     );
-        //     err = new Error(
-        //       "Nesprávné uživatelské jméno nebo heslo, nebo vašemu účtu chybí ověření od správce."
-        //     );
-        //   }
-
-        //   logout();
-        //   throw err;
-        // }
-
-        // if (response.status === 403) {
-        //   setError("Nemáte oprávnění k této akci.");
-        //   throw new Error("Nemáte oprávnění k této akci.");
-        // }
-
-        // if (!response.ok) {
-        //   const errorBody = await response.json();
-        //   let backendError =
-        //     errorBody.message ?? JSON.stringify(errorBody.message);
-        //   backendError = backendError ? backendError : errorBody?.detail;
-        //   console.log("Backend Error:", errorBody);
-
-        //   throw new Error(
-        //     `Error: Při načítání dat došlo k chybě ${response.status} - ${backendError}`
-        //   );
-        // }
-
         if (
           response.status === 204 ||
           response.headers.get("Content-Length") === "0"
@@ -99,17 +58,6 @@ const useApi = (): ApiHook => {
 
         return (await response.json()) as T;
       } catch (err) {
-        // let message: string;
-        // if (err instanceof Error) {
-        //   message = err.message;
-        // } else if (typeof err === "string") {
-        //   message = err;
-        // } else {
-        //   message = "Nastala neznámá chyba.";
-        // }
-
-        // console.error("API Hook Error:", message);
-        // setError(message);
         console.error("API Hook Error:", err);
         throw err;
       }

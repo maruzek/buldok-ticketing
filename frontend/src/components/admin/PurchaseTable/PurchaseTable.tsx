@@ -5,6 +5,8 @@ import { ApiError } from "@/types/ApiError";
 import { DataTable } from "../UserTable/data-table";
 import { columns } from "./columns";
 import Spinner from "@/components/Spinner";
+import { useState } from "react";
+import { PaymentDetailsDialog } from "../PaymentDetailsDialog";
 
 type PurchaseTableProps = {
   matchID: string;
@@ -12,6 +14,8 @@ type PurchaseTableProps = {
 
 export const PurchaseTable = ({ matchID }: PurchaseTableProps) => {
   const { fetchData } = useApi();
+  const [selectedPayment, setSelectedPayment] =
+    useState<Purchase["payment"]>(null);
 
   const { data: purchases, isPending } = useQuery<Purchase[], ApiError>({
     queryKey: ["match", matchID, "purchases"],
@@ -36,5 +40,14 @@ export const PurchaseTable = ({ matchID }: PurchaseTableProps) => {
     return <p>Nákupy se nepodařilo načíst.</p>;
   }
 
-  return <DataTable columns={columns} data={purchases} />;
+  return (
+    <>
+      <DataTable columns={columns(setSelectedPayment)} data={purchases} />
+      <PaymentDetailsDialog
+        isOpen={!!selectedPayment}
+        onOpenChange={(isOpen) => !isOpen && setSelectedPayment(null)}
+        payment={selectedPayment}
+      />
+    </>
+  );
 };

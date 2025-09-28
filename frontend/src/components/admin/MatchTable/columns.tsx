@@ -78,7 +78,6 @@ export const columns: ColumnDef<Match>[] = [
         <button
           className="cursor-pointer text-red-600 hover:text-red-900 px-3 py-1 rounded text-xs flex items-center transition-colors"
           onClick={() => {
-            // Call your delete handler here, e.g.:
             // handleDelete(row.original.id)
           }}
         >

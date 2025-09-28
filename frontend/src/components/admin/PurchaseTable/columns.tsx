@@ -2,7 +2,9 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Purchase } from "@/types/Purchase";
 import { Banknote, QrCode } from "lucide-react";
 
-export const columns: ColumnDef<Purchase>[] = [
+export const columns = (
+  onQrClick: (payment: Purchase["payment"]) => void
+): ColumnDef<Purchase>[] => [
   {
     accessorKey: "id",
     header: "#",
@@ -61,11 +63,17 @@ export const columns: ColumnDef<Purchase>[] = [
     header: "Platba",
     cell: ({ row }) => {
       const paymentType = row.getValue("paymentType");
-      return paymentType === "qr" ? (
-        <QrCode className="w-5 h-5" />
-      ) : (
-        <Banknote className="w-5 h-5" />
-      );
+      const payment = row.original.payment;
+
+      if (paymentType === "qr") {
+        return (
+          <QrCode
+            className="w-5 h-5 cursor-pointer hover:text-primary"
+            onClick={() => onQrClick(payment)}
+          />
+        );
+      }
+      return <Banknote className="w-5 h-5" />;
     },
   },
 ];

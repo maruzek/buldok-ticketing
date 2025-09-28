@@ -36,7 +36,6 @@ import {
   CollapsibleTrigger,
 } from "./ui/collapsible";
 
-// Sidebar data adapted from the old dashboard
 const data = {
   user: {
     name: "Admin",

@@ -43,6 +43,7 @@ import {
   AccordionTrigger,
 } from "../ui/accordion";
 import { PurchaseTable } from "./PurchaseTable/PurchaseTable";
+import { PaymentTable } from "./PaymentTable/PaymentTable";
 
 const chartConfig = {
   plne: {
@@ -218,23 +219,15 @@ const MatchDashboard = () => {
         </Card>
       </div>
       <div className="my-2 w-full">
-        {/* <div>Tabulka nakupu</div>
-        <div>Tabulka plateb</div> */}
         <Accordion
           type="single"
           collapsible
           className="px-4 bg-card border rounded-xl text-card-foreground shadow-sm"
         >
           <AccordionItem value="purchases">
-            <AccordionTrigger>Tabulka nákupů</AccordionTrigger>
+            <AccordionTrigger>Tabulka nákupů a plateb</AccordionTrigger>
             <AccordionContent>
               <PurchaseTable matchID={matchID!} />
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="payments">
-            <AccordionTrigger>Tabulka plateb</AccordionTrigger>
-            <AccordionContent>
-              Yes. It adheres to the WAI-ARIA design pattern.
             </AccordionContent>
           </AccordionItem>
         </Accordion>

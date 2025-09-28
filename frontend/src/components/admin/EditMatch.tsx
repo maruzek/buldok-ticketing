@@ -110,30 +110,6 @@ const EditMatch = () => {
 
   if (isError) {
     return <MatchError error={error!} matchID={matchID!} />;
-    // if (error?.status === 404) {
-    //   return (
-    //     <div className="flex justify-center items-center flex-col h-full">
-    //       <h1 className="text-2xl font-bold">Zápas nebyl nalezen</h1>
-    //       <p className="mt-2">Zápas s ID {matchID} nebyl nalezen.</p>
-    //     </div>
-    //   );
-    // }
-
-    // if (error?.status === 403) {
-    //   return (
-    //     <div className="flex justify-center items-center flex-col h-full">
-    //       <h1 className="text-2xl font-bold">Přístup odepřen</h1>
-    //       <p className="mt-2">Nemáte oprávnění upravovat tento zápas.</p>
-    //     </div>
-    //   );
-    // }
-
-    // return (
-    //   <div className="flex justify-center items-center flex-col h-full">
-    //     <h1 className="text-2xl font-bold">Chyba při načítání zápasu</h1>
-    //     <p className="mt-2">{error.body?.detail}</p>
-    //   </div>
-    // );
   }
 
   return (
