@@ -23,6 +23,13 @@ import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { ApiError } from "@/types/ApiError";
 import BasicError from "../errors/BasicError";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const EditEntrance = () => {
   const { entranceID } = useParams<{ entranceID: string }>();
@@ -51,7 +58,8 @@ const EditEntrance = () => {
   const form = useForm({
     defaultValues: {
       name: editedEntrance ? editedEntrance.name : "",
-      location: editedEntrance ? editedEntrance.location : "",
+      // location: editedEntrance ? editedEntrance.location : "",
+      status: editedEntrance ? editedEntrance.status : "opened",
     },
   });
 
@@ -60,7 +68,8 @@ const EditEntrance = () => {
       setUserList(editedEntrance.users || []);
       form.reset({
         name: editedEntrance.name,
-        location: editedEntrance.location,
+        // location: editedEntrance.location,
+        status: editedEntrance.status,
       });
     }
   }, [editedEntrance, form]);
@@ -101,6 +110,7 @@ const EditEntrance = () => {
           ...editedEntrance,
           name: data.name,
           location: data.location,
+          status: data.status,
         }),
       }),
     onSuccess: (res, variables) => {
@@ -214,7 +224,7 @@ const EditEntrance = () => {
   }
 
   return (
-    <Card className="w-full lg:max-w-3/5 mx-auto">
+    <Card className="w-full lg:max-w-1/3 mx-auto">
       <CardHeader>
         <CardTitle>Úprava vstupu</CardTitle>
       </CardHeader>
@@ -237,7 +247,7 @@ const EditEntrance = () => {
                 </FormItem>
               )}
             />
-            <FormField
+            {/* <FormField
               control={form.control}
               name="location"
               render={({ field }) => (
@@ -249,8 +259,31 @@ const EditEntrance = () => {
                   <FormMessage />
                 </FormItem>
               )}
+            /> */}
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Vyberte stav vstupu" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="opened">Otevřený</SelectItem>
+                      <SelectItem value="closed">Uzavřený</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-
             <div className="flex flex-col gap-1">
               <h4 className="font-medium">Uživatelé přiřazení ke vstupu</h4>
               <ul>

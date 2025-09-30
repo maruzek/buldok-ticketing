@@ -45,7 +45,7 @@ const CreateEntrance = () => {
   });
 
   return (
-    <Card className="w-full lg:max-w-3/5 mx-auto">
+    <Card className="w-full lg:max-w-1/3 mx-auto">
       <CardHeader>
         <CardTitle>Vytvořit vstup</CardTitle>
       </CardHeader>
@@ -73,7 +73,7 @@ const CreateEntrance = () => {
                 </FormItem>
               )}
             />
-            <FormField
+            {/* <FormField
               control={form.control}
               name="location"
               render={({ field }) => (
@@ -85,9 +85,9 @@ const CreateEntrance = () => {
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
             <Button type="submit" disabled={isSaving}>
-              Uložit
+              Vytvořit
             </Button>
           </form>
         </Form>

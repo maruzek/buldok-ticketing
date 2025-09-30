@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\EntranceStatus;
 use App\Repository\EntranceRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -21,9 +22,9 @@ class Entrance
     #[Groups(['purchase:admin_game_summary', "user:read", "entrance:read", "purchase:table"])]
     private ?string $name = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["entrance:read"])]
-    private ?string $location = null;
+    // #[ORM\Column(length: 255, nullable: true)]
+    // #[Groups(["entrance:read"])]
+    // private ?string $location = null;
 
     /**
      * @var Collection<int, Purchase>
@@ -37,6 +38,10 @@ class Entrance
     #[ORM\OneToMany(targetEntity: User::class, mappedBy: 'entrance')]
     #[Groups(["entrance:read"])]
     private Collection $users;
+
+    #[ORM\Column(length: 255, enumType: EntranceStatus::class)]
+    #[Groups(["entrance:read"])]
+    private ?EntranceStatus $status = EntranceStatus::OPENED;
 
     public function __construct()
     {
@@ -61,17 +66,17 @@ class Entrance
         return $this;
     }
 
-    public function getLocation(): ?string
-    {
-        return $this->location;
-    }
+    // public function getLocation(): ?string
+    // {
+    //     return $this->location;
+    // }
 
-    public function setLocation(?string $location): static
-    {
-        $this->location = $location;
+    // public function setLocation(?string $location): static
+    // {
+    //     $this->location = $location;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     /**
      * @return Collection<int, Purchase>
@@ -128,6 +133,18 @@ class Entrance
                 $user->setEntrance(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getStatus(): ?EntranceStatus
+    {
+        return $this->status;
+    }
+
+    public function setStatus(EntranceStatus $status): static
+    {
+        $this->status = $status;
 
         return $this;
     }

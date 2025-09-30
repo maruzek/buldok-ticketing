@@ -1,8 +1,9 @@
 import { User } from "./User";
 
 export type Entrance = {
-  id: string;
+  id: number;
   name: string;
-  location?: string | null;
+  // location?: string | null;
   users: User[];
+  status: "opened" | "closed" | "removed";
 };

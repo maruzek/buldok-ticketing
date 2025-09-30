@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Entrance;
+use App\Enum\EntranceStatus;
 use App\Repository\EntranceRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
@@ -82,7 +83,7 @@ final class EntranceController extends AbstractController
      */
     public function all(EntranceRepository $entranceRepository): JsonResponse
     {
-        $entrances = $entranceRepository->findAll();
+        $entrances = $entranceRepository->findByStatuses();
 
         $json = $this->serializer->serialize($entrances, 'json', [
             'groups' => ['entrance:read'],
@@ -152,12 +153,46 @@ final class EntranceController extends AbstractController
         }
 
         $entrance->setName($data['name'] ?? $entrance->getName());
-        $entrance->setLocation($data['location'] ?? $entrance->getLocation());
+        // $entrance->setLocation($data['location'] ?? $entrance->getLocation());
+        $entrance->setStatus(isset($data['status']) ? EntranceStatus::from($data['status']) : $entrance->getStatus());
 
         try {
             $em->flush();
         } catch (\Exception $e) {
             throw new Exception('Failed to update entrance', 500);
+        }
+
+        $json = $this->serializer->serialize($entrance, 'json', [
+            'groups' => ['entrance:read'],
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
+
+        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
+    }
+
+    #[Route('/{id}', name: 'remove_by_id', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN')]
+    /**
+     * Remove an entrance by its ID.
+     *
+     * @param int $id The ID of the entrance to remove.
+     *
+     * @return JsonResponse
+     */
+    public function removeById(Entrance $entrance, EntityManagerInterface $em): JsonResponse
+    {
+        if (!$entrance) {
+            throw new NotFoundHttpException('Entrance not found');
+        }
+
+        $entrance->setStatus(EntranceStatus::REMOVED);
+
+        try {
+            $em->flush();
+        } catch (\Exception $e) {
+            throw new Exception('Failed to update entrance' . $e->getMessage(), 500);
         }
 
         $json = $this->serializer->serialize($entrance, 'json', [
