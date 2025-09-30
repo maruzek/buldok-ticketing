@@ -43,7 +43,6 @@ import {
   AccordionTrigger,
 } from "../ui/accordion";
 import { PurchaseTable } from "./PurchaseTable/PurchaseTable";
-import { PaymentTable } from "./PaymentTable/PaymentTable";
 
 const chartConfig = {
   plne: {

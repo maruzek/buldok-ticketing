@@ -44,7 +44,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      {/* <div className="flex items-center justify-between mb-4">
         <Button
           className="bg-red-500 cursor-pointer hover:bg-red-600 flex items-center"
           disabled={!table.getIsSomeRowsSelected()}
@@ -52,7 +52,7 @@ export function DataTable<TData, TValue>({
           <Trash />
           Smazat vybrané
         </Button>
-      </div>
+      </div> */}
       <div className="rounded-md border">
         <Table>
           <TableHeader className="bg-white">

@@ -113,7 +113,7 @@ const EditMatch = () => {
   }
 
   return (
-    <Card className="w-full lg:max-w-3/5 mx-auto">
+    <Card className="w-full lg:max-w-1/3 mx-auto">
       <CardHeader>
         <CardTitle>Upravit zápas</CardTitle>
       </CardHeader>
@@ -136,7 +136,7 @@ const EditMatch = () => {
                 </FormItem>
               )}
             />
-            <div className="w-full flex flex-row justify-between gap-4 lg:max-w-1/3 ">
+            <div className="w-full flex flex-row gap-4 flex-wrap">
               <FormField
                 control={form.control}
                 name="matchDate"
@@ -149,7 +149,7 @@ const EditMatch = () => {
                           <Button
                             variant={"outline"}
                             className={cn(
-                              "min-w-1/3 pl-3 text-left font-normal bg-white",
+                              "pl-3 text-left font-normal bg-white",
                               !field.value && "text-muted-foreground"
                             )}
                           >
@@ -205,7 +205,7 @@ const EditMatch = () => {
                     defaultValue={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger className="w-full md:max-w-1/3">
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Vyberte stav zápasu" />
                       </SelectTrigger>
                     </FormControl>

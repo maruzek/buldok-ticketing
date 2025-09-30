@@ -67,7 +67,7 @@ const CreateMatch = () => {
   });
 
   return (
-    <Card className="w-full lg:max-w-3/5 mx-auto min-h-3/5">
+    <Card className="w-full lg:max-w-1/3 mx-auto">
       <CardHeader>
         <CardTitle>Vytvořit nový zápas</CardTitle>
       </CardHeader>
@@ -91,7 +91,7 @@ const CreateMatch = () => {
               )}
             />
 
-            <div className="w-full flex flex-row gap-4">
+            <div className="w-full flex flex-row gap-4 flex-wrap">
               <FormField
                 control={form.control}
                 name="matchDate"
@@ -104,7 +104,7 @@ const CreateMatch = () => {
                           <Button
                             variant={"outline"}
                             className={cn(
-                              "w-[240px] pl-3 text-left font-normal bg-white",
+                              "pl-3 text-left font-normal bg-white",
                               !field.value && "text-muted-foreground"
                             )}
                           >
