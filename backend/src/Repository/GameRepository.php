@@ -47,6 +47,27 @@ class GameRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * Finds matches by an array of statuses, defaulting to non-removed matches.
+     *
+     * @param MatchStatus[] $statuses An array of statuses to filter by. If empty, defaults to ACTIVE and FINISHED.
+     * @return Game[]
+     */
+    public function findByStatuses(array $statuses = []): array
+    {
+        $qb = $this->createQueryBuilder('g');
+
+        if (empty($statuses)) {
+            $statuses = [MatchStatus::ACTIVE, MatchStatus::FINISHED];
+        }
+
+        $qb->andWhere($qb->expr()->in('g.status', ':statuses'))
+            ->setParameter('statuses', $statuses)
+            ->orderBy('g.playedAt', 'DESC');
+
+        return $qb->getQuery()->getResult();
+    }
+
     // public function findWithFilteredPurchases(int $matchId, ?int $entranceId = null): ?Game
     // {
     //     $qb = $this->createQueryBuilder('g')

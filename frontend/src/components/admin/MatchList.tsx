@@ -6,9 +6,11 @@ import ContentBoard from "./ContentBoard";
 import { DataTable } from "./MatchTable/data-table";
 import { columns } from "./MatchTable/columns";
 import { Button } from "../ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ApiError } from "@/types/ApiError";
+import { useState } from "react";
+import RemoveConfirmDialog from "../RemoveConfirmDialog";
 
 interface Match {
   id: number;
@@ -22,6 +24,11 @@ interface Match {
 const MatchList = () => {
   const { fetchData } = useApi();
 
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [matchToDelete, setMatchToDelete] = useState<number | null>(null);
+
+  const queryClient = useQueryClient();
+
   const {
     data: matches,
     isPending,
@@ -31,6 +38,33 @@ const MatchList = () => {
     queryKey: ["matches"],
     queryFn: () => fetchData<Match[]>("/matches", { method: "GET" }),
   });
+
+  const { mutate: deleteMatch, isPending: isDeleting } = useMutation({
+    mutationFn: (id: number) =>
+      fetchData(`/admin/match/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      toast.success("Zápas byl úspěšně smazán.");
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+      setIsDialogOpen(false);
+      setMatchToDelete(null);
+    },
+    onError: (err: ApiError) => {
+      toast.error(
+        `Nepodařilo se smazat zápas: ${err.message || "Neznámá chyba"}`
+      );
+    },
+  });
+
+  const handleOpenDialog = (id: number) => {
+    setMatchToDelete(id);
+    setIsDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (matchToDelete) {
+      deleteMatch(matchToDelete);
+    }
+  };
 
   // TODO: Custom global component for loading screens?
   if (isPending)
@@ -67,18 +101,31 @@ const MatchList = () => {
   }
 
   return (
-    <ContentBoard
-      cardAction={
-        <Button>
-          <Link to="/admin/matches/create" className="flex items-center gap-2">
-            <Plus /> Vytvořit zápas
-          </Link>
-        </Button>
-      }
-    >
-      {/* TODO: implementovat server-side pagination */}
-      <DataTable columns={columns} data={matches} />
-    </ContentBoard>
+    <>
+      <ContentBoard
+        cardAction={
+          <Button>
+            <Link
+              to="/admin/matches/create"
+              className="flex items-center gap-2"
+            >
+              <Plus /> Vytvořit zápas
+            </Link>
+          </Button>
+        }
+      >
+        {/* TODO: implementovat server-side pagination */}
+        <DataTable columns={columns(handleOpenDialog)} data={matches} />
+      </ContentBoard>
+      <RemoveConfirmDialog
+        isOpen={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onConfirm={handleConfirmDelete}
+        isPending={isDeleting}
+        title="Opravdu smazat tento zápas?"
+        message="Všechna data spojená s tímto zápasem, včetně prodaných lístků, budou smazána."
+      />
+    </>
   );
 };
 

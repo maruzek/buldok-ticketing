@@ -88,26 +88,40 @@ final class MatchController extends AbstractController
      */
     public function listMatches(GameRepository $gameRepository, Request $request, SerializerInterface $serializer): JsonResponse
     {
-        $criteria = [];
+        $statuses = [];
 
         if ($this->isGranted("ROLE_ADMIN")) {
             $statusParam = $request->query->get('status');
             if ($statusParam) {
+                if (str_contains($statusParam, ',')) {
+                    $statusParams = explode(',', $statusParam);
+                } else {
+                    $statusParams = [$statusParam];
+                }
+                foreach ($statusParams as $statusParam) {
+                    $statusEnum = MatchStatus::tryFrom($statusParam);
+
+                    if (!$statusEnum) {
+                        throw new BadRequestHttpException('Invalid status value, must be one of: ' . implode(', ', array_column(MatchStatus::cases(), 'value')));
+                    }
+
+                    $statuses[] = $statusEnum;
+                }
                 $statusEnum = MatchStatus::tryFrom($statusParam);
 
                 if (!$statusEnum) {
                     throw new BadRequestHttpException('Invalid status value, must be one of: ' . implode(', ', array_column(MatchStatus::cases(), 'value')));
                 }
 
-                $criteria['status'] = $statusEnum;
+                $statuses[] = $statusEnum;
             }
         } else {
-            $criteria['status'] = MatchStatus::ACTIVE;
+            $statuses[] = MatchStatus::ACTIVE;
         }
 
-        $matches =  $gameRepository->findBy($criteria, ['playedAt' => 'DESC']);
+        $matches =  $gameRepository->findByStatuses($statuses);
 
-        $result = $serializer->serialize($matches, 'json', ['groups' => ['match:read']]);
+        $result = $serializer->serialize($matches, 'json', ['groups' => ['match:admin_list']]);
 
         return JsonResponse::fromJsonString($result, JsonResponse::HTTP_OK);
     }
@@ -181,6 +195,42 @@ final class MatchController extends AbstractController
         $match->setRival($data['rival'] ?? $match->getRival());
         $match->setPlayedAt(new \DateTime($data['matchDate'] ?? $match->getPlayedAt()));
         $match->setDescription($data['description'] ?? $match->getDescription());
+
+        try {
+            $em->flush();
+        } catch (\Exception $e) {
+            throw new BadRequestHttpException('Failed to update match');
+        }
+
+        $json = $this->serializer->serialize($match, 'json', ['groups' => ['match:read']]);
+
+        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
+    }
+
+    #[Route('/api/admin/match/{id}', name: 'remove_match', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN')]
+    /**
+     * Set a match as removed by ID.
+     *
+     * @param int $id The ID of the match to edit.
+     * @param GameRepository $gameRepository The repository to fetch the match.
+     * @param Request $request The request containing the updated match data.
+     * @param EntityManagerInterface $em The entity manager to persist the changes.
+     *
+     * @return JsonResponse
+     */
+    public function removeMatchById(Game $match, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        if (!$match) {
+            throw new NotFoundHttpException('Match not found');
+        }
+
+        // $data = json_decode($request->getContent(), true);
+        // if (json_last_error() !== JSON_ERROR_NONE) {
+        //     throw new BadRequestHttpException('Invalid JSON');
+        // }
+
+        $match->setStatus(MatchStatus::REMOVED);
 
         try {
             $em->flush();

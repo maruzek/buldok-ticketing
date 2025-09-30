@@ -4,7 +4,7 @@ import MatchStatus from "../MatchStatus";
 import { Link } from "react-router";
 import { Trash, ChartColumnIncreasing, Settings2 } from "lucide-react";
 
-export const columns: ColumnDef<Match>[] = [
+export const columns = (onDelete: (id: number) => void): ColumnDef<Match>[] => [
   {
     accessorKey: "id",
     header: "ID",
@@ -59,7 +59,7 @@ export const columns: ColumnDef<Match>[] = [
         <button
           className="cursor-pointer text-red-600 hover:text-red-900 px-3 py-1 rounded text-xs flex items-center transition-colors"
           onClick={() => {
-            // handleDelete(row.original.id)
+            onDelete(row.original.id);
           }}
         >
           <Trash className="w-5 h-5 " />
