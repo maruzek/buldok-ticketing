@@ -108,7 +108,7 @@ const TicketList = () => {
   }
 
   return (
-    <Card className="w-full lg:max-w-3/5 mx-auto">
+    <Card className="w-full lg:max-w-1/3 mx-auto">
       <CardHeader>
         <CardTitle>Upravit ceny vstupenek</CardTitle>
       </CardHeader>

@@ -8,4 +8,5 @@ export type User = {
   entrance: Entrance | null;
   registeredAt: string;
   verified: boolean;
+  status: "active" | "pending" | "suspended" | "removed";
 };

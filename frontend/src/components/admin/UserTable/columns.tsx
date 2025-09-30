@@ -1,32 +1,9 @@
 import { ColumnDef } from "@tanstack/react-table";
 import type { User } from "@/types/User";
 import { Link } from "react-router";
-import { UserCog, Trash } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { UserCog, Trash, Dot } from "lucide-react";
 
-export const columns: ColumnDef<User>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+export const columns = (onDelete: (id: number) => void): ColumnDef<User>[] => [
   { accessorKey: "fullName", header: "Jméno" },
   { accessorKey: "email", header: "Email" },
   {
@@ -36,6 +13,28 @@ export const columns: ColumnDef<User>[] = [
   {
     accessorKey: "entrance.name",
     header: "Vstup",
+  },
+  {
+    accessorKey: "status",
+    header: "Stav",
+    cell: ({ row }) => (
+      <span
+        className={`p-1 px-2 pr-3 rounded-4xl flex items-center justify-center grow-0 w-30 ${
+          row.original.status === "active"
+            ? "bg-green-200 text-green-800"
+            : row.original.status === "pending"
+            ? "bg-yellow-200 text-yellow-800"
+            : "bg-gray-100 text-gray-800"
+        }`}
+      >
+        <Dot className="m-0 p-0" size={30} />
+        {row.original.status === "active"
+          ? "Aktivní"
+          : row.original.status === "pending"
+          ? "Čekající"
+          : "Neznámý"}
+      </span>
+    ),
   },
   {
     id: "actions",
@@ -51,7 +50,7 @@ export const columns: ColumnDef<User>[] = [
         <button
           className="cursor-pointer text-red-600 hover:text-red-900 px-3 py-1 rounded text-xs flex items-center transition-colors"
           onClick={() => {
-            // handleDelete(row.original.id)
+            onDelete(row.original.id);
           }}
         >
           <Trash className="w-5 h-5" />

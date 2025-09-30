@@ -2,7 +2,7 @@ import useApi from "@/hooks/useApi";
 import { useQuery } from "@tanstack/react-query";
 import { Purchase } from "@/types/Purchase";
 import { ApiError } from "@/types/ApiError";
-import { DataTable } from "../UserTable/data-table";
+import { DataTable } from "./data-table";
 import { columns } from "./columns";
 import Spinner from "@/components/Spinner";
 import { useState } from "react";
@@ -25,8 +25,6 @@ export const PurchaseTable = ({ matchID }: PurchaseTableProps) => {
       }),
     enabled: !!matchID,
   });
-
-  console.log(purchases);
 
   if (isPending) {
     return (

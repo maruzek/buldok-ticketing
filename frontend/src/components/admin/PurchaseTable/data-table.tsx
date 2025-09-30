@@ -19,6 +19,13 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -49,11 +56,57 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
+      <div className="flex items-center py-4 gap-2">
+        <Select
+          value={
+            (table.getColumn("entranceName")?.getFilterValue() as string) ?? ""
+          }
+          onValueChange={(value) =>
+            table.getColumn("entranceName")?.setFilterValue(value)
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Vstup..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={undefined}>Všechny vchody</SelectItem>
+            {Array.from(
+              table
+                .getColumn("entranceName")
+                ?.getFacetedUniqueValues()
+                ?.keys() ?? []
+            )
+              .sort()
+              .map((value) => (
+                <SelectItem key={value} value={value}>
+                  {value}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={
+            (table.getColumn("paymentType")?.getFilterValue() as string) ?? ""
+          }
+          onValueChange={(value) =>
+            table.getColumn("paymentType")?.setFilterValue(value)
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Platba..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={undefined}>Všechny platby</SelectItem>
+            <SelectItem value="cash">Hotovost</SelectItem>
+            <SelectItem value="qr">QR</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="bg-white">
+              <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
                     {header.isPlaceholder
@@ -95,15 +148,6 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
-        {/* <Button
-          onClick={() =>
-            console.log(
-              table.getSelectedRowModel().rows.map((row) => row.original)
-            )
-          }
-        >
-          selected
-        </Button> */}
         <Button
           variant="outline"
           size="sm"

@@ -18,6 +18,13 @@ import {
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Checkbox } from "../ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type UserData = Omit<User, "registeredAt">;
 
@@ -37,11 +44,13 @@ const EditUser = () => {
       fetchData<UserData>(`/admin/users/user/${userID}`, { method: "GET" }),
     retry: false,
   });
+  console.log(editedUser);
 
   const form = useForm({
     defaultValues: {
       verified: editedUser ? editedUser.verified : false,
       admin: editedUser ? editedUser.roles.includes("ROLE_ADMIN") : false,
+      status: editedUser ? editedUser.status : "active",
     },
   });
 
@@ -50,6 +59,7 @@ const EditUser = () => {
       form.reset({
         verified: editedUser.verified,
         admin: editedUser.roles.includes("ROLE_ADMIN"),
+        status: editedUser.status,
       });
     }
   }, [editedUser, form]);
@@ -66,6 +76,7 @@ const EditUser = () => {
             ? [...(editedUser?.roles || []), "ROLE_ADMIN"]
             : (editedUser?.roles || []).filter((role) => role !== "ROLE_ADMIN"),
           verified: data.verified,
+          status: data.status,
         }),
       });
     },
@@ -108,7 +119,7 @@ const EditUser = () => {
   }
 
   return (
-    <Card className="w-full lg:max-w-2/5 mx-auto">
+    <Card className="w-full lg:max-w-1/3 mx-auto">
       <CardHeader>
         <CardTitle>
           Upravit uživatele {`${editedUser?.fullName} (${editedUser?.email})`}
@@ -139,6 +150,32 @@ const EditUser = () => {
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Vyberte stav zápasu" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="active">Aktivní</SelectItem>
+                      <SelectItem value="pending">Čekající</SelectItem>
+                      <SelectItem value="suspended">Deaktivovaný</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="admin"
