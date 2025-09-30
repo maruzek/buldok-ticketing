@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Enum\UserStatus;
 use App\Repository\EntranceRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -45,8 +46,7 @@ final class UserController extends AbstractController
      */
     public function index(UserRepository $userRepository): JsonResponse
     {
-        $users = $userRepository->findAll();
-        $userData = [];
+        $users = $userRepository->findByStatuses();
 
         $json = $this->serializer->serialize($users, 'json', [
             'groups' => ['user:read'],
@@ -146,9 +146,48 @@ final class UserController extends AbstractController
             $newEntrance = null;
         }
 
+        if (isset($data['status'])) {
+            // dd($data['status'], UserStatus::from($data['status']));
+            $user->setStatus(UserStatus::from($data['status']));
+        }
+
         $user->setRoles($newRoles ?? $user->getRoles());
         $user->setVerified($data['verified'] ?? $user->isVerified());
         $user->setEntrance($newEntrance);
+        $user->setStatus($data['status'] ? UserStatus::from($data['status']) : $user->getStatus());
+
+        try {
+            $this->em->flush();
+        } catch (\Exception $e) {
+            throw new \Exception('Error updating user', 500);
+        }
+
+        $json = $this->serializer->serialize($user, 'json', [
+            'groups' => ['user:read'],
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
+
+        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
+    }
+
+    #[Route('/user/{id}', name: 'remove_by_id', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN')]
+    /**
+     * Remove a user by ID.
+     *
+     * @param User $user The user to remove.
+     *
+     * @return JsonResponse
+     */
+    public function removeById(User $user): JsonResponse
+    {
+        if (!$user) {
+            throw new NotFoundHttpException('User not found');
+        }
+
+        $user->setStatus(UserStatus::REMOVED);
 
         try {
             $this->em->flush();

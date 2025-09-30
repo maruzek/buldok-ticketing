@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\User;
+use App\Enum\UserStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
@@ -41,6 +42,26 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->setParameter('q', '%' . strtolower($query) . '%')
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Finds users by an array of statuses, defaulting to non-removed matches.
+     *
+     * @param UserStatus[] $statuses An array of statuses to filter by. If empty, defaults to ACTIVE, PENDING and SUSPENDED.
+     * @return User[]
+     */
+    public function findByStatuses(array $statuses = []): array
+    {
+        $qb = $this->createQueryBuilder('g');
+
+        if (empty($statuses)) {
+            $statuses = [UserStatus::ACTIVE, UserStatus::PENDING, UserStatus::SUSPENDED];
+        }
+
+        $qb->andWhere($qb->expr()->in('g.status', ':statuses'))
+            ->setParameter('statuses', $statuses);
+
+        return $qb->getQuery()->getResult();
     }
 
     //    /**

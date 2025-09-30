@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use App\Enum\MatchStatus;
+use App\Enum\UserStatus;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -79,6 +81,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\ManyToOne(inversedBy: 'users')]
     #[Groups(["user:read"])]
     private ?Entrance $entrance = null;
+
+    #[ORM\Column(length: 255, enumType: UserStatus::class)]
+    #[Groups(["user:read", "entrance:read"])]
+    private ?UserStatus $status = UserStatus::PENDING;
 
     public function __construct()
     {
@@ -241,5 +247,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function isAdmin(): bool
     {
         return in_array('ROLE_ADMIN', $this->getRoles(), true);
+    }
+
+    public function getStatus(): ?UserStatus
+    {
+        return $this->status;
+    }
+
+    public function setStatus(UserStatus $status): static
+    {
+        $this->status = $status;
+
+        return $this;
     }
 }
