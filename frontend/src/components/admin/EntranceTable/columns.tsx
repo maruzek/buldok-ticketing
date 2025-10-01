@@ -7,7 +7,7 @@ export const columns = (
   onDelete: (id: number) => void
 ): ColumnDef<Entrance>[] => [
   { accessorKey: "name", header: "Název" },
-  { accessorKey: "location", header: "Lokace" },
+  // { accessorKey: "location", header: "Lokace" },
   {
     accessorKey: "users",
     header: "Pokladníci",

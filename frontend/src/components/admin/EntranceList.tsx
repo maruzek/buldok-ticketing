@@ -37,8 +37,8 @@ const EntranceList = () => {
     mutationFn: (id: number) =>
       fetchData(`/admin/entrances/${id}`, { method: "DELETE" }),
     onSuccess: () => {
-      toast.success("Zápas byl úspěšně smazán.");
-      queryClient.invalidateQueries({ queryKey: ["matches"] });
+      toast.success("Vstup byl úspěšně smazán.");
+      queryClient.invalidateQueries({ queryKey: ["entrances"] });
       setIsDialogOpen(false);
       setMatchToDelete(null);
     },

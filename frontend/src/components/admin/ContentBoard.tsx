@@ -13,10 +13,12 @@ const ContentBoard = ({
 }: contentBoardProps) => {
   return (
     <Card className="w-full p-5 text-card-foreground rounded-md bg-background border-0 shadow-none">
-      <CardHeader className="w-full m-0 p-0">
-        {cardHeader && cardHeader}
-        {cardAction && <CardAction>{cardAction}</CardAction>}
-      </CardHeader>
+      {(cardHeader || cardAction) && (
+        <CardHeader className="w-full m-0 p-0">
+          {cardHeader}
+          {cardAction && <CardAction>{cardAction}</CardAction>}
+        </CardHeader>
+      )}
       {children}
     </Card>
   );

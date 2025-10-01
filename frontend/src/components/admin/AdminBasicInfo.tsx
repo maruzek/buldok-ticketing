@@ -1,127 +1,145 @@
 import { useEffect, useState } from "react";
-import {
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
 import useApi from "../../hooks/useApi";
 import Spinner from "../Spinner";
 import { Match } from "@/types/Match";
+import ContentBoard from "./ContentBoard";
+import { Card, CardHeader, CardTitle } from "../ui/card";
+import { ArrowRight, Dot } from "lucide-react";
+import { Link } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 
-// TODO: make the dashboard reusable for each match
-
-const PIE_COLORS = ["#7ccf01", "#FFBB28", "#A28DFF", "#FF82B3"];
+// const PIE_COLORS = ["#7ccf01", "#FFBB28", "#A28DFF", "#FF82B3"];
 
 const AdminBasicInfo = () => {
-  const [currentMatch, setCurrentMatch] = useState<Match | null>(null);
-  const [uniqueEntranceNames, setUniqueEntranceNames] = useState<string[]>([]);
-  const [numOfFullTickets, setNumOfFullTickets] = useState<number>(0);
-  const [numOfHalfTickets, setNumOfHalfTickets] = useState<number>(0);
-  const [ticketsPerEntrance, setTicketsPerEntrance] = useState<
-    { entranceName: string; count: number }[]
-  >([]);
+  // const [currentMatch, setCurrentMatch] = useState<Match | null>(null);
+  // const [uniqueEntranceNames, setUniqueEntranceNames] = useState<string[]>([]);
+  // const [numOfFullTickets, setNumOfFullTickets] = useState<number>(0);
+  // const [numOfHalfTickets, setNumOfHalfTickets] = useState<number>(0);
+  // const [ticketsPerEntrance, setTicketsPerEntrance] = useState<
+  //   { entranceName: string; count: number }[]
+  // >([]);
 
-  const { fetchData, isLoading } = useApi();
+  const { fetchData } = useApi();
 
-  useEffect(() => {
-    const fetchLatestMatch = async () => {
-      try {
-        const response = await fetchData<Match | null>(
-          "/admin/matches/last-active-match",
-          {
-            method: "GET",
-          }
-        );
-        if (response) {
-          setCurrentMatch(response);
-          console.log(response);
-        }
-      } catch (error) {
-        console.error("Error fetching latest match:", error);
-      }
-    };
-    fetchLatestMatch();
-  }, [fetchData]);
+  const { data: latestMatch } = useQuery<Match | null>({
+    queryKey: ["last-active-match"],
+    queryFn: () =>
+      fetchData<Match | null>("/admin/matches/last-active-match", {
+        method: "GET",
+      }),
+  });
 
-  useEffect(() => {
-    if (currentMatch?.purchases) {
-      const allPurchaseEntranceNames = currentMatch.purchases
-        .map((purchase) => purchase.entrance?.name)
-        .filter(
-          (name): name is string =>
-            typeof name === "string" && name.trim() !== ""
-        );
-      const uniqueNames = Array.from(new Set(allPurchaseEntranceNames));
-      setUniqueEntranceNames(uniqueNames);
+  // useEffect(() => {
+  //   const fetchLatestMatch = async () => {
+  //     try {
+  //       const response = await fetchData<Match | null>(
+  //         "/admin/matches/last-active-match",
+  //         {
+  //           method: "GET",
+  //         }
+  //       );
+  //       if (response) {
+  //         setCurrentMatch(response);
+  //         console.log(response);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching latest match:", error);
+  //     }
+  //   };
+  //   fetchLatestMatch();
+  // }, [fetchData]);
 
-      const fullTickets = currentMatch.purchases.reduce(
-        (acc, purchase) =>
-          acc +
-          purchase.purchaseItems.reduce(
-            (itemAcc, item) =>
-              item.ticketType.name === "fullTicket"
-                ? itemAcc + Number(item.quantity)
-                : itemAcc,
-            0
-          ),
-        0
-      );
-      setNumOfFullTickets(fullTickets);
+  // useEffect(() => {
+  //   if (currentMatch?.purchases) {
+  //     const allPurchaseEntranceNames = currentMatch.purchases
+  //       .map((purchase) => purchase.entrance?.name)
+  //       .filter(
+  //         (name): name is string =>
+  //           typeof name === "string" && name.trim() !== ""
+  //       );
+  //     const uniqueNames = Array.from(new Set(allPurchaseEntranceNames));
+  //     setUniqueEntranceNames(uniqueNames);
 
-      const halfTickets = currentMatch.purchases.reduce(
-        (acc, purchase) =>
-          acc +
-          purchase.purchaseItems.reduce(
-            (itemAcc, item) =>
-              item.ticketType.name === "halfTicket"
-                ? itemAcc + Number(item.quantity)
-                : itemAcc,
-            0
-          ),
-        0
-      );
-      setNumOfHalfTickets(halfTickets);
-    } else {
-      setUniqueEntranceNames([]);
-      setNumOfFullTickets(0);
-      setNumOfHalfTickets(0);
-    }
-  }, [currentMatch]);
+  //     const fullTickets = currentMatch.purchases.reduce(
+  //       (acc, purchase) =>
+  //         acc +
+  //         purchase.purchaseItems.reduce(
+  //           (itemAcc, item) =>
+  //             item.ticketType.name === "fullTicket"
+  //               ? itemAcc + Number(item.quantity)
+  //               : itemAcc,
+  //           0
+  //         ),
+  //       0
+  //     );
+  //     setNumOfFullTickets(fullTickets);
 
-  useEffect(() => {
-    if (currentMatch?.purchases && uniqueEntranceNames.length > 0) {
-      const calculatedData = uniqueEntranceNames.map((name) => {
-        const ticketsForThisEntrance = currentMatch.purchases
-          .filter((purchase) => purchase.entrance?.name === name)
-          .reduce((totalTicketsInEntrance, purchase) => {
-            const ticketsInThisSpecificPurchase = purchase.purchaseItems.reduce(
-              (itemSum, item) => itemSum + Number(item.quantity),
-              0
-            );
-            return totalTicketsInEntrance + ticketsInThisSpecificPurchase;
-          }, 0);
-        return { entranceName: name, count: ticketsForThisEntrance };
-      });
-      setTicketsPerEntrance(calculatedData);
-    } else {
-      setTicketsPerEntrance([]);
-    }
-  }, [currentMatch, uniqueEntranceNames]);
+  //     const halfTickets = currentMatch.purchases.reduce(
+  //       (acc, purchase) =>
+  //         acc +
+  //         purchase.purchaseItems.reduce(
+  //           (itemAcc, item) =>
+  //             item.ticketType.name === "halfTicket"
+  //               ? itemAcc + Number(item.quantity)
+  //               : itemAcc,
+  //           0
+  //         ),
+  //       0
+  //     );
+  //     setNumOfHalfTickets(halfTickets);
+  //   } else {
+  //     setUniqueEntranceNames([]);
+  //     setNumOfFullTickets(0);
+  //     setNumOfHalfTickets(0);
+  //   }
+  // }, [currentMatch]);
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-full w-full">
-        <Spinner />
-      </div>
-    );
-  }
+  // useEffect(() => {
+  //   if (currentMatch?.purchases && uniqueEntranceNames.length > 0) {
+  //     const calculatedData = uniqueEntranceNames.map((name) => {
+  //       const ticketsForThisEntrance = currentMatch.purchases
+  //         .filter((purchase) => purchase.entrance?.name === name)
+  //         .reduce((totalTicketsInEntrance, purchase) => {
+  //           const ticketsInThisSpecificPurchase = purchase.purchaseItems.reduce(
+  //             (itemSum, item) => itemSum + Number(item.quantity),
+  //             0
+  //           );
+  //           return totalTicketsInEntrance + ticketsInThisSpecificPurchase;
+  //         }, 0);
+  //       return { entranceName: name, count: ticketsForThisEntrance };
+  //     });
+  //     setTicketsPerEntrance(calculatedData);
+  //   } else {
+  //     setTicketsPerEntrance([]);
+  //   }
+  // }, [currentMatch, uniqueEntranceNames]);
+
+  // if (isLoading) {
+  //   return (
+  //     <div className="flex justify-center items-center h-full w-full">
+  //       <Spinner />
+  //     </div>
+  //   );
+  // }
 
   return (
     <>
-      <div className="flex flex-col gap-4 w-full h-screen">
+      <ContentBoard>
+        {latestMatch && (
+          <Link to={`/admin/matches/${latestMatch.id}/stats`}>
+            <Card className="bg-green-100 m-0 py-0 pt-2 hover:bg-green-200 transition-colors cursor-pointer">
+              <CardHeader className="py">
+                <CardTitle className="text-md text-green-800 hover:text-green-900 p-0 m-0 hover:underline flex items-center gap-2">
+                  <Dot className="inline mb-1 mr-2 animate-ping" size={30} />
+                  <span>Právě se hraje zápas proti {latestMatch.rival}</span>
+                  <ArrowRight />
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          </Link>
+        )}
+      </ContentBoard>
+      {/* <div className="flex flex-col gap-4 w-full h-screen">
         {currentMatch ? (
           <div className="bg-white rounded-md p-4 flex flex-col shadow-md xl:h-1/2">
             <div className="card-header w-full">
@@ -331,8 +349,8 @@ const AdminBasicInfo = () => {
           <div className="card-header w-full">
             <h2 className="text-3xl font-bold">Aktuální sezóna</h2>
           </div>
-        </div> */}
-      </div>
+        </div> 
+      </div> */}
     </>
   );
 };

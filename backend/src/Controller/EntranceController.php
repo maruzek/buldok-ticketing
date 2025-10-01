@@ -53,7 +53,7 @@ final class EntranceController extends AbstractController
         $entrance = new Entrance();
 
         $entrance->setName($data['name']);
-        $entrance->setLocation($data['location'] ?? null);
+        // $entrance->setLocation($data['location'] ?? null);
 
         try {
             $em->persist($entrance);

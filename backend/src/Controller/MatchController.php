@@ -243,6 +243,7 @@ final class MatchController extends AbstractController
         return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
     }
 
+    // TODO: prehodnotit, co se ma vracet
     #[Route('/api/admin/matches/last-active-match', name: 'last_active_match', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN')]
     /**

@@ -29,7 +29,7 @@ class AuthenticationSuccessListener
             $entrance = array(
                 'id' => $user->getEntrance()->getId(),
                 'name' => $user->getEntrance()->getName(),
-                'location' => $user->getEntrance()->getLocation(),
+                // 'location' => $user->getEntrance()->getLocation(),
             );
         }
 
