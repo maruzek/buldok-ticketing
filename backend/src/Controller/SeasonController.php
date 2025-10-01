@@ -80,4 +80,12 @@ final class SeasonController extends AbstractController
         $json = $this->serializer->serialize($season, 'json', ['groups' => 'season:read']);
         return JsonResponse::fromJsonString($json, JsonResponse::HTTP_CREATED);
     }
+
+    #[Route('/', name: 'list_seasons', methods: ['GET'])]
+    public function listSeasons(): JsonResponse
+    {
+        $seasons = $this->seasonRepository->findBy([], ['startAt' => 'DESC']);
+        $json = $this->serializer->serialize($seasons, 'json', ['groups' => 'season:read']);
+        return JsonResponse::fromJsonString($json);
+    }
 }

@@ -2,12 +2,14 @@
 
 namespace App\Entity;
 
+use App\Enum\SeasonStatus;
 use App\Repository\SeasonRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: SeasonRepository::class)]
 class Season
@@ -18,7 +20,12 @@ class Season
     #[Groups(['season:read'])]
     private ?int $id = null;
 
-    #[ORM\Column(length: 9)]
+    #[ORM\Column(length: 9, unique: true)]
+    #[Assert\NotBlank]
+    #[Assert\Regex(
+        pattern: '/^\d{4}\/\d{4}$/',
+        message: 'The years must be in the format YYYY/YYYY.'
+    )]
     #[Groups(['season:read'])]
     private ?string $years = null;
 
@@ -35,6 +42,13 @@ class Season
      */
     #[ORM\OneToMany(targetEntity: Game::class, mappedBy: 'season')]
     private Collection $games;
+
+    #[ORM\Column]
+    private ?\DateTimeImmutable $createdAt = null;
+
+    #[ORM\Column(length: 255, enumType: SeasonStatus::class)]
+    #[Groups(['season:read'])]
+    private ?SeasonStatus $status = null;
 
     public function __construct()
     {
@@ -108,6 +122,30 @@ class Season
                 $game->setSeason(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    {
+        $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getStatus(): ?SeasonStatus
+    {
+        return $this->status;
+    }
+
+    public function setStatus(SeasonStatus $status): static
+    {
+        $this->status = $status;
 
         return $this;
     }
