@@ -9,6 +9,8 @@ import {
   DoorOpen,
   Plus,
   ChevronRight,
+  Calendar,
+  Swords,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -142,7 +144,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
-                    <Logs className="" />
+                    <Swords />
                     <span>Zápasy</span>
                     <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                   </SidebarMenuButton>
@@ -160,6 +162,46 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <SidebarMenuSubItem>
                       <SidebarMenuSubButton asChild>
                         <NavLink to="/admin/matches" end>
+                          <Logs className="" />
+                          Seznam
+                        </NavLink>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            </Collapsible>
+          </SidebarMenu>
+        </SidebarGroup>
+        {/* Seasons */}
+        <SidebarGroup>
+          <SidebarMenu>
+            <Collapsible
+              asChild
+              defaultOpen={false}
+              className="group/collapsible"
+            >
+              <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
+                    <Calendar />
+                    <span>Sezóny</span>
+                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild>
+                        <NavLink to="/admin/seasons/create" end>
+                          <Plus className="" />
+                          Vytvořit
+                        </NavLink>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild>
+                        <NavLink to="/admin/seasons" end>
                           <Logs className="" />
                           Seznam
                         </NavLink>

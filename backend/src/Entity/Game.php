@@ -42,6 +42,10 @@ class Game
     #[Groups(['game:admin_dashboard', "match:read"])]
     private Collection $purchases;
 
+    #[ORM\ManyToOne(inversedBy: 'games')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Season $season = null;
+
     public function __construct()
     {
         $this->purchases = new ArrayCollection();
@@ -127,6 +131,18 @@ class Game
                 $purchase->setMatch(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getSeason(): ?Season
+    {
+        return $this->season;
+    }
+
+    public function setSeason(?Season $season): static
+    {
+        $this->season = $season;
 
         return $this;
     }

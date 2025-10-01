@@ -167,7 +167,7 @@ final class MatchController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function editMatchById(Game $match, GameRepository $gameRepository, Request $request, EntityManagerInterface $em): JsonResponse
+    public function editMatchById(Game $match, Request $request, EntityManagerInterface $em): JsonResponse
     {
         if (!$match) {
             throw new NotFoundHttpException('Match not found');

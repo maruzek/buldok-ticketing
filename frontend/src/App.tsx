@@ -17,6 +17,9 @@ import EditMatch from "./components/admin/EditMatch";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TicketList from "./components/admin/TicketList";
 import MatchDashboard from "./components/admin/MatchDashboard";
+import CreateSeason from "./components/admin/CreateSeason";
+import SeasonList from "./components/admin/SeasonList";
+import EditSeason from "./components/admin/EditSeason";
 
 function App() {
   // TODO: zamyslet se nad nutnosti app, nebo rovou jit na ticketing
@@ -46,6 +49,11 @@ function App() {
             </Route>
             <Route path="tickets">
               <Route index element={<TicketList />} />
+            </Route>
+            <Route path="seasons">
+              <Route index element={<SeasonList />} />
+              <Route path=":seasonID/edit" element={<EditSeason />} />
+              <Route path="create" element={<CreateSeason />} />
             </Route>
           </Route>
         </Route>
