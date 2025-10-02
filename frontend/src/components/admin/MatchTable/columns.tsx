@@ -15,9 +15,11 @@ export const columns = (onDelete: (id: number) => void): ColumnDef<Match>[] => [
     cell: ({ getValue, row }) => (
       <Link
         to={`/admin/matches/${row.original.id as unknown}/stats`}
-        className="font-medium"
+        className=""
       >
-        {getValue() as string}
+        <span className="max-w-sm truncate block font-bold underline hover:text-blue-800">
+          {getValue() as string}
+        </span>
       </Link>
     ),
   },
@@ -33,6 +35,17 @@ export const columns = (onDelete: (id: number) => void): ColumnDef<Match>[] => [
         minute: "2-digit",
       });
     },
+  },
+  {
+    accessorKey: "season.years",
+    header: "Sezóna",
+    cell: ({ getValue, row }) => (
+      <Link to={`/admin/seasons/${row.original.season.id}/stats`}>
+        <span className="underline hover:text-blue-800 cursor-pointer">
+          {getValue() as string}
+        </span>
+      </Link>
+    ),
   },
   {
     accessorKey: "status",

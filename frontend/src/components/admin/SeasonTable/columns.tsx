@@ -13,6 +13,13 @@ export const columns = (
   {
     accessorKey: "years",
     header: "Sezóna",
+    cell: ({ getValue, row }) => (
+      <Link to={`/admin/seasons/${row.original.id}/stats`}>
+        <span className="font-bold underline hover:text-blue-800">
+          {getValue() as string}
+        </span>
+      </Link>
+    ),
   },
   {
     id: "startAt",

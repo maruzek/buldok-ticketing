@@ -17,7 +17,7 @@ class Season
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['season:read'])]
+    #[Groups(['season:read', "match:admin_list"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 9, unique: true)]
@@ -26,7 +26,7 @@ class Season
         pattern: '/^\d{4}\/\d{4}$/',
         message: 'The years must be in the format YYYY/YYYY.'
     )]
-    #[Groups(['season:read'])]
+    #[Groups(['season:read', "match:admin_list"])]
     private ?string $years = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]

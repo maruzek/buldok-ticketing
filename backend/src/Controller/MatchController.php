@@ -7,6 +7,7 @@ use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\MatchStatus;
 use App\Repository\GameRepository;
+use App\Repository\SeasonRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -25,7 +26,8 @@ final class MatchController extends AbstractController
     public function __construct(
         private readonly GameRepository $gameRepository,
         private readonly EntityManagerInterface $em,
-        private readonly SerializerInterface $serializer
+        private readonly SerializerInterface $serializer,
+        private readonly SeasonRepository $seasonRepository,
     ) {}
 
     #[Route('/api/admin/match/create', name: 'create', methods: ['POST'])]
@@ -63,9 +65,15 @@ final class MatchController extends AbstractController
             throw new BadRequestHttpException('Invalid date format');
         }
 
+        $season = $this->seasonRepository->findSeasonByDate($date);
+        if (!$season) {
+            throw new BadRequestHttpException('Season not found for the given date');
+        }
+
         $match->setPlayedAt($date);
         $match->setDescription($data['description'] ?? null);
         $match->setStatus(MatchStatus::ACTIVE);
+        $match->setSeason($season);
 
         try {
             $em->persist($match);

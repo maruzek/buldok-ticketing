@@ -1,4 +1,5 @@
 import { PurchaseHistory } from "./PurchaseHistory";
+import { Season } from "./Season";
 
 // TODO: Omit description, status and purchases if not needed in the frontend
 
@@ -9,4 +10,5 @@ export type Match = {
   playedAt: string;
   status: string;
   purchases: PurchaseHistory[];
+  season: Season;
 };

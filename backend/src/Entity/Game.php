@@ -44,6 +44,7 @@ class Game
 
     #[ORM\ManyToOne(inversedBy: 'games')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["match:read", "match:stats", "match:admin_list"])]
     private ?Season $season = null;
 
     public function __construct()

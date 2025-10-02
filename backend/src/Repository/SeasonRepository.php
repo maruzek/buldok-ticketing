@@ -34,6 +34,19 @@ class SeasonRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * Finds a season by given datetime.
+     */
+    public function findSeasonByDate(\DateTimeInterface $date): ?Season
+    {
+        return $this->createQueryBuilder('s')
+            ->andWhere('s.startAt <= :date')
+            ->andWhere('s.endAt >= :date')
+            ->setParameter('date', $date)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     //    /**
     //     * @return Season[] Returns an array of Season objects
     //     */

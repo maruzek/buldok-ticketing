@@ -27,8 +27,16 @@ const getTitleFromPathname = (pathname: string): string => {
       return "Správa vstupů";
     case "/admin/entrances/create":
       return "Vytvořit vstup";
+    case "/admin/seasons":
+      return "Seznam sezón";
+    case "/admin/seasons/create":
+      return "Vytvořit sezónu";
     default:
       if (pathname.startsWith("/admin/matches/")) return "Detail zápasu";
+      if (pathname.startsWith("/admin/seasons/")) return "Detail sezóny";
+      if (pathname.startsWith("/admin/users/")) return "Detail uživatele";
+      if (pathname.startsWith("/admin/tickets/")) return "Detail vstupenky";
+      if (pathname.startsWith("/admin/entrances/")) return "Detail vstupu";
       return "Dashboard";
   }
 };

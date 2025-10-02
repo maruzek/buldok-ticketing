@@ -84,7 +84,7 @@ const CreateMatch = () => {
                 <FormItem>
                   <FormLabel>Soupeř</FormLabel>
                   <FormControl>
-                    <Input placeholder="Soupeř" {...field} />
+                    <Input placeholder="Soupeř" required {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -111,7 +111,7 @@ const CreateMatch = () => {
                             {field.value ? (
                               format(field.value, "PPP", { locale: cs })
                             ) : (
-                              <span>Pick a date</span>
+                              <span>Vyberte datum</span>
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
@@ -122,8 +122,15 @@ const CreateMatch = () => {
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
-                          disabled={(date) => date <= new Date()}
+                          // disabled={(date) => date <= new Date()}
                           captionLayout="dropdown"
+                          startMonth={
+                            new Date(new Date().getFullYear() - 5, 0, 1)
+                          }
+                          endMonth={
+                            new Date(new Date().getFullYear() + 5, 11, 31)
+                          }
+                          required
                         />
                       </PopoverContent>
                     </Popover>
@@ -143,6 +150,7 @@ const CreateMatch = () => {
                           type="time"
                           step="1"
                           className="appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                          required
                           {...field}
                         />
                       </FormControl>
