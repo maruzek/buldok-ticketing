@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Season;
+use App\Enum\SeasonStatus;
 use App\Repository\SeasonRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -96,7 +97,7 @@ final class SeasonController extends AbstractController
         return JsonResponse::fromJsonString($json);
     }
 
-    #[Route('/{id}/edit', name: 'edit_season', methods: ['PUT'])]
+    #[Route('/{id}', name: 'edit_season', methods: ['PUT'])]
     public function editSeason(Season $season, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -137,9 +138,14 @@ final class SeasonController extends AbstractController
             throw new BadRequestException('Season in those years already exists');
         }
 
+        if (SeasonStatus::tryFrom($data['status']) === null) {
+            throw new BadRequestException('Invalid status value');
+        }
+
         $season->setYears($data['years']);
         $season->setStartAt(new \DateTime($data['startAt']));
         $season->setEndAt(new \DateTime($data['endAt']));
+        $season->setStatus(SeasonStatus::from($data['status']));
 
         try {
             $this->em->flush();

@@ -45,7 +45,7 @@ export const columns = (
           row.original.status === "active"
             ? "bg-green-200 text-green-800"
             : row.original.status === "inactive"
-            ? "bg-red-200 text-re-800"
+            ? "bg-red-200 text-red-800"
             : "bg-gray-100 text-gray-800"
         }`}
       >

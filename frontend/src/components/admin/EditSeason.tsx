@@ -87,13 +87,13 @@ const EditSeason = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["seasons"] });
-      toast.success("Sezóna byla úspěšně vytvořena!");
+      toast.success("Sezóna byla úspěšně upravena!");
       form.reset();
       navigate("/admin/seasons");
     },
     onError: (error: any) => {
-      console.error("Error creating season:", error);
-      toast.error("Nastala chyba při vytváření sezóny.");
+      console.error("Error editing season:", error);
+      toast.error("Nastala chyba při úpravě sezóny.");
     },
   });
 
@@ -287,7 +287,7 @@ const EditSeason = () => {
               />
               <div className="w-full flex justify-end mt-4">
                 <Button disabled={isSubmitting} type="submit">
-                  Vytvořit sezónu
+                  Upravit sezónu
                 </Button>
               </div>
             </form>
