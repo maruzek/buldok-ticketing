@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -154,6 +155,26 @@ final class SeasonController extends AbstractController
         }
 
         $json = $this->serializer->serialize($season, 'json', ['groups' => 'season:read']);
+        return JsonResponse::fromJsonString($json);
+    }
+
+    #[Route('/{id}/dash-stats', name: 'season_dashboard_stats', methods: ['GET'])]
+    public function getDashboardStats(int $id, SeasonRepository $seasonRepository): JsonResponse
+    {
+        $dashboardData = $seasonRepository->getDashboardStats($id);
+        // dd($dashboardData);
+
+        if ($dashboardData === null) {
+            throw new NotFoundHttpException('Season not found');
+        }
+
+        $json = $this->serializer->serialize($dashboardData, 'json', [
+            'groups' => ['season:read', 'match:read', 'game:admin_dashboard'],
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
+
         return JsonResponse::fromJsonString($json);
     }
 }

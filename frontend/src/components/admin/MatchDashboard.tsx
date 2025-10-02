@@ -81,6 +81,7 @@ const MatchDashboard = () => {
     enabled: !!matchID,
     retry: false,
   });
+  console.log(matchData);
 
   type LocalizedSalesPoint = {
     time: string;

@@ -2,8 +2,15 @@
 
 namespace App\Repository;
 
+use App\Entity\Game;
+use App\Entity\Payment;
+use App\Entity\Purchase;
+use App\Entity\PurchaseItem;
 use App\Entity\Season;
+use App\Enum\MatchStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -36,6 +43,8 @@ class SeasonRepository extends ServiceEntityRepository
 
     /**
      * Finds a season by given datetime.
+     * @param \DateTimeInterface $date The date to check.
+     * @return Season|null Returns the Season object if found, or null if no season covers the date.
      */
     public function findSeasonByDate(\DateTimeInterface $date): ?Season
     {
@@ -45,6 +54,168 @@ class SeasonRepository extends ServiceEntityRepository
             ->setParameter('date', $date)
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    /**
+     * Gathers comprehensive statistics for a given season, including earnings, ticket sales, and breakdowns by entrance and payment method.
+     *
+     * @param int $seasonId The ID of the season to gather statistics for.
+     * @return array|null An associative array containing various statistics about the season, or null if the season does not exist.
+     */
+    public function getDashboardStats(int $seasonId): ?array
+    {
+        $season = $this->find($seasonId);
+        if (!$season) {
+            return null;
+        }
+
+        $em = $this->getEntityManager();
+
+        $purchasesQuery = $em->createQueryBuilder()
+            ->select('p_.id')
+            ->from(Purchase::class, 'p_')
+            ->leftJoin('p_.payment', 'pay_sub')
+            ->join('p_.match', 'g_')
+            ->where('g_.season = :seasonId')
+            ->andWhere('g_.status != :removedStatus')
+            ->andWhere(
+                $em->getExpressionBuilder()->orX(
+                    'p_.paymentType = :cashType',
+                    'pay_sub.status = :paidStatus'
+                )
+            )
+            ->setParameter('seasonId', $seasonId)
+            ->setParameter('removedStatus', MatchStatus::REMOVED->value)
+            ->setParameter('cashType', 'cash')
+            ->setParameter('paidStatus', 'paid');
+
+        $stats = $em->createQueryBuilder()
+            ->select(
+                'SUM(pi.priceAtPurchase) as totalEarnings',
+                'SUM(pi.quantity) as totalTickets',
+                "SUM(CASE WHEN tt.name = 'fullTicket' THEN pi.quantity ELSE 0 END) as fullTicketsCount",
+                "SUM(CASE WHEN tt.name = 'fullTicket' THEN pi.priceAtPurchase ELSE 0 END) as fullTicketsEarnings",
+                "SUM(CASE WHEN tt.name = 'halfTicket' THEN pi.quantity ELSE 0 END) as halfTicketsCount",
+                "SUM(CASE WHEN tt.name = 'halfTicket' THEN pi.priceAtPurchase ELSE 0 END) as halfTicketsEarnings"
+            )
+            ->from(PurchaseItem::class, 'pi')
+            ->join('pi.ticketType', 'tt')
+            ->where($em->getExpressionBuilder()->in('pi.purchase', $purchasesQuery->getDQL()))
+            ->setParameter('seasonId', $seasonId)
+            ->setParameter('removedStatus', MatchStatus::REMOVED->value)
+            ->setParameter('cashType', 'cash')
+            ->setParameter('paidStatus', 'paid')
+            ->getQuery()
+            ->getSingleResult();
+
+        // Entrance Stats 
+        $entranceBreakdown = $em->createQueryBuilder()
+            ->select(
+                'e.name',
+                'tt.name as ticketTypeName',
+                'SUM(pi.quantity) as totalTickets',
+                'SUM(pi.priceAtPurchase) as totalEarnings'
+            )
+            ->from(PurchaseItem::class, 'pi')
+            ->join('pi.purchase', 'p')
+            ->join('pi.ticketType', 'tt')
+            ->join('p.entrance', 'e')
+            ->where($em->getExpressionBuilder()->in('p.id', $purchasesQuery->getDQL()))
+            ->groupBy('e.name', 'tt.name')
+            ->setParameter('seasonId', $seasonId)
+            ->setParameter('removedStatus', MatchStatus::REMOVED->value)
+            ->setParameter('cashType', 'cash')
+            ->setParameter('paidStatus', 'paid')
+            ->getQuery()
+            ->getResult();
+
+        $entrancesStats = [];
+        foreach ($entranceBreakdown as $row) {
+            $eName = $row['name'];
+            if (!isset($entrancesStats[$eName])) {
+                $entrancesStats[$eName] = [
+                    'name' => $eName,
+                    'totalEarnings' => 0.0,
+                    'totalTickets' => 0,
+                    'fullTicketsCount' => 0,
+                    'fullTicketsEarnings' => 0.0,
+                    'halfTicketsCount' => 0,
+                    'halfTicketsEarnings' => 0.0,
+                ];
+            }
+
+            $totalEarnings = (float) $row['totalEarnings'];
+            $totalTickets = (int) $row['totalTickets'];
+
+            $entrancesStats[$eName]['totalEarnings'] += $totalEarnings;
+            $entrancesStats[$eName]['totalTickets'] += $totalTickets;
+
+            if ($row['ticketTypeName'] === 'fullTicket') {
+                $entrancesStats[$eName]['fullTicketsCount'] += $totalTickets;
+                $entrancesStats[$eName]['fullTicketsEarnings'] += $totalEarnings;
+            } else {
+                $entrancesStats[$eName]['halfTicketsCount'] += $totalTickets;
+                $entrancesStats[$eName]['halfTicketsEarnings'] += $totalEarnings;
+            }
+        }
+        $entrancesStats = array_values($entrancesStats);
+
+        // Payment Method Stats 
+        $paymentMethodStats = $em->createQueryBuilder()
+            ->select(
+                'p.paymentType as name',
+                "SUM(COALESCE(pay.amount, pi.priceAtPurchase)) as value"
+            )
+            ->from(Purchase::class, 'p')
+            ->leftJoin('p.payment', 'pay')
+            ->leftJoin('p.purchaseItems', 'pi')
+            ->where($em->getExpressionBuilder()->in('p.id', $purchasesQuery->getDQL()))
+            ->andWhere('p.paymentType IS NOT NULL')
+            ->groupBy('p.paymentType')
+            ->setParameter('seasonId', $seasonId)
+            ->setParameter('removedStatus', MatchStatus::REMOVED->value)
+            ->setParameter('cashType', 'cash')
+            ->setParameter('paidStatus', 'paid')
+            ->getQuery()
+            ->getResult();
+
+        // Earnings per Game 
+        $earningsPerGame = $em->createQueryBuilder()
+            ->select(
+                'g.rival',
+                "SUM(CASE WHEN tt.name = 'fullTicket' THEN pi.priceAtPurchase ELSE 0 END) as fullTicketsEarnings",
+                "SUM(CASE WHEN tt.name = 'halfTicket' THEN pi.priceAtPurchase ELSE 0 END) as halfTicketsEarnings"
+            )
+            ->from(PurchaseItem::class, 'pi')
+            ->join('pi.purchase', 'p')
+            ->join('p.match', 'g')
+            ->join('pi.ticketType', 'tt')
+            ->where('g.season = :seasonId')
+            ->andWhere('g.status != :removedStatus')
+            ->groupBy('g.id, g.rival')
+            ->orderBy('g.playedAt', 'ASC')
+            ->setParameter('seasonId', $seasonId)
+            ->setParameter('removedStatus', MatchStatus::REMOVED->value)
+            ->getQuery()
+            ->getResult();
+
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->neq('status', MatchStatus::REMOVED));
+        $activeGames = $season->getGames()->matching($criteria);
+
+        return [
+            'season' => $season,
+            'games' => $activeGames->toArray(),
+            'totalEarnings' => (float)($stats['totalEarnings'] ?? 0),
+            'totalTickets' => (int)($stats['totalTickets'] ?? 0),
+            'fullTicketsCount' => (int)($stats['fullTicketsCount'] ?? 0),
+            'fullTicketsEarnings' => (float)($stats['fullTicketsEarnings'] ?? 0),
+            'halfTicketsCount' => (int)($stats['halfTicketsCount'] ?? 0),
+            'halfTicketsEarnings' => (float)($stats['halfTicketsEarnings'] ?? 0),
+            'entrancesStats' => $entrancesStats,
+            'paymentMethodStats' => $paymentMethodStats,
+            'earningsPerGame' => $earningsPerGame,
+        ];
     }
 
     //    /**

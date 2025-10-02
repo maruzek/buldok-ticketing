@@ -123,7 +123,9 @@ class GameRepository extends ServiceEntityRepository
                 SUM(pi.quantity) as sales
             FROM purchase p
             JOIN purchase_item pi ON p.id = pi.purchase_id
+            LEFT JOIN payment pay ON pay.purchase_id = p.id
             WHERE p.match_id = :matchId
+              AND (p.payment_type = :cashType OR pay.status = :paidStatus)
             GROUP BY time_interval
             ORDER BY time_interval;
         ";
@@ -132,6 +134,8 @@ class GameRepository extends ServiceEntityRepository
         $rsm->addScalarResult('sales', 'sales', 'integer');
         $nativeQuery = $entityManager->createNativeQuery($sql, $rsm);
         $nativeQuery->setParameter('matchId', $matchId);
+        $nativeQuery->setParameter('cashType', 'cash');
+        $nativeQuery->setParameter('paidStatus', 'paid');
         $salesOverTime = $nativeQuery->getResult();
 
         $qb = $this->getEntityManager()->createQueryBuilder();
@@ -147,8 +151,17 @@ class GameRepository extends ServiceEntityRepository
             ->join('p.purchaseItems', 'pi')
             ->join('pi.ticketType', 'tt')
             ->join('p.entrance', 'e')
+            ->leftJoin('p.payment', 'pay')
             ->where('p.match = :matchId')
+            ->andWhere(
+                $qb->expr()->orX(
+                    'p.paymentType = :cashType',
+                    'pay.status = :paidStatus'
+                )
+            )
             ->setParameter('matchId', $matchId)
+            ->setParameter('cashType', 'cash')
+            ->setParameter('paidStatus', 'paid')
             ->groupBy('e.name', 'tt.name', 'p.paymentType')
             ->getQuery()
             ->getResult();
