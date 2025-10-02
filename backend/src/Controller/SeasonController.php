@@ -88,4 +88,66 @@ final class SeasonController extends AbstractController
         $json = $this->serializer->serialize($seasons, 'json', ['groups' => 'season:read']);
         return JsonResponse::fromJsonString($json);
     }
+
+    #[Route('/{id}', name: 'get_season_by_id', methods: ['GET'])]
+    public function getSeasonById(Season $season): JsonResponse
+    {
+        $json = $this->serializer->serialize($season, 'json', ['groups' => 'season:read']);
+        return JsonResponse::fromJsonString($json);
+    }
+
+    #[Route('/{id}/edit', name: 'edit_season', methods: ['PUT'])]
+    public function editSeason(Season $season, Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new BadRequestException('Invalid JSON data');
+        }
+
+        if (empty($data['years']) || empty($data['startAt']) || empty($data['endAt'])) {
+            throw new BadRequestException('Missing required fields');
+        }
+
+        $newStartAt = new \DateTime($data['startAt']);
+        $newEndAt = new \DateTime($data['endAt']);
+
+        if ($newStartAt >= $newEndAt) {
+            throw new BadRequestException('Start date must be before end date');
+        }
+
+        $overlappingSeasons = $this->seasonRepository->findOverlappingSeasons($newStartAt, $newEndAt);
+        foreach ($overlappingSeasons as $overlappingSeason) {
+            if ($overlappingSeason->getId() !== $season->getId()) {
+                throw new BadRequestException('The provided date range overlaps with an existing season');
+            }
+        }
+
+        if (strlen($data['years']) !== 9 || !preg_match('/^\d{4}\/\d{4}$/', $data['years'])) {
+            throw new BadRequestException('Season name must be in format YYYY/YYYY');
+        }
+
+        [$firstYear, $secondYear] = explode('/', $data['years']);
+        if ((int)$secondYear !== (int)$firstYear + 1) {
+            throw new BadRequestException('The second year must be the first year plus one');
+        }
+
+        $existingSeason = $this->seasonRepository->findOneBy(['years' => $data['years']]);
+        if ($existingSeason && $existingSeason->getId() !== $season->getId()) {
+            throw new BadRequestException('Season in those years already exists');
+        }
+
+        $season->setYears($data['years']);
+        $season->setStartAt(new \DateTime($data['startAt']));
+        $season->setEndAt(new \DateTime($data['endAt']));
+
+        try {
+            $this->em->flush();
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Failed to update season: ' . $e->getMessage());
+        }
+
+        $json = $this->serializer->serialize($season, 'json', ['groups' => 'season:read']);
+        return JsonResponse::fromJsonString($json);
+    }
 }

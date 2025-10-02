@@ -1,6 +1,5 @@
 import { useForm, FieldValues } from "react-hook-form";
 import { cs } from "date-fns/locale/cs";
-import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import useApi from "../../hooks/useApi";
 import { Match } from "../../types/Match";
@@ -51,7 +50,7 @@ const EditMatch = () => {
   });
 
   const form = useForm({
-    defaultValues: {
+    values: {
       rival: editedMatch ? editedMatch.rival : "",
       matchDate: editedMatch ? new Date(editedMatch.playedAt) : undefined,
       matchTime: editedMatch
@@ -62,16 +61,16 @@ const EditMatch = () => {
     },
   });
 
-  useEffect(() => {
-    if (editedMatch) {
-      form.reset({
-        rival: editedMatch.rival,
-        matchDate: new Date(editedMatch.playedAt),
-        description: editedMatch.description,
-        status: editedMatch.status,
-      });
-    }
-  }, [editedMatch, form]);
+  // useEffect(() => {
+  //   if (editedMatch) {
+  //     form.reset({
+  //       rival: editedMatch.rival,
+  //       matchDate: new Date(editedMatch.playedAt),
+  //       description: editedMatch.description,
+  //       status: editedMatch.status,
+  //     });
+  //   }
+  // }, [editedMatch, form]);
 
   const queryClient = useQueryClient();
 
@@ -200,10 +199,7 @@ const EditMatch = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Status</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Vyberte stav zápasu" />
