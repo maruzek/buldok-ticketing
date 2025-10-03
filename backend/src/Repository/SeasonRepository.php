@@ -161,7 +161,7 @@ class SeasonRepository extends ServiceEntityRepository
         $entrancesStats = array_values($entrancesStats);
 
         // Payment Method Stats 
-        $paymentMethodStats = $em->createQueryBuilder()
+        $paymentMethodStatsQuery = $em->createQueryBuilder()
             ->select(
                 'p.paymentType as name',
                 "SUM(COALESCE(pay.amount, pi.priceAtPurchase)) as value"
@@ -178,6 +178,19 @@ class SeasonRepository extends ServiceEntityRepository
             ->setParameter('paidStatus', 'paid')
             ->getQuery()
             ->getResult();
+
+        $paymentMethodStats = [];
+        foreach ($paymentMethodStatsQuery as $row) {
+            $name = match ($row['name']) {
+                'cash' => 'Hotovost',
+                'qr' => 'QR',
+                default => $row['name'],
+            };
+            $paymentMethodStats[] = [
+                'name' => $name,
+                'value' => (float) $row['value']
+            ];
+        }
 
         // Earnings per Game 
         $earningsPerGame = $em->createQueryBuilder()

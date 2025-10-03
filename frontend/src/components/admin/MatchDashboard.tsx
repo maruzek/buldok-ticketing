@@ -108,7 +108,7 @@ const MatchDashboard = () => {
   if (!matchData) {
     return null;
   }
-
+  console.log(matchData);
   const {
     match,
     totalEarnings,

@@ -91,6 +91,22 @@ final class SeasonController extends AbstractController
         return JsonResponse::fromJsonString($json);
     }
 
+    #[Route('/current', name: 'get_current_season_data', methods: ['GET'])]
+    public function getCurrentSeasonData(): JsonResponse
+    {
+        $currentDate = new \DateTimeImmutable();
+        $season = $this->seasonRepository->findSeasonByDate($currentDate);
+
+        if ($season === null) {
+            throw new NotFoundHttpException('No active season found for the current date');
+        }
+
+        $dashData = $this->seasonRepository->getDashboardStats($season->getId());
+
+        $json = $this->serializer->serialize($dashData, 'json', ['groups' => 'season:read']);
+        return JsonResponse::fromJsonString($json);
+    }
+
     #[Route('/{id}', name: 'get_season_by_id', methods: ['GET'])]
     public function getSeasonById(Season $season): JsonResponse
     {
@@ -162,7 +178,6 @@ final class SeasonController extends AbstractController
     public function getDashboardStats(int $id, SeasonRepository $seasonRepository): JsonResponse
     {
         $dashboardData = $seasonRepository->getDashboardStats($id);
-        // dd($dashboardData);
 
         if ($dashboardData === null) {
             throw new NotFoundHttpException('Season not found');

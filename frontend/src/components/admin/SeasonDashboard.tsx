@@ -42,6 +42,8 @@ import {
 import { SeasonDashboardStats } from "@/types/SeasonDashboardStats";
 import { DataTable } from "./MatchTable/data-table";
 import { columns } from "./SeasonMatchesTable/columns";
+import BasicStatsCards from "./BasicStatsCards";
+import MatchSalesChart from "./SeasonDashboard/MatchSalesChart";
 
 const chartConfig = {
   plne: {
@@ -61,17 +63,6 @@ const chartConfig = {
 //   },
 // } satisfies ChartConfig;
 
-const earningsChartConfig = {
-  fullTicketsEarnings: {
-    label: "Plné",
-    color: "var(--chart-1)",
-  },
-  halfTicketsEarnings: {
-    label: "Poloviční",
-    color: "var(--chart-2)",
-  },
-} satisfies ChartConfig;
-
 // TODO: Utrženo celkem
 // TODO: Celkem prodáno lístků
 // TODO: Celkem plné
@@ -83,6 +74,14 @@ const earningsChartConfig = {
 // TODO: rozdělení plateb podle metod - koláč
 // TODO: detail vstupů
 // TODO: graf výdělků za každý zápas
+
+// TODO: Pocet zapasu
+// TODO: Prumerna navstevnost
+// TODO: Nejnavstevovanejsi zapas
+// TODO: Nejmene navstiveny zapas
+// TODO: Prumerne utrzene za zapas
+// TODO: Nejvetsi utrzene za zapas
+// TODO: Nejmensi utrzene za zapas
 
 const SeasonDashboard = () => {
   const { seasonID } = useParams<{ seasonID: string }>();
@@ -224,42 +223,14 @@ const SeasonDashboard = () => {
       }
       cardHeader={DashboardHeader}
     >
-      {/* TODO: make Cards reusable */}
-      <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:grid-cols-2 xl:grid-cols-4">
-        <Card className="@container/card">
-          <CardHeader>
-            <CardDescription>Utrženo celkem</CardDescription>
-            <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-              {totalEarnings} Kč
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card className="@container/card">
-          <CardHeader>
-            <CardDescription>Celkem prodáno lístků</CardDescription>
-            <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-              {totalTickets} ks
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card className="@container/card">
-          <CardHeader>
-            <CardDescription>Celkem plné</CardDescription>
-            <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-              {fullTicketsCount} ks &bull; {fullTicketsEarnings} Kč
-            </CardTitle>
-          </CardHeader>
-        </Card>
-
-        <Card className="@container/card">
-          <CardHeader>
-            <CardDescription>Celkem poloviční</CardDescription>
-            <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-              {halfTicketsCount} ks &bull; {halfTicketsEarnings} Kč
-            </CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
+      <BasicStatsCards
+        totalEarnings={totalEarnings}
+        totalTickets={totalTickets}
+        fullTicketsCount={fullTicketsCount}
+        fullTicketsEarnings={fullTicketsEarnings}
+        halfTicketsCount={halfTicketsCount}
+        halfTicketsEarnings={halfTicketsEarnings}
+      />
       <div className="my-2 w-full">
         <Accordion
           type="single"
@@ -274,7 +245,7 @@ const SeasonDashboard = () => {
           </AccordionItem>
         </Accordion>
       </div>
-      <div className="w-full ">
+      <div className="w-full">
         <Card>
           <CardHeader>
             <CardTitle className="text-xl font-semibold tabular-nums">
@@ -282,89 +253,7 @@ const SeasonDashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ChartContainer
-              config={earningsChartConfig}
-              className="w-full h-72"
-            >
-              <BarChart data={earningsPerGame} stackOffset="sign">
-                <CartesianGrid vertical={false} />
-                <XAxis dataKey="rival" tickLine={false} axisLine={false} />
-                <YAxis
-                  tickFormatter={(value) =>
-                    `${Number(value).toLocaleString()} Kč`
-                  }
-                />
-                {/* <ChartTooltip
-                  content={<ChartTooltipContent indicator="dot" />}
-                /> */}
-                <ChartTooltip
-                  cursor={false}
-                  content={
-                    <ChartTooltipContent
-                      labelClassName="font-bold"
-                      className="w-[180px]"
-                      formatter={(value, name, item, index) => {
-                        const fullTicketsEarnings: number =
-                          +item.payload.fullTicketsEarnings;
-                        const halfTicketsEarnings: number =
-                          +item.payload.halfTicketsEarnings;
-                        const total: number =
-                          fullTicketsEarnings + halfTicketsEarnings;
-                        return (
-                          <>
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
-                                style={
-                                  {
-                                    backgroundColor: `var(--color-${name})`,
-                                  } as React.CSSProperties
-                                }
-                              />
-                              <span className="text-muted-foreground">
-                                {earningsChartConfig[
-                                  name as keyof typeof earningsChartConfig
-                                ]?.label || name}
-                              </span>
-                              <div className="text-foreground ml-auto flex items-baseline gap-0.5 font-mono font-medium tabular-nums">
-                                {Number(value).toLocaleString()}
-                                <span className="text-muted-foreground font-normal ml-1">
-                                  Kč
-                                </span>
-                              </div>
-                            </div>
-                            {/* Add total after the last item */}
-                            {index === 1 && (
-                              <div className="text-foreground mt-1.5 flex basis-full items-center border-t pt-1.5 text-xs font-medium">
-                                Celkem
-                                <div className="text-foreground ml-auto flex items-baseline gap-0.5 font-mono font-medium tabular-nums">
-                                  {total.toLocaleString()}
-                                  <span className="text-muted-foreground font-normal ml-1">
-                                    Kč
-                                  </span>
-                                </div>
-                              </div>
-                            )}
-                          </>
-                        );
-                      }}
-                    />
-                  }
-                />
-                <Bar
-                  dataKey="fullTicketsEarnings"
-                  stackId="a"
-                  fill="var(--color-fullTicketsEarnings)"
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="halfTicketsEarnings"
-                  stackId="a"
-                  fill="var(--color-halfTicketsEarnings)"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ChartContainer>
+            <MatchSalesChart earningsPerGame={earningsPerGame} />
           </CardContent>
         </Card>
       </div>
