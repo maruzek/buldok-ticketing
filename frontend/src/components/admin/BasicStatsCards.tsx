@@ -1,3 +1,4 @@
+import { GameStat } from "@/types/SeasonDashboardStats";
 import { Card, CardDescription, CardHeader, CardTitle } from "../ui/card";
 
 type BasicStatsCardsProps = {
@@ -7,6 +8,14 @@ type BasicStatsCardsProps = {
   fullTicketsEarnings: number;
   halfTicketsCount: number;
   halfTicketsEarnings: number;
+
+  numberOfGames?: number;
+  averageAttendance?: number;
+  averageEarningsPerGame?: number;
+  highestEarningsGame?: GameStat;
+  lowestEarningsGame?: GameStat;
+  mostAttendedGame?: GameStat;
+  leastAttendedGame?: GameStat;
 };
 
 const BasicStatsCards = ({
@@ -16,7 +25,16 @@ const BasicStatsCards = ({
   fullTicketsEarnings,
   halfTicketsCount,
   halfTicketsEarnings,
+  numberOfGames,
+  averageAttendance,
+  averageEarningsPerGame,
+  highestEarningsGame,
+  lowestEarningsGame,
+  mostAttendedGame,
+  leastAttendedGame,
 }: BasicStatsCardsProps) => {
+  const formatRival = (rival: string | null) => (rival ? `(${rival})` : "");
+
   return (
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:grid-cols-2 xl:grid-cols-4">
       <Card className="@container/card">
@@ -52,6 +70,85 @@ const BasicStatsCards = ({
           </CardTitle>
         </CardHeader>
       </Card>
+
+      {numberOfGames !== undefined && (
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Počet zápasů</CardDescription>
+            <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
+              {numberOfGames}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      )}
+      {averageAttendance !== undefined && (
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Průměrná návštěvnost</CardDescription>
+            <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
+              {Math.round(averageAttendance)} osob
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      )}
+      {averageEarningsPerGame !== undefined && (
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>Průměrné tržby na zápas</CardDescription>
+            <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
+              {Math.round(averageEarningsPerGame).toLocaleString("cs-CZ")} Kč
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      )}
+      {mostAttendedGame && (
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>
+              Nejnavštěvovanější zápas {formatRival(mostAttendedGame.rival)}
+            </CardDescription>
+            <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
+              {mostAttendedGame.value} osob
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      )}
+      {leastAttendedGame && (
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>
+              Nejméně navštěvovaný zápas {formatRival(leastAttendedGame.rival)}
+            </CardDescription>
+            <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
+              {leastAttendedGame.value} osob
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      )}
+      {highestEarningsGame && (
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>
+              Nejvyšší tržby ze zápasu {formatRival(highestEarningsGame.rival)}
+            </CardDescription>
+            <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
+              {highestEarningsGame.value?.toLocaleString("cs-CZ")} Kč
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      )}
+      {lowestEarningsGame && (
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>
+              Nejnižší tržby ze zápasu {formatRival(lowestEarningsGame.rival)}
+            </CardDescription>
+            <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
+              {lowestEarningsGame.value?.toLocaleString("cs-CZ")} Kč
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      )}
     </div>
   );
 };

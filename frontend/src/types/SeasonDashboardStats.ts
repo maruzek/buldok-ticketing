@@ -22,6 +22,11 @@ export type EarningsPerGame = {
   halfTicketsEarnings: number;
 };
 
+export type GameStat = {
+  rival: string | null;
+  value: number | null;
+};
+
 export type SeasonDashboardStats = {
   season: Season;
   games: Match[];
@@ -34,4 +39,12 @@ export type SeasonDashboardStats = {
   entrancesStats: EntranceStat[];
   paymentMethodStats: PaymentMethodStat[];
   earningsPerGame: EarningsPerGame[];
+
+  numberOfGames: number;
+  averageAttendance: number;
+  averageEarningsPerGame: number;
+  highestEarningsGame: GameStat;
+  lowestEarningsGame: GameStat;
+  mostAttendedGame: GameStat;
+  leastAttendedGame: GameStat;
 };

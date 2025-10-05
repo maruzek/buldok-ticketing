@@ -215,6 +215,59 @@ class SeasonRepository extends ServiceEntityRepository
         $criteria = Criteria::create()
             ->where(Criteria::expr()->neq('status', MatchStatus::REMOVED));
         $activeGames = $season->getGames()->matching($criteria);
+        $numberOfGames = count($activeGames);
+
+        $averageAttendance = $numberOfGames > 0 ? ($stats['totalTickets'] ?? 0) / $numberOfGames : 0;
+        $averageEarningsPerGame = $numberOfGames > 0 ? ($stats['totalEarnings'] ?? 0) / $numberOfGames : 0;
+
+        $highestEarningsGame = ['rival' => null, 'value' => 0];
+        $lowestEarningsGame = ['rival' => null, 'value' => null];
+        $mostAttendedGame = ['rival' => null, 'value' => 0];
+        $leastAttendedGame = ['rival' => null, 'value' => null];
+
+        $attendancePerGame = [];
+
+        if ($numberOfGames > 0) {
+            $attendanceData = $em->createQueryBuilder()
+                ->select('g.rival', 'SUM(pi.quantity) as attendance')
+                ->from(PurchaseItem::class, 'pi')
+                ->join('pi.purchase', 'p')
+                ->join('p.match', 'g')
+                ->where($em->getExpressionBuilder()->in('p.id', $purchasesQuery->getDQL()))
+                ->groupBy('g.id, g.rival')
+                ->setParameter('seasonId', $seasonId)
+                ->setParameter('removedStatus', MatchStatus::REMOVED->value)
+                ->setParameter('cashType', 'cash')
+                ->setParameter('paidStatus', 'paid')
+                ->getQuery()
+                ->getResult();
+
+            foreach ($attendanceData as $game) {
+                $attendance = (int)$game['attendance'];
+                $attendancePerGame[$game['rival']] = $attendance;
+                if ($attendance > $mostAttendedGame['value']) {
+                    $mostAttendedGame['rival'] = $game['rival'];
+                    $mostAttendedGame['value'] = $attendance;
+                }
+                if ($leastAttendedGame['value'] === null || $attendance < $leastAttendedGame['value']) {
+                    $leastAttendedGame['rival'] = $game['rival'];
+                    $leastAttendedGame['value'] = $attendance;
+                }
+            }
+
+            foreach ($earningsPerGame as $game) {
+                $totalEarnings = (float)$game['fullTicketsEarnings'] + (float)$game['halfTicketsEarnings'];
+                if ($totalEarnings > $highestEarningsGame['value']) {
+                    $highestEarningsGame['rival'] = $game['rival'];
+                    $highestEarningsGame['value'] = $totalEarnings;
+                }
+                if ($lowestEarningsGame['value'] === null || $totalEarnings < $lowestEarningsGame['value']) {
+                    $lowestEarningsGame['rival'] = $game['rival'];
+                    $lowestEarningsGame['value'] = $totalEarnings;
+                }
+            }
+        }
+
 
         return [
             'season' => $season,
@@ -228,6 +281,13 @@ class SeasonRepository extends ServiceEntityRepository
             'entrancesStats' => $entrancesStats,
             'paymentMethodStats' => $paymentMethodStats,
             'earningsPerGame' => $earningsPerGame,
+            'numberOfGames' => $numberOfGames,
+            'averageAttendance' => $averageAttendance,
+            'averageEarningsPerGame' => $averageEarningsPerGame,
+            'highestEarningsGame' => $highestEarningsGame,
+            'lowestEarningsGame' => $lowestEarningsGame,
+            'mostAttendedGame' => $mostAttendedGame,
+            'leastAttendedGame' => $leastAttendedGame,
         ];
     }
 

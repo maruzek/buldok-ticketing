@@ -1,7 +1,4 @@
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
   Cell,
   Label,
   Pie,
@@ -9,8 +6,6 @@ import {
   PolarRadiusAxis,
   RadialBar,
   RadialBarChart,
-  XAxis,
-  YAxis,
 } from "recharts";
 import ContentBoard from "./ContentBoard";
 import {
@@ -55,13 +50,6 @@ const chartConfig = {
     color: "var(--chart-2)",
   },
 } satisfies ChartConfig;
-
-// const salesChartConfig = {
-//   sales: {
-//     label: "Prodané lístky",
-//     color: "var(--chart-1)",
-//   },
-// } satisfies ChartConfig;
 
 // TODO: Utrženo celkem
 // TODO: Celkem prodáno lístků
@@ -142,8 +130,15 @@ const SeasonDashboard = () => {
     paymentMethodStats,
     games,
     earningsPerGame,
+    numberOfGames,
+    averageAttendance,
+    averageEarningsPerGame,
+    highestEarningsGame,
+    lowestEarningsGame,
+    mostAttendedGame,
+    leastAttendedGame,
   } = seasonData;
-  console.log(entrancesStats);
+  console.log(seasonData);
 
   const DashboardHeader = (
     <div>
@@ -230,6 +225,13 @@ const SeasonDashboard = () => {
         fullTicketsEarnings={fullTicketsEarnings}
         halfTicketsCount={halfTicketsCount}
         halfTicketsEarnings={halfTicketsEarnings}
+        numberOfGames={numberOfGames}
+        averageAttendance={averageAttendance}
+        averageEarningsPerGame={averageEarningsPerGame}
+        highestEarningsGame={highestEarningsGame}
+        lowestEarningsGame={lowestEarningsGame}
+        mostAttendedGame={mostAttendedGame}
+        leastAttendedGame={leastAttendedGame}
       />
       <div className="my-2 w-full">
         <Accordion

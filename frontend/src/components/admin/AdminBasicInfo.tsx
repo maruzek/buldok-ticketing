@@ -3,15 +3,14 @@ import Spinner from "../Spinner";
 import { Match } from "@/types/Match";
 import ContentBoard from "./ContentBoard";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { ArrowRight, Dot } from "lucide-react";
+import { ArrowRight, Dot, Frown, TriangleAlert } from "lucide-react";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import BasicStatsCards from "./BasicStatsCards";
 import { SeasonDashboardStats } from "@/types/SeasonDashboardStats";
 import { ApiError } from "@/types/ApiError";
 import MatchSalesChart from "./SeasonDashboard/MatchSalesChart";
-
-// const PIE_COLORS = ["#7ccf01", "#FFBB28", "#A28DFF", "#FF82B3"];
+import BasicError from "../errors/BasicError";
 
 const AdminBasicInfo = () => {
   const { fetchData } = useApi();
@@ -58,7 +57,45 @@ const AdminBasicInfo = () => {
     // paymentMethodStats,
     // games,
     earningsPerGame,
+    numberOfGames,
+    averageAttendance,
+    averageEarningsPerGame,
+    highestEarningsGame,
+    lowestEarningsGame,
+    mostAttendedGame,
+    leastAttendedGame,
   } = seasonData;
+
+  if (isError) {
+    console.error(error);
+    if (error.status === 404) {
+      <BasicError
+        title="Neexistující sezóna"
+        icon={<TriangleAlert />}
+        message="Pro zobrazení statistik je potřeba nejdříve vytvořit sezónu a přiřadit jí zápasy."
+      />;
+    } else if (error.status === 400) {
+      <BasicError
+        title="Došlo k chybě"
+        icon={<Frown />}
+        message="Aktuální sezóna není platná. Zkontrolujte, zda má přiřazené zápasy."
+      />;
+    } else if (error.status === 500) {
+      <BasicError
+        title="Interní chyba serveru"
+        icon={<Frown />}
+        message="Došlo k chybě na serveru. Zkuste to prosím později."
+      />;
+    }
+
+    return (
+      <BasicError
+        title="Došlo k chybě"
+        icon={<Frown />}
+        message="Nepodařilo se načíst data. Zkuste to prosím znovu."
+      />
+    );
+  }
 
   return (
     <>
@@ -96,6 +133,13 @@ const AdminBasicInfo = () => {
               fullTicketsEarnings={fullTicketsEarnings}
               halfTicketsCount={halfTicketsCount}
               halfTicketsEarnings={halfTicketsEarnings}
+              numberOfGames={numberOfGames}
+              averageAttendance={averageAttendance}
+              averageEarningsPerGame={averageEarningsPerGame}
+              highestEarningsGame={highestEarningsGame}
+              lowestEarningsGame={lowestEarningsGame}
+              mostAttendedGame={mostAttendedGame}
+              leastAttendedGame={leastAttendedGame}
             />
 
             <div className="w-full">
