@@ -1,5 +1,6 @@
 import { GameStat } from "@/types/SeasonDashboardStats";
 import { Card, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import MatchTrend from "./MatchTrend";
 
 type BasicStatsCardsProps = {
   totalEarnings: number;
@@ -16,6 +17,9 @@ type BasicStatsCardsProps = {
   lowestEarningsGame?: GameStat;
   mostAttendedGame?: GameStat;
   leastAttendedGame?: GameStat;
+
+  seasonEarningsPerGame?: number;
+  seasonAverageAttendance?: number;
 };
 
 const BasicStatsCards = ({
@@ -32,6 +36,8 @@ const BasicStatsCards = ({
   lowestEarningsGame,
   mostAttendedGame,
   leastAttendedGame,
+  seasonEarningsPerGame,
+  seasonAverageAttendance,
 }: BasicStatsCardsProps) => {
   const formatRival = (rival: string | null) => (rival ? `(${rival})` : "");
 
@@ -40,16 +46,24 @@ const BasicStatsCards = ({
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>Utrženo celkem</CardDescription>
-          <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
+          <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl flex gap-2">
             {totalEarnings} Kč
+            <MatchTrend
+              seasonStat={seasonEarningsPerGame ?? 0}
+              matchStat={totalEarnings}
+            />
           </CardTitle>
         </CardHeader>
       </Card>
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>Celkem prodáno lístků</CardDescription>
-          <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
+          <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl flex gap-2">
             {totalTickets} ks
+            <MatchTrend
+              seasonStat={seasonAverageAttendance ?? 0}
+              matchStat={totalTickets}
+            />
           </CardTitle>
         </CardHeader>
       </Card>
@@ -71,7 +85,7 @@ const BasicStatsCards = ({
         </CardHeader>
       </Card>
 
-      {numberOfGames !== undefined && (
+      {numberOfGames && (
         <Card className="@container/card">
           <CardHeader>
             <CardDescription>Počet zápasů</CardDescription>
@@ -81,7 +95,7 @@ const BasicStatsCards = ({
           </CardHeader>
         </Card>
       )}
-      {averageAttendance !== undefined && (
+      {averageAttendance && (
         <Card className="@container/card">
           <CardHeader>
             <CardDescription>Průměrná návštěvnost</CardDescription>
@@ -91,7 +105,7 @@ const BasicStatsCards = ({
           </CardHeader>
         </Card>
       )}
-      {averageEarningsPerGame !== undefined && (
+      {averageEarningsPerGame && (
         <Card className="@container/card">
           <CardHeader>
             <CardDescription>Průměrné tržby na zápas</CardDescription>

@@ -36,6 +36,12 @@ final class MatchStatisticsDto
         public readonly array $entrancesStats,
 
         #[Groups(['match:stats'])]
-        public readonly array $paymentMethodStats
+        public readonly array $paymentMethodStats,
+
+        #[Groups(['match:stats'])]
+        public readonly array $seasonAverages = [
+            'averageAttendance' => 0,
+            'averageEarningsPerGame' => 0.00,
+        ]
     ) {}
 }

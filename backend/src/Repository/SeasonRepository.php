@@ -291,6 +291,82 @@ class SeasonRepository extends ServiceEntityRepository
         ];
     }
 
+    public function findSeasonByMatchId(int $matchId): ?Season
+    {
+        $em = $this->getEntityManager();
+
+        return $em->createQueryBuilder()
+            ->select('s')
+            ->from(Season::class, 's')
+            ->join('s.games', 'g')
+            ->where('g.id = :matchId')
+            ->setParameter('matchId', $matchId)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * Gathers average statistics for a given season
+     *
+     * @param int $seasonId The ID of the season to gather average statistics for.
+     * @return array|null An associative array containing average attendance and average earnings per game, or null if the season does not exist.
+     */
+    public function getSeasonAverages(int $seasonId): ?array
+    {
+        $season = $this->find($seasonId);
+        if (!$season) {
+            return [];
+        }
+
+        $em = $this->getEntityManager();
+
+        $purchasesQuery = $em->createQueryBuilder()
+            ->select('p_.id')
+            ->from(Purchase::class, 'p_')
+            ->leftJoin('p_.payment', 'pay_sub')
+            ->join('p_.match', 'g_')
+            ->where('g_.season = :seasonId')
+            ->andWhere('g_.status != :removedStatus')
+            ->andWhere(
+                $em->getExpressionBuilder()->orX(
+                    'p_.paymentType = :cashType',
+                    'pay_sub.status = :paidStatus'
+                )
+            )
+            ->setParameter('seasonId', $seasonId)
+            ->setParameter('removedStatus', MatchStatus::REMOVED->value)
+            ->setParameter('cashType', 'cash')
+            ->setParameter('paidStatus', 'paid');
+
+        $stats = $em->createQueryBuilder()
+            ->select(
+                'SUM(pi.priceAtPurchase) as totalEarnings',
+                'SUM(pi.quantity) as totalTickets'
+            )
+            ->from(PurchaseItem::class, 'pi')
+            ->join('pi.ticketType', 'tt')
+            ->where($em->getExpressionBuilder()->in('pi.purchase', $purchasesQuery->getDQL()))
+            ->setParameter('seasonId', $seasonId)
+            ->setParameter('removedStatus', MatchStatus::REMOVED->value)
+            ->setParameter('cashType', 'cash')
+            ->setParameter('paidStatus', 'paid')
+            ->getQuery()
+            ->getSingleResult();
+
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->neq('status', MatchStatus::REMOVED));
+        $activeGames = $season->getGames()->matching($criteria);
+        $numberOfGames = count($activeGames);
+
+        $averageAttendance = $numberOfGames > 0 ? ($stats['totalTickets'] ?? 0) / $numberOfGames : 0;
+        $averageEarningsPerGame = $numberOfGames > 0 ? ($stats['totalEarnings'] ?? 0) / $numberOfGames : 0;
+
+        return [
+            'averageAttendance' => $averageAttendance,
+            'averageEarningsPerGame' => $averageEarningsPerGame,
+        ];
+    }
+
     //    /**
     //     * @return Season[] Returns an array of Season objects
     //     */

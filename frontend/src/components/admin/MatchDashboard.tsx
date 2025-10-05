@@ -43,6 +43,7 @@ import {
   AccordionTrigger,
 } from "../ui/accordion";
 import { PurchaseTable } from "./PurchaseTable/PurchaseTable";
+import BasicStatsCards from "./BasicStatsCards";
 
 const chartConfig = {
   plne: {
@@ -119,6 +120,7 @@ const MatchDashboard = () => {
     halfTicketsEarnings,
     entrancesStats = [],
     paymentMethodStats,
+    seasonAverages,
   } = matchData;
 
   const DashboardHeader = (
@@ -184,7 +186,7 @@ const MatchDashboard = () => {
       cardHeader={DashboardHeader}
     >
       <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:grid-cols-2 xl:grid-cols-4">
-        <Card className="@container/card">
+        {/* <Card className="@container/card">
           <CardHeader>
             <CardDescription>Utrženo celkem</CardDescription>
             <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
@@ -216,8 +218,18 @@ const MatchDashboard = () => {
               {halfTicketsCount} ks &bull; {halfTicketsEarnings} Kč
             </CardTitle>
           </CardHeader>
-        </Card>
+        </Card> */}
       </div>
+      <BasicStatsCards
+        totalEarnings={Number(totalEarnings)}
+        totalTickets={totalTickets}
+        fullTicketsCount={fullTicketsCount}
+        fullTicketsEarnings={Number(fullTicketsEarnings)}
+        halfTicketsCount={halfTicketsCount}
+        halfTicketsEarnings={Number(halfTicketsEarnings)}
+        seasonEarningsPerGame={seasonAverages.averageEarningsPerGame}
+        seasonAverageAttendance={seasonAverages.averageAttendance}
+      />
       <div className="my-2 w-full">
         <Accordion
           type="single"

@@ -401,7 +401,9 @@ final class MatchController extends AbstractController
             halfTicketsEarnings: number_format($halfTicketsEarnings, 0, ',', ' '),
             salesOverTime: $statsData['salesOverTime'],
             entrancesStats: array_values($entranceData),
-            paymentMethodStats: $paymentMethodChartData
+            paymentMethodStats: $paymentMethodChartData,
+            seasonAverages: $statsData['seasonAverages']
+
         );
 
         return $this->json($dto, context: ['groups' => ['match:stats']]);

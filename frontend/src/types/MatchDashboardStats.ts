@@ -25,6 +25,11 @@ export type EntranceStats = {
   };
 };
 
+export type SeasonAverages = {
+  averageAttendance?: number;
+  averageEarningsPerGame?: number;
+};
+
 export type MatchDashboardStats = {
   match: MatchInfo;
   totalEarnings: string;
@@ -39,4 +44,5 @@ export type MatchDashboardStats = {
     name: string;
     value: number;
   }>;
+  seasonAverages: SeasonAverages;
 };
