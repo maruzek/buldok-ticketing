@@ -28,15 +28,26 @@ import { Label } from "../ui/label";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { PaymentStateMap } from "@/types/PaymentStateMap";
 
 type PurchaseDrawerProps = {
   matchID: string | undefined;
   ticketPrices: TicketPrices | null;
+  onNewQrPayment: (vs: string) => void;
+  // paymentStates: { [key: string]: { status: string; message?: string } };
+  paymentStates: PaymentStateMap;
+};
+
+type PaymentResponse = {
+  id: number;
+  vs: string;
 };
 
 export default function PurchaseDrawer({
   matchID,
   ticketPrices,
+  onNewQrPayment,
+  paymentStates,
 }: PurchaseDrawerProps) {
   const [open, setOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -57,6 +68,8 @@ export default function PurchaseDrawer({
             ticketPrices={ticketPrices}
             matchID={matchID}
             setPurchaseFormOpened={setOpen}
+            onNewQrPayment={onNewQrPayment}
+            paymentStates={paymentStates}
           />
         </DialogContent>
       </Dialog>
@@ -78,6 +91,8 @@ export default function PurchaseDrawer({
           ticketPrices={ticketPrices}
           matchID={matchID}
           setPurchaseFormOpened={setOpen}
+          onNewQrPayment={onNewQrPayment}
+          paymentStates={paymentStates}
         />
       </DrawerContent>
     </Drawer>
@@ -88,10 +103,14 @@ function PaymentForm({
   ticketPrices,
   matchID,
   setPurchaseFormOpened,
+  onNewQrPayment,
+  paymentStates,
 }: {
   ticketPrices: TicketPrices | null;
   matchID: string | undefined;
   setPurchaseFormOpened: (open: boolean) => void;
+  onNewQrPayment: (vs: string) => void;
+  paymentStates: PaymentStateMap;
 }) {
   const { watch, handleSubmit, control } = useForm({
     defaultValues: { fullTickets: 0, halfTickets: 0 },
@@ -174,7 +193,12 @@ function PaymentForm({
           halfTicketsValue * ticketPrices.halfTicket,
       });
       setQrData(payment);
-    } catch {
+      if (payment.vs) {
+        console.log("vs", payment);
+        onNewQrPayment(payment.vs);
+      }
+    } catch (error) {
+      console.error("Error creating payment:", error);
       toast.error("Chyba při vytváření platby");
     } finally {
       setIsQrLoading(false);
@@ -300,12 +324,8 @@ function PaymentForm({
                   className="w-full cursor-pointer"
                   disabled={fullTicketsValue + halfTicketsValue === 0}
                 >
-                  Uložit
+                  Platba hotovostí
                 </Button>
-              </DrawerClose>
-
-              <DrawerClose asChild>
-                <Button variant="outline">Zrušit</Button>
               </DrawerClose>
               <QrDialog
                 fullPrice={
@@ -317,7 +337,11 @@ function PaymentForm({
                 isQrLoading={isQrLoading}
                 triggerDisabled={fullTicketsValue + halfTicketsValue === 0}
                 setPurchaseFormOpened={setPurchaseFormOpened}
+                livePaymentState={paymentStates[qrData?.vs as string]}
               />
+              <DrawerClose asChild>
+                <Button variant="outline">Zrušit</Button>
+              </DrawerClose>
             </DrawerFooter>
           </form>
         </>

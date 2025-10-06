@@ -13,11 +13,12 @@ import { QRCodeSVG } from "qrcode.react";
 import Spinner from "../Spinner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import useApi from "@/hooks/useApi";
-import { useEffect, useState } from "react";
+// import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "sonner";
 import { Check, CircleX, Coins, QrCode } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { PaymentState } from "@/types/PaymentStateMap";
 
 type QrDialogProps = {
   fullPrice: number;
@@ -28,6 +29,7 @@ type QrDialogProps = {
   setPurchaseFormOpened?: (open: boolean) => void;
   isTriggerIcon?: boolean;
   paymentStatus?: string;
+  livePaymentState?: PaymentState;
 };
 
 export default function QrDialog({
@@ -39,10 +41,13 @@ export default function QrDialog({
   setPurchaseFormOpened,
   isTriggerIcon = false,
   paymentStatus,
+  livePaymentState,
 }: QrDialogProps) {
   const { fetchData } = useApi();
   const queryClient = useQueryClient();
   const { matchID } = useParams<{ matchID: string }>();
+  const status = livePaymentState?.status ?? paymentStatus ?? "pending";
+  const paymentMessage = livePaymentState?.message;
   const { mutate: cancelPayment } = useMutation({
     mutationFn: () =>
       fetchData("/payment/cancel", {
@@ -60,100 +65,9 @@ export default function QrDialog({
     },
   });
 
-  console.log("paymentStatus qr:", paymentStatus, qrData);
-
-  const [status, setStatus] = useState<
-    "pending" | "paid" | "failed" | "canceled"
-  >(
-    paymentStatus === "paid"
-      ? "paid"
-      : paymentStatus === "failed"
-      ? "failed"
-      : "pending"
-  );
-  console.log("status state", status);
-  const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
-  function beep() {
-    const snd = new Audio("/pay-success.mp3");
-    snd.play();
-  }
-  console.log(status, paymentStatus);
-
-  useEffect(() => {
-    if (status !== "pending" || !qrData || !qrData.vs) {
-      return;
-    }
-
-    let eventSource: EventSource | null = null;
-
-    const connectToMercure = async () => {
-      try {
-        const isAuthEnabled =
-          import.meta.env.VITE_MERCURE_AUTH_ENABLED === "true";
-        if (isAuthEnabled) {
-          await fetchData("/mercure/token", {
-            method: "POST",
-            body: JSON.stringify({ paymentId: qrData.vs }),
-          });
-        }
-
-        const hubUrl = new URL(import.meta.env.VITE_MERCURE_PUBLIC_URL);
-
-        const topic = `https://buldok.app/payments/${qrData.vs}`;
-        hubUrl.searchParams.append("topic", topic);
-
-        eventSource = new EventSource(hubUrl.toString(), {
-          withCredentials: isAuthEnabled,
-        });
-
-        eventSource.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          console.log(data);
-
-          if (data.status === "completed") {
-            setStatus("paid");
-            queryClient.invalidateQueries({ queryKey: ["match", matchID] });
-            beep();
-            toast.success("Platba byla přijata!");
-          } else if (data.status === "failed") {
-            setStatus("failed");
-            queryClient.invalidateQueries({ queryKey: ["match", matchID] });
-            if (data.reason === "amount_mismatch") {
-              setPaymentMessage("Nesouhlasí částka platby.");
-              toast.error("Platba selhala. Nesouhlasí částka platby.");
-            } else {
-              setPaymentMessage("Zkuste to prosím znovu.");
-              toast.error("Platba selhala. Zkuste to prosím znovu.");
-            }
-          }
-          // TODO: ma tu toto byt?
-          eventSource?.close();
-        };
-
-        eventSource.onerror = (err) => {
-          console.error("Mercure EventSource failed:", err);
-          eventSource?.close();
-        };
-      } catch (error) {
-        console.error("Failed to authorize or connect to Mercure:", error);
-        toast.error("Chyba spojení s notifikačním serverem.");
-      }
-    };
-
-    connectToMercure();
-
-    return () => {
-      if (eventSource) {
-        console.log("Closing Mercure connection for payment:", qrData.vs);
-        eventSource.close();
-      }
-    };
-  }, [qrData, status, queryClient, matchID, fetchData]);
-
   const onCancelClick = () => {
     if (status === "pending") {
       cancelPayment();
-      setStatus("canceled");
     }
   };
 

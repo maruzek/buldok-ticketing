@@ -154,13 +154,16 @@ final class MatchController extends AbstractController
             throw new BadRequestHttpException('Match is canceled');
         }
 
-        return $this->json([
-            'id' => $match->getId(),
-            'rival' => $match->getRival(),
-            'playedAt' => $match->getPlayedAt(),
-            'description' => $match->getDescription(),
-            'status' => $match->getStatus(),
-        ], JsonResponse::HTTP_OK);
+        $json = $serializer->serialize($match, 'json', ['groups' => ['match:read']]);
+
+        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
+        // return $this->json([
+        //     'id' => $match->getId(),
+        //     'rival' => $match->getRival(),
+        //     'playedAt' => $match->getPlayedAt(),
+        //     'description' => $match->getDescription(),
+        //     'status' => $match->getStatus(),
+        // ], JsonResponse::HTTP_OK);
     }
 
     #[Route('/api/admin/match/{id}', name: 'edit_match', methods: ['PUT'])]

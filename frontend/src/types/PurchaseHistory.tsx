@@ -14,4 +14,8 @@ export type PurchaseHistory = {
       name: string;
     };
   }[];
+  payment: {
+    variableSymbol: string;
+    status: string;
+  } | null;
 };

@@ -1,8 +1,7 @@
-import { Banknote, XCircle } from "lucide-react";
+import { Banknote, Dot, XCircle } from "lucide-react";
 import {
   Card,
   CardAction,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -13,12 +12,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import useApi from "@/hooks/useApi";
 import { useParams } from "react-router";
 import QrDialog from "./QrDialog";
+import { PaymentState } from "@/types/PaymentStateMap";
 
 type PurchaseCardProps = {
   purchase: PurchaseHistory;
+  livePaymentState?: PaymentState;
 };
 
-const PurchaseCard = ({ purchase }: PurchaseCardProps) => {
+const PurchaseCard = ({ purchase, livePaymentState }: PurchaseCardProps) => {
   const { fetchData } = useApi();
   const { matchID } = useParams<{ matchID: string }>();
   const queryClient = useQueryClient();
@@ -48,15 +49,22 @@ const PurchaseCard = ({ purchase }: PurchaseCardProps) => {
   const qrData = {
     vs: purchase?.payment?.variableSymbol,
   };
-  // console.log("QR data paymentCard:", qrData);
-  // console.log("status paymentCard:", purchase.payment?.status);
 
   return (
     <>
       <Card className="w-full my-3 py-3 px-3 gap-0">
         <CardHeader className="p-0 ">
-          <CardDescription className="text-gray-500 text-sm">
+          <CardDescription className="text-gray-500 text-sm flex items-center">
             #{purchase.id}
+            {purchase.payment &&
+              purchase.paymentType === "qr" &&
+              purchase.payment.variableSymbol && (
+                <span className="flex items-center">
+                  {" "}
+                  <Dot />
+                  VS: {purchase.payment.variableSymbol}
+                </span>
+              )}{" "}
           </CardDescription>
           <CardTitle className="font-bold text-2xl flex items-center gap-3 ">
             {`${amount} Kč`}
@@ -67,6 +75,7 @@ const PurchaseCard = ({ purchase }: PurchaseCardProps) => {
                   qrData={qrData}
                   isTriggerIcon={true}
                   paymentStatus={purchase.payment?.status}
+                  livePaymentState={livePaymentState}
                 />
               ) : (
                 <Banknote className="w-5 h-5" />
