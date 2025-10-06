@@ -233,7 +233,6 @@ function PaymentForm({
           </div>
           <form
             className="flex flex-col gap-4"
-            // onSubmit={handleSubmit(onSubmit)}
             onSubmit={handleSubmit((data) => purchase(data))}
           >
             <div className="px-5">

@@ -21,15 +21,10 @@ export const columns = (
       });
     },
   },
-  //   {
-  //     accessorKey: "entrance.name",
-  //     header: "Vchod",
-  //   },
   {
-    // This is the key change
-    id: "entranceName", // Use a simple, unique ID
+    id: "entranceName",
     header: "Vchod",
-    accessorFn: (row) => row.entrance.name, // Tell the table exactly how to get the value
+    accessorFn: (row) => row.entrance.name,
   },
   {
     accessorKey: "purchaseItems",
