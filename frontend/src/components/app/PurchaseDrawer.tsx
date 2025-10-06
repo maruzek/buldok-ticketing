@@ -45,7 +45,9 @@ export default function PurchaseDrawer({
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button className="w-full">Zaznamenat nákup</Button>
+          <div className="mx-4">
+            <Button className="w-full">Zaznamenat nákup</Button>
+          </div>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -64,7 +66,9 @@ export default function PurchaseDrawer({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button className="w-full">Zaznamenat nákup</Button>
+        <div className="mx-4">
+          <Button className="w-full">Zaznamenat nákup</Button>
+        </div>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="text-left">

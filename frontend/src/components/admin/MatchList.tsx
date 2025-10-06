@@ -66,7 +66,6 @@ const MatchList = () => {
     }
   };
 
-  // TODO: Custom global component for loading screens?
   if (isPending)
     return (
       <div className="flex justify-center h-screen w-full pt-20">
