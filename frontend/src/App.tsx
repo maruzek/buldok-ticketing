@@ -8,7 +8,6 @@ import CreateMatch from "./components/admin/CreateMatch";
 import EditUser from "./components/admin/EditUser";
 import Ticketing from "./pages/Ticketing";
 import UserMatchList from "./pages/UserMatchList";
-import NotFound from "./pages/errors/NotFound";
 import Register from "./pages/Register";
 import EntranceList from "./components/admin/EntranceList";
 import CreateEntrance from "./components/admin/CreateEntrance";
@@ -21,9 +20,10 @@ import CreateSeason from "./components/admin/CreateSeason";
 import SeasonList from "./components/admin/SeasonList";
 import EditSeason from "./components/admin/EditSeason";
 import SeasonDashboard from "./components/admin/SeasonDashboard";
+import ErrorPage from "./pages/errors/ErrorPage";
+import { SearchX, ShieldBan } from "lucide-react";
 
 function App() {
-  // TODO: zamyslet se nad nutnosti app, nebo rovou jit na ticketing
   return (
     <BrowserRouter>
       <Routes>
@@ -65,8 +65,26 @@ function App() {
             <Route path="ticketing/:matchID" element={<Ticketing />} />
           </Route>
         </Route>
-
-        <Route path="*" element={<NotFound />} />
+        <Route
+          path="unauthorized"
+          element={
+            <ErrorPage
+              title="Neoprávněný přístup"
+              description="Nemáte oprávnění k přístupu na tuto stránku."
+              icon={<ShieldBan />}
+            />
+          }
+        />
+        <Route
+          path="*"
+          element={
+            <ErrorPage
+              title="Stránka nenalezena"
+              description="Omlouváme se, ale stránka, kterou hledáte, neexistuje."
+              icon={<SearchX />}
+            />
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

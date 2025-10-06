@@ -1,7 +1,6 @@
 import * as React from "react";
 import { NavLink } from "react-router";
 import {
-  GalleryVerticalEnd,
   LayoutDashboard,
   Logs,
   Users,
@@ -12,11 +11,7 @@ import {
   Calendar,
   Swords,
 } from "lucide-react";
-
-import { NavMain } from "@/components/nav-main";
-import { NavProjects } from "@/components/nav-projects";
 import { NavUser } from "@/components/nav-user";
-import { TeamSwitcher } from "@/components/team-switcher";
 import {
   Sidebar,
   SidebarContent,
@@ -24,7 +19,6 @@ import {
   SidebarHeader,
   SidebarRail,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -37,71 +31,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "./ui/collapsible";
+import logo from "../assets/logo-buldok-transparent.png";
 
-const data = {
-  user: {
-    name: "Admin",
-    email: "admin@example.com",
-    avatar: "/logo-buldok-transparent.png",
-  },
-  teams: [
-    {
-      name: "Buldok Ticketing",
-      logo: GalleryVerticalEnd,
-      plan: "Admin",
-    },
-  ],
-  navMain: [
-    {
-      title: "Přehled",
-      url: "/admin",
-      icon: LayoutDashboard,
-      isActive: false,
-    },
-    {
-      title: "Zápasy",
-      url: "#",
-      icon: Logs,
-      items: [
-        {
-          title: "Vytvořit zápas",
-          url: "/admin/matches/create",
-        },
-        {
-          title: "Seznam zápasů",
-          url: "/admin/matches",
-        },
-      ],
-    },
-    {
-      title: "Uživatelé",
-      url: "/admin/users",
-      icon: Users,
-    },
-    {
-      title: "Ceny",
-      url: "/admin/tickets",
-      icon: Ticket,
-    },
-    {
-      title: "Vstupy",
-      url: "#",
-      icon: DoorOpen,
-      items: [
-        {
-          title: "Spravovat vstupy",
-          url: "/admin/entrances",
-        },
-        {
-          title: "Vytvořit vstup",
-          url: "/admin/entrances/create",
-        },
-      ],
-    },
-  ],
-  projects: [],
-};
-// TODO: make child components reusable and unified
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar
@@ -111,10 +42,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {...props}
     >
       <SidebarHeader>
-        {/* <TeamSwitcher teams={data.teams} /> */}
-        {/* TODO: Season switcher */}
-        <h1>Buldok</h1>
+        <img src={logo} alt="Buldok Logo" className="w-16 h-auto" />
       </SidebarHeader>
+      {/* Přehled */}
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
@@ -131,10 +61,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
+
+        {/* Zápasy */}
         <SidebarGroup>
-          {/* <SidebarGroupLabel className="text-sidebar-foreground/70 text-sm pt-4 pb-0 px-4 mb-1">
-            Zápasy
-          </SidebarGroupLabel> */}
           <SidebarMenu>
             <Collapsible
               asChild
@@ -152,7 +81,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <CollapsibleContent>
                   <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild>
+                      <SidebarMenuSubButton
+                        asChild
+                        className="transition-colors"
+                      >
                         <NavLink to="/admin/matches/create" end>
                           <Plus className="" />
                           Vytvořit
@@ -160,7 +92,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild>
+                      <SidebarMenuSubButton
+                        asChild
+                        className="transition-colors"
+                      >
                         <NavLink to="/admin/matches" end>
                           <Logs className="" />
                           Seznam
@@ -173,7 +108,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </Collapsible>
           </SidebarMenu>
         </SidebarGroup>
-        {/* Seasons */}
+
+        {/* Sezóny */}
         <SidebarGroup>
           <SidebarMenu>
             <Collapsible
@@ -192,7 +128,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <CollapsibleContent>
                   <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild>
+                      <SidebarMenuSubButton
+                        asChild
+                        className="transition-colors"
+                      >
                         <NavLink to="/admin/seasons/create" end>
                           <Plus className="" />
                           Vytvořit
@@ -200,7 +139,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild>
+                      <SidebarMenuSubButton
+                        asChild
+                        className="transition-colors"
+                      >
                         <NavLink to="/admin/seasons" end>
                           <Logs className="" />
                           Seznam
@@ -213,15 +155,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </Collapsible>
           </SidebarMenu>
         </SidebarGroup>
+
+        {/* Uživatelé */}
         <SidebarGroup>
-          {/* <SidebarGroupLabel className="text-sidebar-foreground/70 text-sm pt-4 pb-0 px-4 mb-1">
-            Uživatelé
-          </SidebarGroupLabel> */}
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
+                className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground transition-colors"
               >
                 <NavLink to="/admin/users" end>
                   <Users className="" />
@@ -232,14 +173,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenu>
         </SidebarGroup>
         <SidebarGroup>
-          {/* <SidebarGroupLabel className="text-sidebar-foreground/70 text-sm pt-4 pb-0 px-4 mb-1">
-            Ceny
-          </SidebarGroupLabel> */}
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
+                className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground transition-colors"
               >
                 <NavLink to="/admin/tickets" end>
                   <Ticket className="" />
@@ -249,10 +187,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
+
+        {/* Vstupy */}
         <SidebarGroup>
-          {/* <SidebarGroupLabel className="text-sidebar-foreground/70 text-sm pt-4 pb-0 px-4 mb-1">
-            Vstupy
-          </SidebarGroupLabel> */}
           <SidebarMenu>
             <Collapsible
               asChild
@@ -261,7 +198,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
-                  <SidebarMenuButton className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ">
+                  <SidebarMenuButton className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
                     <DoorOpen className="" />
                     <span>Vstupy</span>
                     <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -270,7 +207,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <CollapsibleContent>
                   <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild>
+                      <SidebarMenuSubButton
+                        asChild
+                        className="transition-colors"
+                      >
                         <NavLink to="/admin/entrances" end>
                           <DoorOpen className="" />
                           Spravovat
@@ -278,7 +218,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild>
+                      <SidebarMenuSubButton
+                        asChild
+                        className="transition-colors"
+                      >
                         <NavLink to="/admin/entrances/create">
                           <Plus className="" />
                           Vytvořit
@@ -293,7 +236,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

@@ -23,15 +23,16 @@ class AuthenticationSuccessListener
         }
         $data = $event->getData();
 
-        $entrance = null;
-
-        if ($user->getEntrance()) {
-            $entrance = array(
-                'id' => $user->getEntrance()->getId(),
-                'name' => $user->getEntrance()->getName(),
-                // 'location' => $user->getEntrance()->getLocation(),
-            );
+        if (!$user->getEntrance()) {
+            throw new CustomUserMessageAuthenticationException('User has no entrance assigned');
         }
+
+        $entrance = null;
+        $entrance = array(
+            'id' => $user->getEntrance()->getId(),
+            'name' => $user->getEntrance()->getName(),
+            // 'location' => $user->getEntrance()->getLocation(),
+        );
 
         $data['user'] = array(
             'roles' => $user->getRoles(),
