@@ -252,7 +252,6 @@ export default function QrDialog({
               Zrušit platbu QR kódem a smazat nákup
             </Button>
           </DialogClose>
-          <Button onClick={() => beep()}>beep</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
