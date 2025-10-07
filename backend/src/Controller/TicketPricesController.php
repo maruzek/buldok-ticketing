@@ -76,8 +76,17 @@ final class TicketPricesController extends AbstractController
         if (!isset($data['fullTicket'])) {
             throw new BadRequestException('fullTicketPrice is required');
         }
+
         if (!isset($data['halfTicket'])) {
             throw new BadRequestException('halfTicketPrice is required');
+        }
+
+        if (!is_numeric($data['fullTicket']) || $data['fullTicket'] < 0) {
+            throw new BadRequestException('fullTicketPrice must be a non-negative number');
+        }
+
+        if (!is_numeric($data['halfTicket']) || $data['halfTicket'] < 0) {
+            throw new BadRequestException('halfTicketPrice must be a non-negative number');
         }
 
         try {
