@@ -13,6 +13,8 @@ import useApi from "@/hooks/useApi";
 import { useParams } from "react-router";
 import QrDialog from "./QrDialog";
 import { PaymentState } from "@/types/PaymentStateMap";
+import { useState } from "react";
+import RemoveConfirmDialog from "../RemoveConfirmDialog";
 
 type PurchaseCardProps = {
   purchase: PurchaseHistory;
@@ -24,7 +26,10 @@ const PurchaseCard = ({ purchase, livePaymentState }: PurchaseCardProps) => {
   const { matchID } = useParams<{ matchID: string }>();
   const queryClient = useQueryClient();
 
-  const { mutate: deletePurchase } = useMutation({
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [purchaseToDelete, setPurchaseToDelete] = useState<number | null>(null);
+
+  const { mutate: deletePurchase, isPending: isDeleting } = useMutation({
     mutationFn: (purchaseID: number) =>
       fetchData(`/purchase/${purchaseID}`, {
         method: "DELETE",
@@ -48,6 +53,17 @@ const PurchaseCard = ({ purchase, livePaymentState }: PurchaseCardProps) => {
 
   const qrData = {
     vs: purchase?.payment?.variableSymbol,
+  };
+
+  const handleOpenDeleteDialog = (id: number) => {
+    setPurchaseToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (purchaseToDelete) {
+      deletePurchase(purchaseToDelete);
+    }
   };
 
   return (
@@ -91,11 +107,27 @@ const PurchaseCard = ({ purchase, livePaymentState }: PurchaseCardProps) => {
             ))}
           </CardDescription>
           {purchase.paymentType !== "qr" && (
+            // <CardAction className="h-full flex items-start">
+            //   <XCircle
+            //     className="text-red-500 hover:text-red-800 transition ease-in-out cursor-pointer"
+            //     onClick={() => deletePurchase(purchase.id as number)}
+            //     aria-label="Smazat nákup"
+            //   />
+            // </CardAction>
+
             <CardAction className="h-full flex items-start">
               <XCircle
                 className="text-red-500 hover:text-red-800 transition ease-in-out cursor-pointer"
-                onClick={() => deletePurchase(purchase.id as number)}
+                onClick={() => handleOpenDeleteDialog(purchase.id as number)}
                 aria-label="Smazat nákup"
+              />
+              <RemoveConfirmDialog
+                isOpen={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+                onConfirm={handleConfirmDelete}
+                isPending={isDeleting}
+                title="Opravdu smazat tento nákup?"
+                message="Všechna data spojená s tímto nákupem, včetně prodaných lístků, budou smazána."
               />
             </CardAction>
           )}
