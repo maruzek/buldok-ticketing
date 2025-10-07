@@ -41,6 +41,14 @@ const BasicStatsCards = ({
 }: BasicStatsCardsProps) => {
   const formatRival = (rival: string | null) => (rival ? `(${rival})` : "");
 
+  if ((numberOfGames ?? 0) === 0) {
+    return (
+      <div className="flex items-center justify-center h-48">
+        <p className="">Prozatím nejsou k dispozici žádná data</p>
+      </div>
+    );
+  }
+
   return (
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:grid-cols-2 xl:grid-cols-4">
       <Card className="@container/card">
