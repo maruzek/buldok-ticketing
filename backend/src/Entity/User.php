@@ -54,11 +54,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Purchase::class, mappedBy: 'soldBy')]
     private Collection $purchases;
 
-    #[ORM\Column]
-    #[Assert\Type('bool')]
-    #[Assert\NotNull]
-    #[Groups(["user:read"])]
-    private ?bool $verified = null;
+    // #[ORM\Column]
+    // #[Assert\Type('bool')]
+    // #[Assert\NotNull]
+    // #[Groups(["user:read"])]
+    // private ?bool $verified = null;
 
     #[ORM\Column]
     #[Assert\NotNull]
@@ -196,17 +196,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function isVerified(): ?bool
-    {
-        return $this->verified;
-    }
+    // public function isVerified(): ?bool
+    // {
+    //     return $this->verified;
+    // }
 
-    public function setVerified(bool $verified): static
-    {
-        $this->verified = $verified;
+    // public function setVerified(bool $verified): static
+    // {
+    //     $this->verified = $verified;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     public function getRegisteredAt(): ?\DateTimeImmutable
     {

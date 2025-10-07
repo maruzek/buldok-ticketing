@@ -76,8 +76,9 @@ final class AuthController extends AbstractController
                 'email' => $user->getEmail(),
                 'fullName' => $user->getFullName(),
                 'roles' => $user->getRoles(),
-                'verified' => $user->isVerified(),
+                // 'verified' => $user->isVerified(),
                 'registeredAt' => $user->getRegisteredAt()->format('Y-m-d H:i:s'),
+                'status' => $user->getStatus()?->value,
             ],
         ], JsonResponse::HTTP_CREATED);
     }

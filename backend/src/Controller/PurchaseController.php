@@ -194,7 +194,7 @@ final class PurchaseController extends AbstractController
         if (!$purchase) {
             throw new NotFoundHttpException('Purchase not found');
         }
-
+        // TODO Soft delete
         try {
             $em->remove($purchase);
             $em->flush();

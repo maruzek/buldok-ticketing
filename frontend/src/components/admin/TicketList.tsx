@@ -3,7 +3,7 @@ import { FieldValues, useForm } from "react-hook-form";
 import useApi from "../../hooks/useApi";
 import { TicketPrices } from "../../types/TicketPrices";
 import Spinner from "../Spinner";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
@@ -34,20 +34,11 @@ const TicketList = () => {
   });
 
   const form = useForm({
-    defaultValues: {
+    values: {
       fullTicket: ticketPrices ? ticketPrices.fullTicket.toString() : "",
       halfTicket: ticketPrices ? ticketPrices.halfTicket.toString() : "",
     },
   });
-
-  useEffect(() => {
-    if (ticketPrices) {
-      form.reset({
-        fullTicket: ticketPrices.fullTicket.toString(),
-        halfTicket: ticketPrices.halfTicket.toString(),
-      });
-    }
-  }, [ticketPrices, form]);
 
   useEffect(() => {
     if (isFetchError) {
@@ -72,6 +63,8 @@ const TicketList = () => {
     }
   }, [fullTicketValue, form]);
 
+  const queryClient = useQueryClient();
+
   const { mutate, isPending: isSaving } = useMutation({
     mutationFn: (data: FieldValues) =>
       fetchData<{ status: string; message: string }>("/ticket-prices/", {
@@ -83,6 +76,7 @@ const TicketList = () => {
       }),
     onSuccess: (response) => {
       if (response.status == "ok") {
+        queryClient.invalidateQueries({ queryKey: ["ticket-prices"] });
         toast.success("Ceny vstupenek byly úspěšně aktualizovány.");
       }
     },

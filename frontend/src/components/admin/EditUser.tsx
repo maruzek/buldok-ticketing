@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { FieldValues, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
 import { User } from "../../types/User";
@@ -18,13 +17,7 @@ import {
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Checkbox } from "../ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
 type UserData = Omit<User, "registeredAt">;
 
@@ -47,22 +40,22 @@ const EditUser = () => {
   console.log(editedUser);
 
   const form = useForm({
-    defaultValues: {
+    values: {
       verified: editedUser ? editedUser.verified : false,
       admin: editedUser ? editedUser.roles.includes("ROLE_ADMIN") : false,
       status: editedUser ? editedUser.status : "active",
     },
   });
 
-  useEffect(() => {
-    if (editedUser) {
-      form.reset({
-        verified: editedUser.verified,
-        admin: editedUser.roles.includes("ROLE_ADMIN"),
-        status: editedUser.status,
-      });
-    }
-  }, [editedUser, form]);
+  // useEffect(() => {
+  //   if (editedUser) {
+  //     form.reset({
+  //       verified: editedUser.verified,
+  //       admin: editedUser.roles.includes("ROLE_ADMIN"),
+  //       status: editedUser.status,
+  //     });
+  //   }
+  // }, [editedUser, form]);
 
   const queryClient = useQueryClient();
 
@@ -117,7 +110,7 @@ const EditUser = () => {
       </Card>
     );
   }
-
+  // TODO: pridat vyber entrance
   return (
     <Card className="w-full lg:max-w-1/3 mx-auto">
       <CardHeader>
@@ -131,7 +124,7 @@ const EditUser = () => {
             className="w-full flex gap-2 flex-col"
             onSubmit={form.handleSubmit((data) => mutate(data))}
           >
-            <FormField
+            {/* <FormField
               control={form.control}
               name="verified"
               render={({ field }) => (
@@ -149,8 +142,8 @@ const EditUser = () => {
                   <FormMessage />
                 </FormItem>
               )}
-            />
-            <FormField
+            /> */}
+            {/* <FormField
               control={form.control}
               name="status"
               render={({ field }) => (
@@ -162,7 +155,7 @@ const EditUser = () => {
                   >
                     <FormControl>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Vyberte stav zápasu" />
+                        <SelectValue placeholder="Vyberte stav účtu" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -171,6 +164,47 @@ const EditUser = () => {
                       <SelectItem value="suspended">Deaktivovaný</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            /> */}
+
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Vyberte stav účtu</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="flex flex-col"
+                    >
+                      <FormItem className="flex items-center gap-3">
+                        <FormControl>
+                          <RadioGroupItem value="pending" />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          Čekající na aktivaci
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center gap-3">
+                        <FormControl>
+                          <RadioGroupItem value="active" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Aktivní</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center gap-3">
+                        <FormControl>
+                          <RadioGroupItem value="suspended" />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          Pozastavený
+                        </FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

@@ -24,6 +24,8 @@ export const columns = (onDelete: (id: number) => void): ColumnDef<User>[] => [
             ? "bg-green-200 text-green-800"
             : row.original.status === "pending"
             ? "bg-yellow-200 text-yellow-800"
+            : row.original.status === "suspended"
+            ? "bg-red-200 text-red-800"
             : "bg-gray-100 text-gray-800"
         }`}
       >
@@ -32,6 +34,8 @@ export const columns = (onDelete: (id: number) => void): ColumnDef<User>[] => [
           ? "Aktivní"
           : row.original.status === "pending"
           ? "Čekající"
+          : row.original.status === "suspended"
+          ? "Pozastaven"
           : "Neznámý"}
       </span>
     ),

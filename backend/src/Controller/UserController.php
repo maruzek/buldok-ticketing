@@ -152,7 +152,7 @@ final class UserController extends AbstractController
         }
 
         $user->setRoles($newRoles ?? $user->getRoles());
-        $user->setVerified($data['verified'] ?? $user->isVerified());
+        // $user->setVerified($data['verified'] ?? $user->isVerified());
         $user->setEntrance($newEntrance);
         $user->setStatus($data['status'] ? UserStatus::from($data['status']) : $user->getStatus());
 
