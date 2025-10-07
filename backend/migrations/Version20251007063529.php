@@ -20,14 +20,14 @@ final class Version20251007063529 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('CREATE TABLE refresh_tokens (id INT AUTO_INCREMENT NOT NULL, refresh_token VARCHAR(128) NOT NULL, username VARCHAR(255) NOT NULL, valid DATETIME NOT NULL, UNIQUE INDEX UNIQ_9BACE7E1C74F2195 (refresh_token), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
-        $this->addSql('CREATE UNIQUE INDEX UNIQ_F0E45BA9A308E877 ON season (years)');
+#        $this->addSql('CREATE TABLE refresh_tokens (id INT AUTO_INCREMENT NOT NULL, refresh_token VARCHAR(128) NOT NULL, username VARCHAR(255) NOT NULL, valid DATETIME NOT NULL, UNIQUE INDEX UNIQ_9BACE7E1C74F2195 (refresh_token), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+ #       $this->addSql('CREATE UNIQUE INDEX UNIQ_F0E45BA9A308E877 ON season (years)');
     }
 
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('DROP TABLE refresh_tokens');
-        $this->addSql('DROP INDEX UNIQ_F0E45BA9A308E877 ON season');
+  #      $this->addSql('DROP TABLE refresh_tokens');
+   #     $this->addSql('DROP INDEX UNIQ_F0E45BA9A308E877 ON season');
     }
 }
