@@ -37,6 +37,9 @@ security:
     dev:
       pattern: ^/(_(profiler|wdt)|css|images|js)/
       security: false
+    public:
+      pattern: ^/api/(auth/login|token/refresh|auth/register)
+      stateless: true
     api:
       pattern: ^/api
       stateless: true
@@ -54,7 +57,7 @@ security:
   # Easy way to control access for large sections of your site
   # Note: Only the *first* access control that matches will be used
   access_control:
-    - { path: ^/api, methods: [OPTIONS], roles: PUBLIC_ACCESS }
+    # - { path: ^/api, methods: [OPTIONS], roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/(login|logout|register), roles: PUBLIC_ACCESS }
     - { path: ^/api/(login|token/refresh), roles: PUBLIC_ACCESS }
     - { path: ^/api/admin, roles: ROLE_ADMIN }
