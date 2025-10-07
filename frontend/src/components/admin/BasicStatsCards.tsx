@@ -40,8 +40,26 @@ const BasicStatsCards = ({
   seasonAverageAttendance,
 }: BasicStatsCardsProps) => {
   const formatRival = (rival: string | null) => (rival ? `(${rival})` : "");
+  console.log(
+    "totalEarnings, totalTickets,fullTicketsCount,fullTicketsEarnings,halfTicketsCount,halfTicketsEarnings,numberOfGames,averageAttendance,averageEarningsPerGame,highestEarningsGame,lowestEarningsGame,mostAttendedGame,leastAttendedGame,seasonEarningsPerGame,seasonAverageAttendance",
+    totalEarnings,
+    totalTickets,
+    fullTicketsCount,
+    fullTicketsEarnings,
+    halfTicketsCount,
+    halfTicketsEarnings,
+    numberOfGames,
+    averageAttendance,
+    averageEarningsPerGame,
+    highestEarningsGame,
+    lowestEarningsGame,
+    mostAttendedGame,
+    leastAttendedGame,
+    seasonEarningsPerGame,
+    seasonAverageAttendance
+  );
 
-  if ((numberOfGames ?? 0) === 0) {
+  if (numberOfGames && (numberOfGames ?? 0) === 0) {
     return (
       <div className="flex items-center justify-center h-48">
         <p className="">Prozatím nejsou k dispozici žádná data</p>
@@ -98,7 +116,7 @@ const BasicStatsCards = ({
           <CardHeader>
             <CardDescription>Počet zápasů</CardDescription>
             <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-              {numberOfGames}
+              {numberOfGames ? numberOfGames : 0} ks
             </CardTitle>
           </CardHeader>
         </Card>
@@ -108,7 +126,7 @@ const BasicStatsCards = ({
           <CardHeader>
             <CardDescription>Průměrná návštěvnost</CardDescription>
             <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-              {Math.round(averageAttendance)} osob
+              {averageAttendance ? Math.round(averageAttendance) : 0} os.
             </CardTitle>
           </CardHeader>
         </Card>
@@ -118,7 +136,10 @@ const BasicStatsCards = ({
           <CardHeader>
             <CardDescription>Průměrné tržby na zápas</CardDescription>
             <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-              {Math.round(averageEarningsPerGame).toLocaleString("cs-CZ")} Kč
+              {averageEarningsPerGame
+                ? Math.round(averageEarningsPerGame).toLocaleString("cs-CZ")
+                : 0}{" "}
+              Kč
             </CardTitle>
           </CardHeader>
         </Card>
@@ -130,7 +151,7 @@ const BasicStatsCards = ({
               Nejnavštěvovanější zápas {formatRival(mostAttendedGame.rival)}
             </CardDescription>
             <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-              {mostAttendedGame.value} osob
+              {mostAttendedGame.value ? mostAttendedGame.value : 0} os.
             </CardTitle>
           </CardHeader>
         </Card>
@@ -142,7 +163,7 @@ const BasicStatsCards = ({
               Nejméně navštěvovaný zápas {formatRival(leastAttendedGame.rival)}
             </CardDescription>
             <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-              {leastAttendedGame.value} osob
+              {leastAttendedGame.value ? leastAttendedGame.value : 0} os.
             </CardTitle>
           </CardHeader>
         </Card>
@@ -154,7 +175,10 @@ const BasicStatsCards = ({
               Nejvyšší tržby ze zápasu {formatRival(highestEarningsGame.rival)}
             </CardDescription>
             <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-              {highestEarningsGame.value?.toLocaleString("cs-CZ")} Kč
+              {highestEarningsGame.value
+                ? highestEarningsGame.value?.toLocaleString("cs-CZ")
+                : 0}{" "}
+              Kč
             </CardTitle>
           </CardHeader>
         </Card>
@@ -166,7 +190,10 @@ const BasicStatsCards = ({
               Nejnižší tržby ze zápasu {formatRival(lowestEarningsGame.rival)}
             </CardDescription>
             <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-              {lowestEarningsGame.value?.toLocaleString("cs-CZ")} Kč
+              {lowestEarningsGame.value
+                ? lowestEarningsGame.value?.toLocaleString("cs-CZ")
+                : 0}{" "}
+              Kč
             </CardTitle>
           </CardHeader>
         </Card>
