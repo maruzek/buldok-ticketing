@@ -37,6 +37,7 @@ export function LoginForm({ className }: React.ComponentProps<"form">) {
       return fetchData<{ user: User }>("/auth/login", {
         method: "POST",
         body: JSON.stringify(data),
+        skipAuthRefresh: true,
       });
     },
     onSuccess: (data) => {

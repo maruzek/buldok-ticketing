@@ -4,6 +4,10 @@ import { ApiError } from "@/types/ApiError";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
+type FetchOptions = RequestInit & {
+  skipAuthRefresh?: boolean;
+};
+
 type ApiHook = {
   fetchData: <T>(endpoint: string, options: RequestInit) => Promise<T>;
 };
@@ -32,18 +36,19 @@ const useApi = (): ApiHook => {
   }, [logout]);
 
   const fetchData = useCallback(
-    async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
+    async <T>(endpoint: string, options: FetchOptions = {}): Promise<T> => {
+      const { skipAuthRefresh, ...fetchOptions } = options;
       const makeRequest = async (): Promise<Response> => {
-        const fetchOptions: RequestInit = {
-          ...options,
+        const requestOptions: RequestInit = {
+          ...fetchOptions,
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
-            ...options.headers,
+            ...fetchOptions.headers,
           },
           credentials: "include",
         };
-        return fetch(`${BASE_URL}${endpoint}`, fetchOptions);
+        return fetch(`${BASE_URL}${endpoint}`, requestOptions);
       };
       try {
         // const fetchOptions: RequestInit = {
@@ -62,7 +67,7 @@ const useApi = (): ApiHook => {
         // );
         let response = await makeRequest();
 
-        if (response.status === 401) {
+        if (response.status === 401 && !skipAuthRefresh) {
           if (!isRefreshing) {
             isRefreshing = true;
             refreshPromise = refreshToken().finally(() => {
