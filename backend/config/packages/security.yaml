@@ -37,19 +37,27 @@ security:
     dev:
       pattern: ^/(_(profiler|wdt)|css|images|js)/
       security: false
-    public:
-      pattern: ^/api/(auth/login|token/refresh|auth/register)
+
+    login:
+      pattern: ^/api/auth/login
       stateless: true
-    api:
-      pattern: ^/api
-      stateless: true
-      entry_point: jwt
+      provider: app_user_provider
       json_login:
         check_path: /api/auth/login
         username_path: email
         password_path: password
         success_handler: lexik_jwt_authentication.handler.authentication_success
         failure_handler: lexik_jwt_authentication.handler.authentication_failure
+
+    public:
+      pattern: ^/api/(auth/login|token/refresh|auth/register)
+      stateless: true
+
+    api:
+      pattern: ^/api
+      stateless: true
+      entry_point: jwt
+
       jwt: ~
       refresh_jwt:
         check_path: /api/token/refresh
@@ -58,8 +66,12 @@ security:
   # Note: Only the *first* access control that matches will be used
   access_control:
     # - { path: ^/api, methods: [OPTIONS], roles: PUBLIC_ACCESS }
-    - { path: ^/api/auth/(login|logout|register), roles: PUBLIC_ACCESS }
-    - { path: ^/api/(login|token/refresh), roles: PUBLIC_ACCESS }
+    # - { path: ^/api/auth/(login|logout|register), roles: PUBLIC_ACCESS }
+    # - { path: ^/api/(login|token/refresh), roles: PUBLIC_ACCESS }
+    - {
+        path: ^/api/(auth/login|auth/register|token/refresh),
+        roles: PUBLIC_ACCESS,
+      }
     - { path: ^/api/admin, roles: ROLE_ADMIN }
     - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
