@@ -71,6 +71,8 @@ final class SeasonController extends AbstractController
         $season->setYears($data['years']);
         $season->setStartAt(new \DateTime($data['startAt']));
         $season->setEndAt(new \DateTime($data['endAt']));
+        $season->setCreatedAt(new \DateTimeImmutable());
+        $season->setStatus(SeasonStatus::ACTIVE);
 
         try {
             $this->em->persist($season);
