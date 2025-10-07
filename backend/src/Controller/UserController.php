@@ -187,6 +187,13 @@ final class UserController extends AbstractController
             throw new NotFoundHttpException('User not found');
         }
 
+        /** @var User|null $authUser */
+        $authUser = $this->getUser();
+
+        if ($user->getId() == $authUser->getId()) {
+            throw new BadRequestException('You cannot remove yourself');
+        }
+
         $user->setStatus(UserStatus::REMOVED);
 
         try {

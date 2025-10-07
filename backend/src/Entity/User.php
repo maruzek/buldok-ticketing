@@ -72,7 +72,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\Length(max: 255)]
     #[Assert\Type('string')]
     #[Assert\Regex(
-        pattern: '/^[a-zA-Z\s]+$/',
+        pattern: '/^[\p{L}\s]+$/u',
         message: 'Full name can only contain letters and spaces.'
     )]
     #[Groups(["user:read", "user:search", "entrance:read"])]

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\DTO\RegisterUserDto;
 use App\Entity\User;
+use App\Enum\UserStatus;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
@@ -52,6 +53,7 @@ final class AuthController extends AbstractController
         $user->setPassword($this->hasher->hashPassword($user, $dto->password));
         $user->setRoles(['ROLE_USER']);
         $user->setVerified(false);
+        $user->setStatus(UserStatus::PENDING);
         $user->setRegisteredAt(new \DateTimeImmutable());
 
         $errors = $this->validator->validate($user);

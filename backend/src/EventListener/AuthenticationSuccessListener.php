@@ -5,6 +5,7 @@ namespace App\EventListener;
 use Lexik\Bundle\JWTAuthenticationBundle\Event\AuthenticationSuccessEvent;
 use Symfony\Component\Security\Core\User\UserInterface;
 use App\Entity\User;
+use App\Enum\UserStatus;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 
@@ -18,7 +19,7 @@ class AuthenticationSuccessListener
         /** @var User|null $user */
         $user = $event->getUser();
 
-        if (!$user instanceof UserInterface || !$user instanceof User || !$user->isVerified()) {
+        if (!$user instanceof UserInterface || !$user instanceof User || !$user->isVerified() || $user->getStatus() !== UserStatus::ACTIVE) {
             throw new CustomUserMessageAuthenticationException('User not found or not verified');
         }
         $data = $event->getData();
