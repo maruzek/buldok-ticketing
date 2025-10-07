@@ -111,7 +111,7 @@ const BasicStatsCards = ({
         </CardHeader>
       </Card>
 
-      {numberOfGames && (
+      {numberOfGames !== undefined && (
         <Card className="@container/card">
           <CardHeader>
             <CardDescription>Počet zápasů</CardDescription>
@@ -121,7 +121,7 @@ const BasicStatsCards = ({
           </CardHeader>
         </Card>
       )}
-      {averageAttendance && (
+      {averageAttendance !== undefined && (
         <Card className="@container/card">
           <CardHeader>
             <CardDescription>Průměrná návštěvnost</CardDescription>
@@ -131,7 +131,7 @@ const BasicStatsCards = ({
           </CardHeader>
         </Card>
       )}
-      {averageEarningsPerGame && (
+      {averageEarningsPerGame !== undefined && (
         <Card className="@container/card">
           <CardHeader>
             <CardDescription>Průměrné tržby na zápas</CardDescription>
@@ -144,7 +144,7 @@ const BasicStatsCards = ({
           </CardHeader>
         </Card>
       )}
-      {mostAttendedGame && (
+      {mostAttendedGame !== undefined && (
         <Card className="@container/card">
           <CardHeader>
             <CardDescription>
@@ -156,7 +156,7 @@ const BasicStatsCards = ({
           </CardHeader>
         </Card>
       )}
-      {leastAttendedGame && (
+      {leastAttendedGame !== undefined && (
         <Card className="@container/card">
           <CardHeader>
             <CardDescription>
@@ -168,7 +168,7 @@ const BasicStatsCards = ({
           </CardHeader>
         </Card>
       )}
-      {highestEarningsGame && (
+      {highestEarningsGame !== undefined && (
         <Card className="@container/card">
           <CardHeader>
             <CardDescription>
@@ -183,7 +183,7 @@ const BasicStatsCards = ({
           </CardHeader>
         </Card>
       )}
-      {lowestEarningsGame && (
+      {lowestEarningsGame !== undefined && (
         <Card className="@container/card">
           <CardHeader>
             <CardDescription>
