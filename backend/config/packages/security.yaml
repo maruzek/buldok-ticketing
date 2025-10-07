@@ -17,31 +17,46 @@ security:
     #   lazy: true
     #   provider: app_user_provider
 
-    login:
-      pattern: ^/api/auth/login$
+    # login:
+    #   pattern: ^/api/auth/login$
+    #   stateless: true
+    #   provider: app_user_provider
+    #   json_login:
+    #     check_path: /api/auth/login
+    #     username_path: email
+    #     password_path: password
+    #     success_handler: lexik_jwt_authentication.handler.authentication_success
+    #     failure_handler: lexik_jwt_authentication.handler.authentication_failure
+
+    # api:
+    #   pattern: ^/api
+    #   stateless: true
+    #   jwt: ~
+    #   refresh_jwt:
+    #     check_path: /api/token/refresh
+    dev:
+      pattern: ^/(_(profiler|wdt)|css|images|js)/
+      security: false
+    api:
+      pattern: ^/api
       stateless: true
-      provider: app_user_provider
+      entry_point: jwt
       json_login:
         check_path: /api/auth/login
         username_path: email
         password_path: password
         success_handler: lexik_jwt_authentication.handler.authentication_success
         failure_handler: lexik_jwt_authentication.handler.authentication_failure
-
-    api:
-      pattern: ^/api
-      stateless: true
-      # entry_point: jwt
       jwt: ~
-      # refresh_jwt:
-      #   provider: app_user_provider
-      #   check_path: /api/auth/refresh
+      refresh_jwt:
+        check_path: /api/token/refresh
 
   # Easy way to control access for large sections of your site
   # Note: Only the *first* access control that matches will be used
   access_control:
     - { path: ^/api, methods: [OPTIONS], roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/(login|logout|register), roles: PUBLIC_ACCESS }
+    - { path: ^/api/(login|token/refresh), roles: PUBLIC_ACCESS }
     - { path: ^/api/admin, roles: ROLE_ADMIN }
     - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 

@@ -2,7 +2,7 @@ lexik_jwt_authentication:
   secret_key: "%env(resolve:JWT_SECRET_KEY)%"
   public_key: "%env(resolve:JWT_PUBLIC_KEY)%"
   pass_phrase: "%env(JWT_PASSPHRASE)%"
-  token_ttl: 7200
+  token_ttl: 3600 # 1 hodina
   set_cookies:
     BEARER:
       httpOnly: true
@@ -15,3 +15,9 @@ lexik_jwt_authentication:
     cookie:
       enabled: true
       name: BEARER
+
+when@prod:
+  lexik_jwt_authentication:
+    set_cookies:
+      BEARER:
+        secure: true

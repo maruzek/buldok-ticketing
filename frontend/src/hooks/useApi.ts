@@ -8,12 +8,32 @@ type ApiHook = {
   fetchData: <T>(endpoint: string, options: RequestInit) => Promise<T>;
 };
 
+let isRefreshing = false;
+let refreshPromise: Promise<void> | null = null;
+
 const useApi = (): ApiHook => {
   const { logout } = useAuth();
 
+  const refreshToken = useCallback(async (): Promise<void> => {
+    try {
+      const response = await fetch(`${BASE_URL}/token/refresh`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to refresh token");
+      }
+    } catch (error) {
+      console.error("Token refresh failed, logging out.", error);
+      logout();
+      throw error;
+    }
+  }, [logout]);
+
   const fetchData = useCallback(
     async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
-      try {
+      const makeRequest = async (): Promise<Response> => {
         const fetchOptions: RequestInit = {
           ...options,
           headers: {
@@ -23,11 +43,38 @@ const useApi = (): ApiHook => {
           },
           credentials: "include",
         };
+        return fetch(`${BASE_URL}${endpoint}`, fetchOptions);
+      };
+      try {
+        // const fetchOptions: RequestInit = {
+        //   ...options,
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //     Accept: "application/json",
+        //     ...options.headers,
+        //   },
+        //   credentials: "include",
+        // };
 
-        const response: Response = await fetch(
-          `${BASE_URL}${endpoint}`,
-          fetchOptions
-        );
+        // const response: Response = await fetch(
+        //   `${BASE_URL}${endpoint}`,
+        //   fetchOptions
+        // );
+        let response = await makeRequest();
+
+        if (response.status === 401) {
+          if (!isRefreshing) {
+            isRefreshing = true;
+            refreshPromise = refreshToken().finally(() => {
+              isRefreshing = false;
+              refreshPromise = null;
+            });
+          }
+
+          await refreshPromise;
+
+          response = await makeRequest();
+        }
 
         if (!response.ok) {
           const errorBody = await response.json().catch(() => ({}));
@@ -62,7 +109,7 @@ const useApi = (): ApiHook => {
         throw err;
       }
     },
-    [logout]
+    [logout, refreshToken]
   );
 
   return { fetchData };
