@@ -52,7 +52,6 @@ final class AuthController extends AbstractController
         $user->setFullName($dto->fullName);
         $user->setPassword($this->hasher->hashPassword($user, $dto->password));
         $user->setRoles(['ROLE_USER']);
-        $user->setVerified(false);
         $user->setStatus(UserStatus::PENDING);
         $user->setRegisteredAt(new \DateTimeImmutable());
 

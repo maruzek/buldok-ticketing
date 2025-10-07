@@ -43,7 +43,6 @@ class AuthenticationSuccessListener
             'id' => $user->getId(),
             'email' => $user->getUserIdentifier(),
             'fullName' => $user->getFullName(),
-            'verified' => $user->isVerified(),
             'entrance' => $entrance,
             'registrationDate' => $user->getRegisteredAt()->format('Y-m-d H:i:s'),
             'status' => $user->getStatus()?->value,
