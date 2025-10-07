@@ -23,7 +23,7 @@ class AuthenticationSuccessListener
         }
         $data = $event->getData();
 
-        if (!$user->getEntrance()) {
+        if (!$user->getEntrance() && !$user->isAdmin()) {
             throw new CustomUserMessageAuthenticationException('User has no entrance assigned');
         }
 
