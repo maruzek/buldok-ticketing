@@ -28,11 +28,14 @@ class AuthenticationSuccessListener
         }
 
         $entrance = null;
-        $entrance = array(
-            'id' => $user->getEntrance()->getId(),
-            'name' => $user->getEntrance()->getName(),
-            // 'location' => $user->getEntrance()->getLocation(),
-        );
+
+        if ($user->getEntrance()) {
+            $entrance = [
+                'id' => $user->getEntrance()->getId(),
+                'name' => $user->getEntrance()->getName(),
+                'status' => $user->getEntrance()->getStatus(),
+            ];
+        }
 
         $data['user'] = array(
             'roles' => $user->getRoles(),
