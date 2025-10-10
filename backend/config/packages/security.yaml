@@ -34,14 +34,40 @@ security:
     #   jwt: ~
     #   refresh_jwt:
     #     check_path: /api/token/refresh
+
     dev:
       pattern: ^/(_(profiler|wdt)|css|images|js)/
       security: false
 
-    login:
-      pattern: ^/api/auth/login
+    # login:
+    #   pattern: ^/api/auth/login
+    #   stateless: true
+    #   provider: app_user_provider
+    #   json_login:
+    #     check_path: /api/auth/login
+    #     username_path: email
+    #     password_path: password
+    #     success_handler: lexik_jwt_authentication.handler.authentication_success
+    #     failure_handler: lexik_jwt_authentication.handler.authentication_failure
+
+    # public:
+    #   pattern: ^/api/(auth/login|token/refresh|auth/register)
+    #   stateless: true
+
+    # api:
+    #   pattern: ^/api
+    #   stateless: true
+    #   entry_point: jwt
+
+    #   jwt: ~
+    #   refresh_jwt:
+    #     check_path: /api/token/refresh
+
+    api:
+      pattern: ^/api
       stateless: true
-      provider: app_user_provider
+      entry_point: jwt
+
       json_login:
         check_path: /api/auth/login
         username_path: email
@@ -49,16 +75,8 @@ security:
         success_handler: lexik_jwt_authentication.handler.authentication_success
         failure_handler: lexik_jwt_authentication.handler.authentication_failure
 
-    public:
-      pattern: ^/api/(auth/login|token/refresh|auth/register)
-      stateless: true
-
-    api:
-      pattern: ^/api
-      stateless: true
-      entry_point: jwt
-
       jwt: ~
+
       refresh_jwt:
         check_path: /api/token/refresh
 

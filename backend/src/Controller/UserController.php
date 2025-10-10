@@ -138,21 +138,19 @@ final class UserController extends AbstractController
 
         $newEntrance = null;
 
-        if ($data['entrance']) {
-            $newEntrance = $this->entranceRepository->findOneBy(['id' => $data['entrance']['id']]);
-        } else if ($data['entrance'] === null && $user->getEntrance()) {
+        if (isset($data['entranceId'])) {
+            $newEntrance = $this->entranceRepository->findOneBy(['id' => $data['entranceId']]);
+        } else if ($data['entranceId'] === null && $user->getEntrance()) {
             $newEntrance = $user->getEntrance();
         } else {
             $newEntrance = null;
         }
 
         if (isset($data['status'])) {
-            // dd($data['status'], UserStatus::from($data['status']));
             $user->setStatus(UserStatus::from($data['status']));
         }
 
         $user->setRoles($newRoles ?? $user->getRoles());
-        // $user->setVerified($data['verified'] ?? $user->isVerified());
         $user->setEntrance($newEntrance);
         $user->setStatus($data['status'] ? UserStatus::from($data['status']) : $user->getStatus());
 

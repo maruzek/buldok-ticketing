@@ -18,6 +18,8 @@ import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Checkbox } from "../ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import ComboboxPicker from "./ComboboxPicker";
+import { Entrance } from "@/types/Entrance";
 
 type UserData = Omit<User, "registeredAt">;
 
@@ -28,7 +30,7 @@ const EditUser = () => {
 
   const {
     data: editedUser,
-    isPending,
+    isPending: isUserPending,
     isError,
     error,
   } = useQuery({
@@ -39,11 +41,20 @@ const EditUser = () => {
   });
   console.log(editedUser);
 
+  const { data: entrances, isPending: areEntrancesPending } = useQuery<
+    Entrance[]
+  >({
+    queryKey: ["entrances"],
+    queryFn: () =>
+      fetchData<Entrance[]>("/admin/entrances/", { method: "GET" }),
+  });
+
   const form = useForm({
     values: {
       verified: editedUser ? editedUser.verified : false,
       admin: editedUser ? editedUser.roles.includes("ROLE_ADMIN") : false,
       status: editedUser ? editedUser.status : "active",
+      entranceId: editedUser?.entrance?.id.toString() ?? "",
     },
   });
 
@@ -54,19 +65,23 @@ const EditUser = () => {
       return fetchData<User>(`/admin/users/user/${userID}`, {
         method: "PUT",
         body: JSON.stringify({
-          ...editedUser,
+          // ...editedUser,
           roles: data.admin
             ? [...(editedUser?.roles || []), "ROLE_ADMIN"]
             : (editedUser?.roles || []).filter((role) => role !== "ROLE_ADMIN"),
-          verified: data.verified,
           status: data.status,
+          entranceId: data.entranceId ? parseInt(data.entranceId) : null,
         }),
       });
     },
     onSuccess: (res, variables) => {
-      console.log(res, variables);
+      console.log("success", res, variables);
       queryClient.invalidateQueries({ queryKey: ["user", userID] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["entrances"] });
+      queryClient.invalidateQueries({
+        queryKey: ["entrance", variables.entranceId],
+      });
       toast.success(`Uživatel ${res?.fullName} byl úspěšně upraven!`);
       navigate("/admin/users");
     },
@@ -78,6 +93,8 @@ const EditUser = () => {
       );
     },
   });
+
+  const isPending = isUserPending || areEntrancesPending;
 
   if (isPending) {
     return (
@@ -118,7 +135,7 @@ const EditUser = () => {
               control={form.control}
               name="status"
               render={({ field }) => (
-                <FormItem className="space-y-3">
+                <FormItem className="space-y-3 mb-1">
                   <FormLabel>Vyberte stav účtu</FormLabel>
                   <FormControl>
                     <RadioGroup
@@ -185,6 +202,21 @@ const EditUser = () => {
                 </FormItem>
               )}
             />
+            <ComboboxPicker
+              form={form}
+              name="entranceId"
+              label="Přiřazený vstup"
+              placeholder="Vyberte vstup..."
+              searchPlaceholder="Hledat vstup..."
+              notFoundText="Žádný vstup nenalezen."
+              items={
+                entrances?.map((e) => ({
+                  value: e.id.toString(),
+                  label: e.name,
+                })) ?? []
+              }
+            />
+            {/* TODO: Remove entrance button */}
             <Button
               className="w-full mt-3"
               type="submit"

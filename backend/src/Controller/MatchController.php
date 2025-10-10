@@ -186,6 +186,14 @@ final class MatchController extends AbstractController
             throw new BadRequestHttpException('Rival is required');
         }
 
+        $activeMatches = $this->gameRepository->findBy(['status' => MatchStatus::ACTIVE]);
+
+        if ($data['status'] === MatchStatus::ACTIVE->value && count($activeMatches) > 0) {
+            if ($match->getStatus() !== MatchStatus::ACTIVE) {
+                throw new BadRequestHttpException('Jen jeden zápas může být aktivní, nejdříve upravte stávající aktivní zápas');
+            }
+        }
+
         if (isset($data['status'])) {
             try {
                 $enumStatus = MatchStatus::from($data['status']);
@@ -194,7 +202,6 @@ final class MatchController extends AbstractController
                 throw new BadRequestHttpException('Invalid status value, must be one of: ' . implode(', ', array_column(MatchStatus::cases(), 'value')));
             }
         }
-
 
         $match->setRival($data['rival'] ?? $match->getRival());
         $match->setPlayedAt(new \DateTime($data['matchDate'] ?? $match->getPlayedAt()));

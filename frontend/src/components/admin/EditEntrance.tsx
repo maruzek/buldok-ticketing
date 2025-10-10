@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FieldValues, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
 import { Entrance } from "../../types/Entrance";
@@ -56,6 +56,12 @@ const EditEntrance = () => {
       status: editedEntrance ? editedEntrance.status : "opened",
     },
   });
+
+  useEffect(() => {
+    if (editedEntrance) {
+      setUserList(editedEntrance.users || []);
+    }
+  }, [editedEntrance, form]);
 
   useDebounce(
     () => {
