@@ -47,16 +47,6 @@ const EditUser = () => {
     },
   });
 
-  // useEffect(() => {
-  //   if (editedUser) {
-  //     form.reset({
-  //       verified: editedUser.verified,
-  //       admin: editedUser.roles.includes("ROLE_ADMIN"),
-  //       status: editedUser.status,
-  //     });
-  //   }
-  // }, [editedUser, form]);
-
   const queryClient = useQueryClient();
 
   const { mutate, isPending: isSubmitting } = useMutation({
@@ -124,51 +114,6 @@ const EditUser = () => {
             className="w-full flex gap-2 flex-col"
             onSubmit={form.handleSubmit((data) => mutate(data))}
           >
-            {/* <FormField
-              control={form.control}
-              name="verified"
-              render={({ field }) => (
-                <FormItem className="flex flex-col mb-4">
-                  <FormLabel>Ověření</FormLabel>
-                  <FormControl>
-                    <div className="flex items-center">
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={(checked) => field.onChange(!!checked)}
-                      />
-                      <Label className="ml-2">Uživatel ověřen</Label>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            /> */}
-            {/* <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Vyberte stav účtu" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="active">Aktivní</SelectItem>
-                      <SelectItem value="pending">Čekající</SelectItem>
-                      <SelectItem value="suspended">Deaktivovaný</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            /> */}
-
             <FormField
               control={form.control}
               name="status"

@@ -37,36 +37,38 @@ const Header = ({ children, color }: HeaderProps) => {
           )}
         </div>
         <div className="relative">
-          <DropdownMenu>
-            <DropdownMenuTrigger className="w-10 h-10 flex justify-center items-center cursor-pointer">
-              <User className="w-full h-full m-0 p-0 bg-gray-300 rounded-full text-gray-600 hover:bg-gray-400 transition-colors" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem>
-                <Cog />
-                Nastavení
-              </DropdownMenuItem>
-              {isAdmin && (
-                <>
-                  <Link to="/admin">
-                    <DropdownMenuItem>
-                      <LayoutDashboard />
-                      Admin
-                    </DropdownMenuItem>
-                  </Link>
-                  <Link to="/app">
-                    <DropdownMenuItem>
-                      <Volleyball />
-                      Aplikace
-                    </DropdownMenuItem>
-                  </Link>
-                </>
-              )}
-              <DropdownMenuItem onClick={logout}>
-                <LogOut /> Odhlásit se
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {auth.user && (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="w-10 h-10 flex justify-center items-center cursor-pointer">
+                <User className="w-full h-full m-0 p-0 bg-gray-300 rounded-full text-gray-600 hover:bg-gray-400 transition-colors" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>
+                  <Cog />
+                  Nastavení
+                </DropdownMenuItem>
+                {isAdmin && (
+                  <>
+                    <Link to="/admin">
+                      <DropdownMenuItem>
+                        <LayoutDashboard />
+                        Admin
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link to="/app">
+                      <DropdownMenuItem>
+                        <Volleyball />
+                        Aplikace
+                      </DropdownMenuItem>
+                    </Link>
+                  </>
+                )}
+                <DropdownMenuItem onClick={logout}>
+                  <LogOut /> Odhlásit se
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
     </header>

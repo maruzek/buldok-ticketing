@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FieldValues, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
 import { Entrance } from "../../types/Entrance";
@@ -23,13 +23,7 @@ import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { ApiError } from "@/types/ApiError";
 import BasicError from "../errors/BasicError";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
 const EditEntrance = () => {
   const { entranceID } = useParams<{ entranceID: string }>();
@@ -40,6 +34,7 @@ const EditEntrance = () => {
   const [userSearchResults, setUserSearchResults] = useState<User[]>([]);
   const [userList, setUserList] = useState<User[]>([]);
   const [userSearchQuery, setUserSearchQuery] = useState<string>("");
+  const [isSearchingUser, setIsSearchingUser] = useState<boolean>(false);
 
   const {
     data: editedEntrance,
@@ -56,29 +51,18 @@ const EditEntrance = () => {
   });
 
   const form = useForm({
-    defaultValues: {
+    values: {
       name: editedEntrance ? editedEntrance.name : "",
-      // location: editedEntrance ? editedEntrance.location : "",
       status: editedEntrance ? editedEntrance.status : "opened",
     },
   });
-
-  useEffect(() => {
-    if (editedEntrance) {
-      setUserList(editedEntrance.users || []);
-      form.reset({
-        name: editedEntrance.name,
-        // location: editedEntrance.location,
-        status: editedEntrance.status,
-      });
-    }
-  }, [editedEntrance, form]);
 
   useDebounce(
     () => {
       if (userSearchQuery && userSearchQuery.length > 2) {
         const fetchUser = async () => {
           try {
+            setIsSearchingUser(true);
             const data = await fetchData<User[]>(
               `/admin/users/search?q=${userSearchQuery}`,
               {
@@ -89,6 +73,8 @@ const EditEntrance = () => {
             setUserSearchResults(data || []);
           } catch (error) {
             console.error("Error fetching user:", error);
+          } finally {
+            setIsSearchingUser(false);
           }
         };
         fetchUser();
@@ -96,7 +82,7 @@ const EditEntrance = () => {
         setUserSearchResults([]);
       }
     },
-    1000,
+    200,
     [userSearchQuery, fetchData]
   );
 
@@ -247,39 +233,32 @@ const EditEntrance = () => {
                 </FormItem>
               )}
             />
-            {/* <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Umístění</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            /> */}
             <FormField
               control={form.control}
               name="status"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Vyberte stav vstupu" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="opened">Otevřený</SelectItem>
-                      <SelectItem value="closed">Uzavřený</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <FormItem className="space-y-3">
+                  <FormLabel>Vyberte stav účtu</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="flex flex-col"
+                    >
+                      <FormItem className="flex items-center gap-3">
+                        <FormControl>
+                          <RadioGroupItem value="opened" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Otevřený</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center gap-3">
+                        <FormControl>
+                          <RadioGroupItem value="closed" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Uzavřený</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -325,7 +304,7 @@ const EditEntrance = () => {
                 />
               </div>
 
-              {userSearchResults.length > 0 && (
+              {userSearchResults.length > 0 ? (
                 <ul className="w-full border border-t-0 border-gray-300 rounded-b-md">
                   {userSearchResults
                     .filter((sr) => !userList.some((u) => u.id === sr.id))
@@ -347,7 +326,14 @@ const EditEntrance = () => {
                       </li>
                     ))}
                 </ul>
-              )}
+              ) : userSearchResults &&
+                userSearchResults.length === 0 &&
+                userSearchQuery.length > 3 &&
+                !isSearchingUser ? (
+                <p className="text-sm text-gray-500">
+                  Žádní uživatelé nenalezeni.
+                </p>
+              ) : null}
             </div>
 
             <Button type="submit">Uložit změny</Button>

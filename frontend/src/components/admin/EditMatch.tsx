@@ -22,16 +22,11 @@ import { Calendar } from "../ui/calendar";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "../ui/textarea";
 import { ApiError } from "@/types/ApiError";
 import MatchError from "../errors/MatchError";
+
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
 const EditMatch = () => {
   const { matchID } = useParams<{ matchID: string }>();
@@ -60,17 +55,6 @@ const EditMatch = () => {
       status: editedMatch && editedMatch.status,
     },
   });
-
-  // useEffect(() => {
-  //   if (editedMatch) {
-  //     form.reset({
-  //       rival: editedMatch.rival,
-  //       matchDate: new Date(editedMatch.playedAt),
-  //       description: editedMatch.description,
-  //       status: editedMatch.status,
-  //     });
-  //   }
-  // }, [editedMatch, form]);
 
   const queryClient = useQueryClient();
 
@@ -193,23 +177,33 @@ const EditMatch = () => {
                 )}
               />
             </div>
+
             <FormField
               control={form.control}
               name="status"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Vyberte stav zápasu" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="active">Aktivní</SelectItem>
-                      <SelectItem value="finished">Odehrán</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <FormItem className="space-y-3 mb-1">
+                  <FormLabel>Vyberte stav zápasu</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="flex flex-col"
+                    >
+                      <FormItem className="flex items-center gap-3">
+                        <FormControl>
+                          <RadioGroupItem value="active" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Aktivní</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center gap-3">
+                        <FormControl>
+                          <RadioGroupItem value="finished" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Ukončený</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

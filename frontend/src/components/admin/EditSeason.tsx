@@ -24,15 +24,9 @@ import useApi from "@/hooks/useApi";
 import { useNavigate, useParams } from "react-router";
 import { Season } from "@/types/Season";
 import { ApiError } from "@/types/ApiError";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import Spinner from "../Spinner";
 import BasicError from "../errors/BasicError";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
 const EditSeason = () => {
   const { fetchData } = useApi();
@@ -87,6 +81,7 @@ const EditSeason = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["seasons"] });
+      queryClient.invalidateQueries({ queryKey: ["season", seasonID] });
       toast.success("Sezóna byla úspěšně upravena!");
       form.reset();
       navigate("/admin/seasons");
@@ -260,7 +255,7 @@ const EditSeason = () => {
                   )}
                 />
               </div>
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="status"
                 render={({ field }) => (
@@ -273,7 +268,6 @@ const EditSeason = () => {
                       <FormControl>
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Vyberte stav sezóny" />
-                          {/* <span>{field.value}</span> */}
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -284,7 +278,41 @@ const EditSeason = () => {
                     <FormMessage />
                   </FormItem>
                 )}
+              /> */}
+
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Vyberte stav účtu</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        className="flex flex-col"
+                      >
+                        <FormItem className="flex items-center gap-3">
+                          <FormControl>
+                            <RadioGroupItem value="active" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Aktivní</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center gap-3">
+                          <FormControl>
+                            <RadioGroupItem value="inactive" />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            Neaktivní
+                          </FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
+
               <div className="w-full flex justify-end mt-4">
                 <Button disabled={isSubmitting} type="submit">
                   Upravit sezónu
