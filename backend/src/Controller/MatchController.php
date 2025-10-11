@@ -381,12 +381,20 @@ final class MatchController extends AbstractController
             }
         }
 
+        // foreach ($entranceData as &$e) {
+        //     $e['totalEarnings'] = number_format($e['totalEarnings'], 0, ',', ' ');
+        //     $e['fullTicketsEarnings'] = number_format($e['fullTicketsEarnings'], 0, ',', ' ');
+        //     $e['halfTicketsEarnings'] = number_format($e['halfTicketsEarnings'], 0, ',', ' ');
+        //     $e['paymentMethods']['cash'] = number_format($e['paymentMethods']['cash'], 0, ',', ' ');
+        //     $e['paymentMethods']['qr'] = number_format($e['paymentMethods']['qr'], 0, ',', ' ');
+        // }
+
         foreach ($entranceData as &$e) {
-            $e['totalEarnings'] = number_format($e['totalEarnings'], 0, ',', ' ');
-            $e['fullTicketsEarnings'] = number_format($e['fullTicketsEarnings'], 0, ',', ' ');
-            $e['halfTicketsEarnings'] = number_format($e['halfTicketsEarnings'], 0, ',', ' ');
-            $e['paymentMethods']['cash'] = number_format($e['paymentMethods']['cash'], 0, ',', ' ');
-            $e['paymentMethods']['qr'] = number_format($e['paymentMethods']['qr'], 0, ',', ' ');
+            $e['totalEarnings'] = $e['totalEarnings'];
+            $e['fullTicketsEarnings'] = $e['fullTicketsEarnings'];
+            $e['halfTicketsEarnings'] = $e['halfTicketsEarnings'];
+            $e['paymentMethods']['cash'] = $e['paymentMethods']['cash'];
+            $e['paymentMethods']['qr'] = $e['paymentMethods']['qr'];
         }
 
         $paymentMethodChartData = [
@@ -396,12 +404,12 @@ final class MatchController extends AbstractController
 
         $dto = new MatchStatisticsDto(
             match: $match,
-            totalEarnings: number_format($totalEarnings, 0, ',', ' '),
+            totalEarnings: $totalEarnings,
             totalTickets: $fullTicketsCount + $halfTicketsCount,
             fullTicketsCount: $fullTicketsCount,
-            fullTicketsEarnings: number_format($fullTicketsEarnings, 0, ',', ' '),
+            fullTicketsEarnings: $fullTicketsEarnings,
             halfTicketsCount: $halfTicketsCount,
-            halfTicketsEarnings: number_format($halfTicketsEarnings, 0, ',', ' '),
+            halfTicketsEarnings: $halfTicketsEarnings,
             salesOverTime: $statsData['salesOverTime'],
             entrancesStats: array_values($entranceData),
             paymentMethodStats: $paymentMethodChartData,
