@@ -18,7 +18,7 @@ import useAuth from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "./ui/alert";
 import { AlertCircleIcon } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export function LoginForm({ className }: React.ComponentProps<"form">) {
   const { fetchData } = useApi();
@@ -31,6 +31,7 @@ export function LoginForm({ className }: React.ComponentProps<"form">) {
     },
   });
   const [searchParams] = useSearchParams();
+  const [err, setErr] = useState<string | null>(null);
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: FieldValues) => {
@@ -63,6 +64,7 @@ export function LoginForm({ className }: React.ComponentProps<"form">) {
         type: "manual",
         message: error.message as string,
       });
+      setErr(JSON.stringify(error.name, null, 2));
     },
   });
 
@@ -100,13 +102,16 @@ export function LoginForm({ className }: React.ComponentProps<"form">) {
             Přihlaste se pomocí svého emailu a hesla.
           </p>
           {form.formState.errors.root && (
-            <Alert variant={"destructive"}>
-              <AlertCircleIcon />
-              {/* <AlertTitle>Chyba při přihlášení</AlertTitle> */}
-              <AlertDescription>
-                {form.formState.errors.root.message}
-              </AlertDescription>
-            </Alert>
+            <>
+              <Alert variant={"destructive"}>
+                <AlertCircleIcon />
+                {/* <AlertTitle>Chyba při přihlášení</AlertTitle> */}
+                <AlertDescription>
+                  {form.formState.errors.root.message}
+                </AlertDescription>
+              </Alert>
+              <pre>{JSON.stringify(err, null, 2)}</pre>
+            </>
           )}
         </div>
         <div className="grid gap-6">

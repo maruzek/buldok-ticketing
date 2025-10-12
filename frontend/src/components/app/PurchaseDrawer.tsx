@@ -17,24 +17,33 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import QrDialog from "./QrDialog";
-import { Controller, FieldValues, useForm } from "react-hook-form";
+import { FieldValues, useForm } from "react-hook-form";
 import { PurchaseHistory } from "@/types/PurchaseHistory";
 import { TicketPrices } from "@/types/TicketPrices";
 import useApi from "@/hooks/useApi";
 import { Card, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Input } from "../ui/input";
-import { Slider } from "../ui/slider";
 import { Label } from "../ui/label";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PaymentStateMap } from "@/types/PaymentStateMap";
 
+import TicketCounter from "./TicketCounter";
+
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
 type PurchaseDrawerProps = {
   matchID: string | undefined;
   ticketPrices: TicketPrices | null;
   onNewQrPayment: (vs: string) => void;
-  // paymentStates: { [key: string]: { status: string; message?: string } };
   paymentStates: PaymentStateMap;
 };
 
@@ -64,13 +73,39 @@ export default function PurchaseDrawer({
           <DialogHeader>
             <DialogTitle>Zaznamenat nákup</DialogTitle>
           </DialogHeader>
-          <PaymentForm
-            ticketPrices={ticketPrices}
-            matchID={matchID}
-            setPurchaseFormOpened={setOpen}
-            onNewQrPayment={onNewQrPayment}
-            paymentStates={paymentStates}
-          />
+          {ticketPrices && (
+            <>
+              <div className="grid grid-cols-2 gap-4 px-5 mb-4">
+                <Card className="max-h-[100px]">
+                  <CardHeader>
+                    <CardDescription>Plná cena</CardDescription>
+                    <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
+                      {ticketPrices?.fullTicket} Kč
+                    </CardTitle>
+                  </CardHeader>
+                  <p></p>
+                  <span className="font-bold"></span>
+                </Card>
+                <Card className="max-h-[100px]">
+                  <CardHeader>
+                    <CardDescription>Poloviční cena</CardDescription>
+                    <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
+                      {ticketPrices?.halfTicket} Kč
+                    </CardTitle>
+                  </CardHeader>
+                  <p></p>
+                  <span className="font-bold"></span>
+                </Card>
+              </div>
+              <PaymentForm
+                ticketPrices={ticketPrices}
+                matchID={matchID}
+                setPurchaseFormOpened={setOpen}
+                onNewQrPayment={onNewQrPayment}
+                paymentStates={paymentStates}
+              />
+            </>
+          )}
         </DialogContent>
       </Dialog>
     );
@@ -87,15 +122,64 @@ export default function PurchaseDrawer({
         <DrawerHeader className="text-left">
           <DrawerTitle>Zaznamenat nákup</DrawerTitle>
         </DrawerHeader>
-        <PaymentForm
-          ticketPrices={ticketPrices}
-          matchID={matchID}
-          setPurchaseFormOpened={setOpen}
-          onNewQrPayment={onNewQrPayment}
-          paymentStates={paymentStates}
-        />
+        {ticketPrices && (
+          <>
+            <TicketPricesDisplay ticketPrices={ticketPrices} />
+            <PaymentForm
+              ticketPrices={ticketPrices}
+              matchID={matchID}
+              setPurchaseFormOpened={setOpen}
+              onNewQrPayment={onNewQrPayment}
+              paymentStates={paymentStates}
+            />
+          </>
+        )}
       </DrawerContent>
     </Drawer>
+  );
+}
+
+function TicketPricesDisplay({
+  ticketPrices,
+}: {
+  ticketPrices: TicketPrices | null;
+}) {
+  return (
+    <div className="mb-4 px-5">
+      <h4 className="text-sm text-muted-foreground">Ceny vstupenek</h4>
+      <Table className="text-center">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="text-center">Plná cena</TableHead>
+            <TableHead className="text-center">Poloviční cena</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell>{ticketPrices?.fullTicket} Kč</TableCell>
+            <TableCell>{ticketPrices?.halfTicket} Kč</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </div>
+    // <div className="grid grid-cols-2 gap-4 px-5 mb-4">
+    //   <Card className="max-h-[100px]">
+    //     <CardHeader>
+    //       <CardDescription>Plná cena</CardDescription>
+    //       <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
+    //         {ticketPrices?.fullTicket} Kč
+    //       </CardTitle>
+    //     </CardHeader>
+    //   </Card>
+    //   <Card className="max-h-[100px]">
+    //     <CardHeader>
+    //       <CardDescription>Poloviční cena</CardDescription>
+    //       <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
+    //         {ticketPrices?.halfTicket} Kč
+    //       </CardTitle>
+    //     </CardHeader>
+    //   </Card>
+    // </div>
   );
 }
 
@@ -112,7 +196,7 @@ function PaymentForm({
   onNewQrPayment: (vs: string) => void;
   paymentStates: PaymentStateMap;
 }) {
-  const { watch, handleSubmit, control } = useForm({
+  const { watch, handleSubmit, control, setValue } = useForm({
     defaultValues: { fullTickets: 0, halfTickets: 0 },
   });
 
@@ -173,6 +257,19 @@ function PaymentForm({
   const fullTicketsValue = watch("fullTickets", 0);
   const halfTicketsValue = watch("halfTickets", 0);
 
+  const increment = (field: "fullTickets" | "halfTickets") => {
+    // @ts-expect-error the input can become a string so it has to be parsed at all times
+    setValue(field, (parseInt(watch(field)) || 0) + 1);
+  };
+
+  const decrement = (field: "fullTickets" | "halfTickets") => {
+    const currentValue = watch(field);
+    if (currentValue > 0) {
+      // @ts-expect-error the input can become a string so it has to be parsed at all times
+      setValue(field, (parseInt(currentValue) || 0) - 1);
+    }
+  };
+
   const onQrRequest = async () => {
     if (!ticketPrices) return;
 
@@ -205,146 +302,84 @@ function PaymentForm({
     }
   };
 
+  if (!ticketPrices) return null;
+
   return (
-    <>
-      {ticketPrices && (
-        <>
-          <div className="grid grid-cols-2 gap-4 px-5 mb-4">
-            <Card className="max-h-[100px]">
-              <CardHeader>
-                <CardDescription>Plná cena</CardDescription>
-                <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-                  {ticketPrices?.fullTicket} Kč
-                </CardTitle>
-              </CardHeader>
-              <p></p>
-              <span className="font-bold"></span>
-            </Card>
-            <Card className="max-h-[100px]">
-              <CardHeader>
-                <CardDescription>Poloviční cena</CardDescription>
-                <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-                  {ticketPrices?.halfTicket} Kč
-                </CardTitle>
-              </CardHeader>
-              <p></p>
-              <span className="font-bold"></span>
-            </Card>
+    <form
+      className="flex flex-col gap-4"
+      onSubmit={handleSubmit((data) => purchase(data))}
+    >
+      <div className="px-5">
+        <div className="flex flex-col gap-3">
+          <Label htmlFor="fullTickets">Počet plných vstupenek:</Label>
+          <TicketCounter
+            control={control}
+            onIncrement={increment}
+            onDecrement={decrement}
+            ticketType="fullTickets"
+          />
+        </div>
+        <div className="flex flex-col gap-3 mt-4">
+          <Label htmlFor="halfTickets" className="">
+            Počet polovičních vstupenek:
+          </Label>
+          <TicketCounter
+            control={control}
+            onIncrement={increment}
+            onDecrement={decrement}
+            ticketType="halfTickets"
+          />
+        </div>
+        <div className="flex flex-col gap-1 mt-4">
+          <div className="flex flex-row justify-between items-center">
+            <p>Plné vstupenky: </p>
+            <span className="font-bold">
+              {fullTicketsValue * ticketPrices?.fullTicket} Kč
+            </span>
           </div>
-          <form
-            className="flex flex-col gap-4"
-            onSubmit={handleSubmit((data) => purchase(data))}
+          <div className="flex flex-row justify-between items-center">
+            <p>Poloviční vstupenky: </p>
+            <span className="font-bold">
+              {halfTicketsValue * ticketPrices?.halfTicket} Kč
+            </span>
+          </div>
+          <hr className="my-2" />
+          <div className="flex flex-row justify-between items-center font-bold">
+            <p>Cena celkem: </p>
+            <span>
+              {fullTicketsValue * ticketPrices?.fullTicket +
+                halfTicketsValue * ticketPrices?.halfTicket}{" "}
+              Kč
+            </span>
+          </div>
+        </div>
+      </div>
+      <DrawerFooter>
+        <DrawerClose asChild>
+          <Button
+            type="submit"
+            className="w-full cursor-pointer"
+            disabled={fullTicketsValue + halfTicketsValue === 0}
           >
-            <div className="px-5">
-              <div className="flex flex-col gap-3">
-                <Controller
-                  control={control}
-                  name="fullTickets"
-                  render={({ field }) => (
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="flex flex-row justify-between items-center w-full">
-                        <Label htmlFor="fullTickets">
-                          Počet plných vstupenek:{" "}
-                        </Label>
-                        <Input
-                          type="number"
-                          {...field}
-                          className="w-1/5"
-                          min={0}
-                        />
-                      </div>
-                      <Slider
-                        value={[field.value]}
-                        max={10}
-                        min={0}
-                        step={1}
-                        onValueChange={([v]) => field.onChange(v)}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-              <div className="flex flex-col gap-3 mt-4">
-                <Controller
-                  control={control}
-                  name="halfTickets"
-                  render={({ field }) => (
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="flex flex-row justify-between items-center w-full">
-                        <Label htmlFor="halfTickets">
-                          Počet polovičních vstupenek:{" "}
-                        </Label>
-                        <Input
-                          type="number"
-                          {...field}
-                          className="w-1/5"
-                          min={0}
-                        />
-                      </div>
-                      <Slider
-                        value={[field.value]}
-                        max={10}
-                        step={1}
-                        min={0}
-                        onValueChange={([v]) => field.onChange(v)}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-              <div className="flex flex-col gap-1 mt-4">
-                <div className="flex flex-row justify-between items-center">
-                  <p>Plné vstupenky: </p>
-                  <span className="font-bold">
-                    {fullTicketsValue * ticketPrices?.fullTicket} Kč
-                  </span>
-                </div>
-                <div className="flex flex-row justify-between items-center">
-                  <p>Poloviční vstupenky: </p>
-                  <span className="font-bold">
-                    {halfTicketsValue * ticketPrices?.halfTicket} Kč
-                  </span>
-                </div>
-                <hr className="my-2" />
-                <div className="flex flex-row justify-between items-center font-bold">
-                  <p>Cena celkem: </p>
-                  <span>
-                    {fullTicketsValue * ticketPrices?.fullTicket +
-                      halfTicketsValue * ticketPrices?.halfTicket}{" "}
-                    Kč
-                  </span>
-                </div>
-              </div>
-            </div>
-            <DrawerFooter className="">
-              <DrawerClose asChild>
-                <Button
-                  type="submit"
-                  className="w-full cursor-pointer"
-                  disabled={fullTicketsValue + halfTicketsValue === 0}
-                >
-                  Platba hotovostí
-                </Button>
-              </DrawerClose>
-              <QrDialog
-                fullPrice={
-                  fullTicketsValue * ticketPrices?.fullTicket +
-                  halfTicketsValue * ticketPrices?.halfTicket
-                }
-                onQrRequest={onQrRequest}
-                qrData={qrData}
-                isQrLoading={isQrLoading}
-                triggerDisabled={fullTicketsValue + halfTicketsValue === 0}
-                setPurchaseFormOpened={setPurchaseFormOpened}
-                livePaymentState={paymentStates[qrData?.vs as string]}
-              />
-              <DrawerClose asChild>
-                <Button variant="outline">Zrušit</Button>
-              </DrawerClose>
-            </DrawerFooter>
-          </form>
-        </>
-      )}
-    </>
+            Platba hotovostí
+          </Button>
+        </DrawerClose>
+        <QrDialog
+          fullPrice={
+            fullTicketsValue * ticketPrices?.fullTicket +
+            halfTicketsValue * ticketPrices?.halfTicket
+          }
+          onQrRequest={onQrRequest}
+          qrData={qrData}
+          isQrLoading={isQrLoading}
+          triggerDisabled={fullTicketsValue + halfTicketsValue === 0}
+          setPurchaseFormOpened={setPurchaseFormOpened}
+          livePaymentState={paymentStates[qrData?.vs as string]}
+        />
+        <DrawerClose asChild>
+          <Button variant="outline">Zrušit</Button>
+        </DrawerClose>
+      </DrawerFooter>
+    </form>
   );
 }

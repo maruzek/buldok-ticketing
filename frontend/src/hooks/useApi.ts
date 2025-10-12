@@ -9,7 +9,7 @@ type FetchOptions = RequestInit & {
 };
 
 type ApiHook = {
-  fetchData: <T>(endpoint: string, options: RequestInit) => Promise<T>;
+  fetchData: <T>(endpoint: string, options: FetchOptions) => Promise<T>;
 };
 
 let isRefreshing = false;
