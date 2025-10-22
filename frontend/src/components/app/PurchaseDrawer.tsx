@@ -21,7 +21,6 @@ import { FieldValues, useForm } from "react-hook-form";
 import { PurchaseHistory } from "@/types/PurchaseHistory";
 import { TicketPrices } from "@/types/TicketPrices";
 import useApi from "@/hooks/useApi";
-import { Card, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Label } from "../ui/label";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -33,7 +32,6 @@ import TicketCounter from "./TicketCounter";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -75,28 +73,16 @@ export default function PurchaseDrawer({
           </DialogHeader>
           {ticketPrices && (
             <>
-              <div className="grid grid-cols-2 gap-4 px-5 mb-4">
-                <Card className="max-h-[100px]">
-                  <CardHeader>
-                    <CardDescription>Plná cena</CardDescription>
-                    <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-                      {ticketPrices?.fullTicket} Kč
-                    </CardTitle>
-                  </CardHeader>
-                  <p></p>
-                  <span className="font-bold"></span>
-                </Card>
-                <Card className="max-h-[100px]">
-                  <CardHeader>
-                    <CardDescription>Poloviční cena</CardDescription>
-                    <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-                      {ticketPrices?.halfTicket} Kč
-                    </CardTitle>
-                  </CardHeader>
-                  <p></p>
-                  <span className="font-bold"></span>
-                </Card>
-              </div>
+              <TicketPricesDisplay ticketPrices={ticketPrices} />
+              {/* {ticketPrices.fullTicket <= 0 || ticketPrices.halfTicket <= 0 ? (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertDescription>
+                    Upozornění: Ceny vstupenek jsou nastaveny na 0 Kč. Prosím
+                    aktualizujte ceny v administraci před zaznamenáváním nákupů.
+                  </AlertDescription>
+                </Alert>
+              ) : null} */}
+
               <PaymentForm
                 ticketPrices={ticketPrices}
                 matchID={matchID}
@@ -144,14 +130,19 @@ function TicketPricesDisplay({
 }: {
   ticketPrices: TicketPrices | null;
 }) {
+  const classes = `text-center ${
+    ticketPrices?.fullTicket == 0 || ticketPrices?.halfTicket == 0
+      ? "text-red-500"
+      : ""
+  }`;
   return (
     <div className="mb-4 px-5">
       <h4 className="text-sm text-muted-foreground">Ceny vstupenek</h4>
-      <Table className="text-center">
+      <Table className={classes}>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-center">Plná cena</TableHead>
-            <TableHead className="text-center">Poloviční cena</TableHead>
+            <TableHead className={classes}>Plná cena</TableHead>
+            <TableHead className={classes}>Poloviční cena</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -162,24 +153,6 @@ function TicketPricesDisplay({
         </TableBody>
       </Table>
     </div>
-    // <div className="grid grid-cols-2 gap-4 px-5 mb-4">
-    //   <Card className="max-h-[100px]">
-    //     <CardHeader>
-    //       <CardDescription>Plná cena</CardDescription>
-    //       <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-    //         {ticketPrices?.fullTicket} Kč
-    //       </CardTitle>
-    //     </CardHeader>
-    //   </Card>
-    //   <Card className="max-h-[100px]">
-    //     <CardHeader>
-    //       <CardDescription>Poloviční cena</CardDescription>
-    //       <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-    //         {ticketPrices?.halfTicket} Kč
-    //       </CardTitle>
-    //     </CardHeader>
-    //   </Card>
-    // </div>
   );
 }
 

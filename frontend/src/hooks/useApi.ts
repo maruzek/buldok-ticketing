@@ -83,7 +83,6 @@ const useApi = (): ApiHook => {
 
         if (!response.ok) {
           const errorBody = await response.json().catch(() => ({}));
-
           const errorMessage =
             errorBody.detail ||
             errorBody.message ||

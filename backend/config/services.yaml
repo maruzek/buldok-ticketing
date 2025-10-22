@@ -31,6 +31,14 @@ services:
           method: onAuthenticationSuccess,
         }
 
+  App\EventListener\AuthenticationFailureListener:
+    tags:
+      - {
+          name: kernel.event_listener,
+          event: lexik_jwt_authentication.on_authentication_failure,
+          method: onAuthenticationFailure,
+        }
+
   App\Service\FioApiService:
     arguments:
       $fioApiToken: "%env(FIO_API_TOKEN)%"

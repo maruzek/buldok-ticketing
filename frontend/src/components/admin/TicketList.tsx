@@ -31,6 +31,7 @@ const TicketList = () => {
   } = useQuery({
     queryKey: ["ticket-prices"],
     queryFn: () => fetchData<TicketPrices>("/ticket-prices", { method: "GET" }),
+    retry: false,
   });
 
   const form = useForm({
@@ -46,7 +47,10 @@ const TicketList = () => {
       toast.error("Nastala chyba při načítání cen vstupenek.");
       form.setError("root", {
         type: "server",
-        message: "Nastala chyba při načítání cen vstupenek.",
+        message:
+          fetchError?.message ||
+          fetchError ||
+          "Nastala chyba při načítání cen vstupenek.",
       });
     }
   }, [isFetchError, fetchError, form]);
@@ -74,17 +78,18 @@ const TicketList = () => {
           halfTicket: data.halfTicket,
         }),
       }),
-    onSuccess: (response) => {
-      if (response.status == "ok") {
-        queryClient.invalidateQueries({ queryKey: ["ticket-prices"] });
-        toast.success("Ceny vstupenek byly úspěšně aktualizovány.");
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ticket-prices"] });
+      toast.success("Ceny vstupenek byly úspěšně aktualizovány.");
     },
     onError: (error: any) => {
       console.error("Error updating ticket prices:", error);
       form.setError("root", {
         type: "server",
-        message: "Nastala chyba při aktualizaci cen vstupenek.",
+        message:
+          fetchError?.message ||
+          error ||
+          "Nastala chyba při načítání cen vstupenek.",
       });
       toast.error(
         error?.message ||
@@ -108,7 +113,7 @@ const TicketList = () => {
       </CardHeader>
       <CardContent>
         {form.formState.errors.root && (
-          <Alert variant={"destructive"}>
+          <Alert variant={"destructive"} className="mb-4">
             <AlertCircle />
             <AlertDescription>
               {form.formState.errors.root.message}

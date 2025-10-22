@@ -31,7 +31,7 @@ final class TicketPricesController extends AbstractController
         $halfTicket = $ticketTypeRepository->findOneBy(['name' => 'halfTicket']);
 
         if (!$fullTicket || !$halfTicket) {
-            throw new NotFoundHttpException('Ticket types not found');
+            throw new NotFoundHttpException('Ceny vstupenek nebyly nastaveny. Prosím, nastavte je před používáním aplikace a jejich zobrazením.');
         }
 
         return $this->json([
@@ -58,35 +58,43 @@ final class TicketPricesController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
-        if (!$fullTicket || !$halfTicket) {
-            $fullTicket = new TicketType();
-            $fullTicket->setName('fullTicket');
-            $fullTicket->setPrice(0);
-            $halfTicket = new TicketType();
-            $halfTicket->setName('halfTicket');
-            $halfTicket->setPrice(0);
-            $em->persist($fullTicket);
-            $em->persist($halfTicket);
-            $em->flush();
-            return $this->json([
-                'message' => 'Ticket types not found, created new ones',
-            ], 404);
+        if (!isset($data['fullTicket']) && !isset($data['halfTicket'])) {
+            throw new BadRequestException('Musíte zadat obě ceny k aktualizaci');
         }
 
         if (!isset($data['fullTicket'])) {
-            throw new BadRequestException('fullTicketPrice is required');
+            throw new BadRequestException('Plná cena je povinná');
         }
 
         if (!isset($data['halfTicket'])) {
-            throw new BadRequestException('halfTicketPrice is required');
+            throw new BadRequestException('Poloviční cena je povinná');
         }
 
         if (!is_numeric($data['fullTicket']) || $data['fullTicket'] < 0) {
-            throw new BadRequestException('fullTicketPrice must be a non-negative number');
+            throw new BadRequestException('Plná cena musí být nezáporné číslo');
         }
 
         if (!is_numeric($data['halfTicket']) || $data['halfTicket'] < 0) {
-            throw new BadRequestException('halfTicketPrice must be a non-negative number');
+            throw new BadRequestException('Poloviční cena musí být nezáporné číslo');
+        }
+
+        if (!$fullTicket || !$halfTicket) {
+            $fullTicket = new TicketType();
+            $fullTicket->setName('fullTicket');
+            $fullTicket->setPrice((float)$data['fullTicket'] ?? 0);
+            $halfTicket = new TicketType();
+            $halfTicket->setName('halfTicket');
+            $halfTicket->setPrice((float)$data['halfTicket'] ?? 0);
+
+            $em->persist($fullTicket);
+            $em->persist($halfTicket);
+            $em->flush();
+
+            return $this->json([
+                'message' => 'Ceny vytvořeny, nyní je můžete aktualizovat',
+                'fullTicket' => $fullTicket->getPrice(),
+                'halfTicket' => $halfTicket->getPrice(),
+            ], 201);
         }
 
         try {
@@ -94,12 +102,12 @@ final class TicketPricesController extends AbstractController
             $halfTicket->setPrice((float)$data['halfTicket']);
             $em->flush();
         } catch (\Exception $e) {
-            throw new BadRequestException('Failed to update ticket prices');
+            throw new BadRequestException('Chyba při aktualizaci cen');
         }
 
         return $this->json([
             'status' => 'ok',
-            'message' => 'Ceny úspešně aktualizovány',
+            'message' => 'Ceny úspěšně aktualizovány',
         ], 200);
     }
 }
