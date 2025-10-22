@@ -214,7 +214,7 @@ const Ticketing = () => {
             </div>
           ) : match?.purchases?.length === 0 ? (
             <div>
-              <p className="text-gray-500 mt-3">
+              <p className="text-gray-500 mt-3 mx-4">
                 Zatím nebyly zaznamenány žádné nákupy.
               </p>
             </div>
