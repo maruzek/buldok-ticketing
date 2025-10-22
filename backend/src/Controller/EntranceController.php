@@ -47,13 +47,12 @@ final class EntranceController extends AbstractController
         }
 
         if ($em->getRepository(Entrance::class)->findOneBy(['name' => $data['name']])) {
-            throw new BadRequestHttpException('Entrance with this name already exists');
+            throw new BadRequestHttpException('Vstup s tímto názvem již existuje');
         }
 
         $entrance = new Entrance();
 
         $entrance->setName($data['name']);
-        // $entrance->setLocation($data['location'] ?? null);
 
         try {
             $em->persist($entrance);
@@ -111,9 +110,7 @@ final class EntranceController extends AbstractController
         $entrance = $entranceRepository->findOneBy(['id' => $id]);
 
         if (!$entrance) {
-            return $this->json([
-                'error' => 'Entrance not found',
-            ], JsonResponse::HTTP_NOT_FOUND);
+            throw new NotFoundHttpException('Vstup nenalezen');
         }
 
         $users = [];
@@ -140,26 +137,25 @@ final class EntranceController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function editById(Entrance $entrance, int $id, EntranceRepository $entranceRepository, Request $request, EntityManagerInterface $em): JsonResponse
+    public function editById(Entrance $entrance, Request $request, EntityManagerInterface $em): JsonResponse
     {
         if (!$entrance) {
-            throw new NotFoundHttpException('Entrance not found');
+            throw new NotFoundHttpException('Vstup nenalezen');
         }
 
         $data = json_decode($request->getContent(), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new BadRequestHttpException('Invalid JSON');
+            throw new BadRequestHttpException('Neplatná data');
         }
 
         $entrance->setName($data['name'] ?? $entrance->getName());
-        // $entrance->setLocation($data['location'] ?? $entrance->getLocation());
         $entrance->setStatus(isset($data['status']) ? EntranceStatus::from($data['status']) : $entrance->getStatus());
 
         try {
             $em->flush();
         } catch (\Exception $e) {
-            throw new Exception('Failed to update entrance', 500);
+            throw new Exception('Nastala chyba při aktualizaci vstupu', 500);
         }
 
         $json = $this->serializer->serialize($entrance, 'json', [
@@ -184,7 +180,7 @@ final class EntranceController extends AbstractController
     public function removeById(Entrance $entrance, EntityManagerInterface $em): JsonResponse
     {
         if (!$entrance) {
-            throw new NotFoundHttpException('Entrance not found');
+            throw new NotFoundHttpException('Vstup nenalezen');
         }
 
         $entrance->setStatus(EntranceStatus::REMOVED);
@@ -192,7 +188,7 @@ final class EntranceController extends AbstractController
         try {
             $em->flush();
         } catch (\Exception $e) {
-            throw new Exception('Failed to update entrance' . $e->getMessage(), 500);
+            throw new Exception('Nastala chyba při aktualizaci vstupu' . $e->getMessage(), 500);
         }
 
         $json = $this->serializer->serialize($entrance, 'json', [

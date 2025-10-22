@@ -31,40 +31,37 @@ final class SeasonController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new BadRequestException('Invalid JSON data');
+            throw new BadRequestException('Neplatná data');
         }
 
         if (empty($data['years']) || empty($data['startAt']) || empty($data['endAt'])) {
-            throw new BadRequestException('Missing required fields');
+            throw new BadRequestException('Chybí povinná pole');
         }
-        // check if startDate is before endDate
-        // check if the season with the same name already exists
-        // check if first year is less than the second by one year
 
         $newStartAt = new \DateTime($data['startAt']);
         $newEndAt = new \DateTime($data['endAt']);
 
 
         if ($newStartAt >= $newEndAt) {
-            throw new BadRequestException('Start date must be before end date');
+            throw new BadRequestException('Datum začátku musí být před datem konce');
         }
 
         $overlappingSeasons = $this->seasonRepository->findOverlappingSeasons($newStartAt, $newEndAt);
         if (count($overlappingSeasons) > 0) {
-            throw new BadRequestException('The provided date range overlaps with an existing season');
+            throw new BadRequestException('Poskytnutý časový rámec se překrývá s existující sezónou');
         }
 
         if (strlen($data['years']) !== 9 || !preg_match('/^\d{4}\/\d{4}$/', $data['years'])) {
-            throw new BadRequestException('Season name must be in format YYYY/YYYY');
+            throw new BadRequestException('Název sezóny musí být ve formátu YYYY/YYYY');
         }
 
         [$firstYear, $secondYear] = explode('/', $data['years']);
         if ((int)$secondYear !== (int)$firstYear + 1) {
-            throw new BadRequestException('The second year must be the first year plus one');
+            throw new BadRequestException('Druhý rok musí být o jeden větší než první rok');
         }
 
         if ($this->seasonRepository->findOneBy(['years' => $data['years']])) {
-            throw new BadRequestException('Season in those years already exists');
+            throw new BadRequestException('Sezóna v těchto letech již existuje');
         }
 
         $season = new Season();
@@ -78,7 +75,7 @@ final class SeasonController extends AbstractController
             $this->em->persist($season);
             $this->em->flush();
         } catch (\Exception $e) {
-            throw new \RuntimeException('Failed to create season: ' . $e->getMessage());
+            throw new \RuntimeException('Nastala chyba při vytváření sezóny: ' . $e->getMessage());
         }
 
         $json = $this->serializer->serialize($season, 'json', ['groups' => 'season:read']);
@@ -100,7 +97,7 @@ final class SeasonController extends AbstractController
         $season = $this->seasonRepository->findSeasonByDate($currentDate);
 
         if ($season === null) {
-            throw new NotFoundHttpException('No active season found for the current date');
+            throw new NotFoundHttpException('Aktivní sezóna nebyla nalezena pro aktuální datum');
         }
 
         $dashData = $this->seasonRepository->getDashboardStats($season->getId());
@@ -122,43 +119,43 @@ final class SeasonController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new BadRequestException('Invalid JSON data');
+            throw new BadRequestException('Neplatná data');
         }
 
         if (empty($data['years']) || empty($data['startAt']) || empty($data['endAt'])) {
-            throw new BadRequestException('Missing required fields');
+            throw new BadRequestException('Chybí povinná pole');
         }
 
         $newStartAt = new \DateTime($data['startAt']);
         $newEndAt = new \DateTime($data['endAt']);
 
         if ($newStartAt >= $newEndAt) {
-            throw new BadRequestException('Start date must be before end date');
+            throw new BadRequestException('Datum začátku musí být před datem konce');
         }
 
         $overlappingSeasons = $this->seasonRepository->findOverlappingSeasons($newStartAt, $newEndAt);
         foreach ($overlappingSeasons as $overlappingSeason) {
             if ($overlappingSeason->getId() !== $season->getId()) {
-                throw new BadRequestException('The provided date range overlaps with an existing season');
+                throw new BadRequestException('Poskytnutý časový rámec se překrývá s existující sezónou');
             }
         }
 
         if (strlen($data['years']) !== 9 || !preg_match('/^\d{4}\/\d{4}$/', $data['years'])) {
-            throw new BadRequestException('Season name must be in format YYYY/YYYY');
+            throw new BadRequestException('Název sezóny musí být ve formátu YYYY/YYYY');
         }
 
         [$firstYear, $secondYear] = explode('/', $data['years']);
         if ((int)$secondYear !== (int)$firstYear + 1) {
-            throw new BadRequestException('The second year must be the first year plus one');
+            throw new BadRequestException('Druhý rok musí být o jeden větší než první rok');
         }
 
         $existingSeason = $this->seasonRepository->findOneBy(['years' => $data['years']]);
         if ($existingSeason && $existingSeason->getId() !== $season->getId()) {
-            throw new BadRequestException('Season in those years already exists');
+            throw new BadRequestException('Sezóna v těchto letech již existuje');
         }
 
         if (SeasonStatus::tryFrom($data['status']) === null) {
-            throw new BadRequestException('Invalid status value');
+            throw new BadRequestException('Neplatná hodnota stavu');
         }
 
         $season->setYears($data['years']);
@@ -169,7 +166,7 @@ final class SeasonController extends AbstractController
         try {
             $this->em->flush();
         } catch (\Exception $e) {
-            throw new \RuntimeException('Failed to update season: ' . $e->getMessage());
+            throw new \RuntimeException('Nastala chyba při aktualizaci sezóny: ' . $e->getMessage());
         }
 
         $json = $this->serializer->serialize($season, 'json', ['groups' => 'season:read']);
@@ -182,7 +179,7 @@ final class SeasonController extends AbstractController
         $dashboardData = $seasonRepository->getDashboardStats($id);
 
         if ($dashboardData === null) {
-            throw new NotFoundHttpException('Season not found');
+            throw new NotFoundHttpException('Sezóna nebyla nalezena');
         }
 
         $json = $this->serializer->serialize($dashboardData, 'json', [

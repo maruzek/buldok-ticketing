@@ -52,21 +52,21 @@ final class PurchaseController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new BadRequestException('Invalid JSON');
+            throw new BadRequestException('Neplatná data');
         }
 
         /** @var User|null $authUser */
         $authUser = $this->getUser();
 
         if (!$authUser || !$authUser->getEntrance()) {
-            throw new AccessDeniedException('User not found or entrance not defined');
+            throw new AccessDeniedException('Uživatel nenalezen nebo nemá definovaný vchod');
         }
 
         $fullTicketsCount = $data['fullTickets'] ?? 0;
         $halfTicketsCount = $data['halfTickets'] ?? 0;
 
         if ($fullTicketsCount + $halfTicketsCount <= 0) {
-            throw new BadRequestException('At least one ticket must be purchased');
+            throw new BadRequestException('Musí být zakoupen alespoň jeden lístek');
         }
 
         $purchase = new Purchase();
@@ -106,7 +106,7 @@ final class PurchaseController extends AbstractController
             $this->em->persist($purchase);
             $this->em->flush();
         } catch (\Exception $e) {
-            throw new \RuntimeException('Failed to create purchase: ' . $e->getMessage());
+            throw new \RuntimeException('Nastala chyba při vytváření nákupu: ' . $e->getMessage());
         }
 
 
@@ -143,14 +143,12 @@ final class PurchaseController extends AbstractController
         $match = $gameRepository->findOneBy(['id' => $id]);
 
         if (!$match) {
-            return $this->json([
-                'error' => 'Match not found',
-            ], Response::HTTP_NOT_FOUND);
+            throw new NotFoundHttpException('Zápas nenalezen');
         }
 
         if ($match->getStatus() === 'FINISHED' && !in_array("ROLE_ADMIN", $this->getUser()->getRoles())) {
             return $this->json([
-                'error' => 'Match is finished',
+                'error' => 'Zápas je ukončen',
             ], Response::HTTP_BAD_REQUEST);
         }
 
@@ -192,14 +190,14 @@ final class PurchaseController extends AbstractController
         $purchase = $purchaseRepository->find($id);
 
         if (!$purchase) {
-            throw new NotFoundHttpException('Purchase not found');
+            throw new NotFoundHttpException('Nákup nenalezen');
         }
         // TODO Soft delete
         try {
             $em->remove($purchase);
             $em->flush();
         } catch (\Exception $e) {
-            throw new \Exception('Failed to delete purchase: ' . $e->getMessage(), 500);
+            throw new \Exception('Nastala chyba při mazání nákupu: ' . $e->getMessage(), 500);
         }
 
         return $this->json([

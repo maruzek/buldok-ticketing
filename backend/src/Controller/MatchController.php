@@ -45,15 +45,15 @@ final class MatchController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new BadRequestHttpException('Invalid JSON');
+            throw new BadRequestHttpException('Neplatná data');
         }
 
         if (!isset($data['rival'])) {
-            throw new BadRequestHttpException('Rival is required');
+            throw new BadRequestHttpException('Soupeř je povinný');
         }
 
         if (!isset($data['matchDate'])) {
-            throw new BadRequestHttpException('Date is required');
+            throw new BadRequestHttpException('Datum zápasu je povinný');
         }
 
         $match = new Game();
@@ -62,12 +62,12 @@ final class MatchController extends AbstractController
         try {
             $date = new \DateTime($data['matchDate']);
         } catch (\Exception $e) {
-            throw new BadRequestHttpException('Invalid date format');
+            throw new BadRequestHttpException('Neplatný formát data');
         }
 
         $season = $this->seasonRepository->findSeasonByDate($date);
         if (!$season) {
-            throw new BadRequestHttpException('Season not found for the given date');
+            throw new BadRequestHttpException('Sezóna nenalezena pro dané datum');
         }
 
         $match->setPlayedAt($date);
@@ -79,7 +79,7 @@ final class MatchController extends AbstractController
             $em->persist($match);
             $em->flush();
         } catch (\Exception $e) {
-            throw new BadRequestHttpException('Failed to create match');
+            throw new BadRequestHttpException('Nastala chyba při vytváření zápasu');
         }
 
         $json = $this->serializer->serialize($match, 'json', ['groups' => ['match:read']]);
@@ -110,7 +110,7 @@ final class MatchController extends AbstractController
                     $statusEnum = MatchStatus::tryFrom($statusParam);
 
                     if (!$statusEnum) {
-                        throw new BadRequestHttpException('Invalid status value, must be one of: ' . implode(', ', array_column(MatchStatus::cases(), 'value')));
+                        throw new BadRequestHttpException('Neplatná hodnota stavu, musí být jednou z: ' . implode(', ', array_column(MatchStatus::cases(), 'value')));
                     }
 
                     $statuses[] = $statusEnum;
@@ -118,7 +118,7 @@ final class MatchController extends AbstractController
                 $statusEnum = MatchStatus::tryFrom($statusParam);
 
                 if (!$statusEnum) {
-                    throw new BadRequestHttpException('Invalid status value, must be one of: ' . implode(', ', array_column(MatchStatus::cases(), 'value')));
+                    throw new BadRequestHttpException('Neplatná hodnota stavu, musí být jednou z: ' . implode(', ', array_column(MatchStatus::cases(), 'value')));
                 }
 
                 $statuses[] = $statusEnum;
@@ -147,11 +147,11 @@ final class MatchController extends AbstractController
     public function getMatchById(Game $match, int $id, GameRepository $gameRepository, SerializerInterface $serializer): JsonResponse
     {
         if (!$match) {
-            throw new NotFoundHttpException('Match not found');
+            throw new NotFoundHttpException('Zápas nenalezen');
         }
 
         if ($match->getStatus() === MatchStatus::FINISHED && !in_array("ROLE_ADMIN", $this->getUser()->getRoles())) {
-            throw new BadRequestHttpException('Match is canceled');
+            throw new BadRequestHttpException('Zápas byl zrušen');
         }
 
         $json = $serializer->serialize($match, 'json', ['groups' => ['match:read']]);
@@ -174,16 +174,16 @@ final class MatchController extends AbstractController
     public function editMatchById(Game $match, Request $request, EntityManagerInterface $em): JsonResponse
     {
         if (!$match) {
-            throw new NotFoundHttpException('Match not found');
+            throw new NotFoundHttpException('Zápas nenalezen');
         }
 
         $data = json_decode($request->getContent(), true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new BadRequestHttpException('Invalid JSON');
+            throw new BadRequestHttpException('Neplatná data');
         }
 
         if (!isset($data['rival'])) {
-            throw new BadRequestHttpException('Rival is required');
+            throw new BadRequestHttpException('Soupeř je povinný');
         }
 
         $activeMatches = $this->gameRepository->findBy(['status' => MatchStatus::ACTIVE]);
@@ -199,7 +199,7 @@ final class MatchController extends AbstractController
                 $enumStatus = MatchStatus::from($data['status']);
                 $match->setStatus($enumStatus);
             } catch (\ValueError $e) {
-                throw new BadRequestHttpException('Invalid status value, must be one of: ' . implode(', ', array_column(MatchStatus::cases(), 'value')));
+                throw new BadRequestHttpException('Neplatná hodnota stavu, musí být jednou z: ' . implode(', ', array_column(MatchStatus::cases(), 'value')));
             }
         }
 
@@ -210,7 +210,7 @@ final class MatchController extends AbstractController
         try {
             $em->flush();
         } catch (\Exception $e) {
-            throw new BadRequestHttpException('Failed to update match');
+            throw new BadRequestHttpException('Nastala chyba při aktualizaci zápasu');
         }
 
         $json = $this->serializer->serialize($match, 'json', ['groups' => ['match:read']]);
@@ -233,20 +233,15 @@ final class MatchController extends AbstractController
     public function removeMatchById(Game $match, Request $request, EntityManagerInterface $em): JsonResponse
     {
         if (!$match) {
-            throw new NotFoundHttpException('Match not found');
+            throw new NotFoundHttpException('Zápas nenalezen');
         }
-
-        // $data = json_decode($request->getContent(), true);
-        // if (json_last_error() !== JSON_ERROR_NONE) {
-        //     throw new BadRequestHttpException('Invalid JSON');
-        // }
 
         $match->setStatus(MatchStatus::REMOVED);
 
         try {
             $em->flush();
         } catch (\Exception $e) {
-            throw new BadRequestHttpException('Failed to update match');
+            throw new BadRequestHttpException('Nastala chyba při aktualizaci zápasu');
         }
 
         $json = $this->serializer->serialize($match, 'json', ['groups' => ['match:read']]);
@@ -270,7 +265,7 @@ final class MatchController extends AbstractController
         $match = $gameRepository->findLastActiveMatch();
 
         if (!$match) {
-            throw new NotFoundHttpException('No active match found');
+            throw new NotFoundHttpException('Žádný aktivní zápas nenalezen');
         }
 
         $json = $serializer->serialize($match, 'json', [
@@ -303,7 +298,7 @@ final class MatchController extends AbstractController
 
         $entrance = $authUser->getEntrance();
         if (!$entrance) {
-            throw new BadRequestHttpException('User does not have an entrance assigned');
+            throw new BadRequestHttpException('Uživatel nemá přiřazený vstup');
         }
 
         if ($limit || (!$isAdmin && !$limit)) {
@@ -313,11 +308,11 @@ final class MatchController extends AbstractController
         }
 
         if (!$match) {
-            throw new NotFoundHttpException('Match not found');
+            throw new NotFoundHttpException('Zápas nenalezen');
         }
 
         if ($match->getStatus() === MatchStatus::FINISHED && !$isAdmin) {
-            throw new BadRequestHttpException('Match has finished');
+            throw new BadRequestHttpException('Zápas již skončil');
         }
 
         $match = $serializer->serialize($match, 'json', [
@@ -341,7 +336,6 @@ final class MatchController extends AbstractController
         $halfTicketsCount = 0;
         $fullTicketsEarnings = 0;
         $halfTicketsEarnings = 0;
-        $entrancesStats = [];
         $paymentMethodStats = ['cash' => 0, 'qr' => 0];
 
         $entranceData = [];
@@ -380,14 +374,6 @@ final class MatchController extends AbstractController
                 $halfTicketsEarnings += $earnings;
             }
         }
-
-        // foreach ($entranceData as &$e) {
-        //     $e['totalEarnings'] = number_format($e['totalEarnings'], 0, ',', ' ');
-        //     $e['fullTicketsEarnings'] = number_format($e['fullTicketsEarnings'], 0, ',', ' ');
-        //     $e['halfTicketsEarnings'] = number_format($e['halfTicketsEarnings'], 0, ',', ' ');
-        //     $e['paymentMethods']['cash'] = number_format($e['paymentMethods']['cash'], 0, ',', ' ');
-        //     $e['paymentMethods']['qr'] = number_format($e['paymentMethods']['qr'], 0, ',', ' ');
-        // }
 
         foreach ($entranceData as &$e) {
             $e['totalEarnings'] = $e['totalEarnings'];

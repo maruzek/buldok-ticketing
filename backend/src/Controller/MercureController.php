@@ -20,7 +20,7 @@ class MercureController extends AbstractController
         $paymentId = $payload['paymentId'] ?? null;
 
         if (!$paymentId) {
-            throw new BadRequestException('Payment ID is required');
+            throw new BadRequestException('ID platby je povinné');
         }
 
         $topic = 'https://buldok.app/payments/' . $paymentId;

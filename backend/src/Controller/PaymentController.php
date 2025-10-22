@@ -20,23 +20,27 @@ use Symfony\Component\Mercure\Update;
 
 final class PaymentController extends AbstractController
 {
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+    ) {}
+
     #[Route('/api/payment', name: 'app_payment', methods: ['POST'])]
-    public function index(Request $request, VariableSymbolService $vsGenerator, EntityManagerInterface $em, PurchaseRepository $purchaseRepository): JsonResponse
+    public function index(Request $request, VariableSymbolService $vsGenerator, PurchaseRepository $purchaseRepository): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new BadRequestException('Invalid JSON');
+            throw new BadRequestException('Neplatná data');
         }
 
         if ($data['amount'] <= 0) {
-            throw new BadRequestException('Amount must be greater than zero');
+            throw new BadRequestException('Částka musí být větší než nula');
         }
 
         $purchase = $purchaseRepository->find($data['purchaseId'] ?? 0);
 
         if (!$purchase) {
-            throw new NotFoundHttpException('Purchase not found');
+            throw new NotFoundHttpException('Nákup nenalezen');
         }
 
         $vs = $vsGenerator->generateUnique();
@@ -49,17 +53,17 @@ final class PaymentController extends AbstractController
         $payment->setGeneratedAt(new \DateTimeImmutable());
         $payment->setPurchase($purchase);
 
-        $em->persist($payment);
-        $em->flush();
+        $this->em->persist($payment);
+        $this->em->flush();
 
         return $this->json([
-            'message' => 'Payment processed successfully!',
+            'message' => 'Platba byla úspěšně zpracována!',
             'vs' => $vs,
         ]);
     }
 
     #[Route('/api/payment/test', name: 'app_payment_get', methods: ['GET'])]
-    public function getTest(EntityManagerInterface $em, FioApiService $fioApiService): JsonResponse
+    public function getTest(FioApiService $fioApiService): JsonResponse
     {
         $result = $fioApiService->fetchNewTransactions();
 
@@ -67,10 +71,10 @@ final class PaymentController extends AbstractController
     }
 
     #[Route('/api/payment/test-push', name: 'app_payment_get', methods: ['GET'])]
-    public function pushTest(Request $request, EntityManagerInterface $em, HubInterface $hub): JsonResponse
+    public function pushTest(Request $request, HubInterface $hub): JsonResponse
     {
         $paymentId = $request->query->get('vs');
-        $payment = $em->getRepository(Payment::class)->findOneBy(["variableSymbol" => $paymentId]);
+        $payment = $this->em->getRepository(Payment::class)->findOneBy(["variableSymbol" => $paymentId]);
 
         if ($payment) {
             $topic = 'https://my-ticketing-app.com/payments/' . $paymentId;
@@ -85,12 +89,12 @@ final class PaymentController extends AbstractController
     }
 
     #[Route('/api/payment/cancel', name: 'app_payment_get', methods: ['POST'])]
-    public function cancelPayment(Request $request, EntityManagerInterface $em, HubInterface $hub, LoggerInterface $logger, PaymentRepository $paymentRepository): JsonResponse
+    public function cancelPayment(Request $request, HubInterface $hub, LoggerInterface $logger, PaymentRepository $paymentRepository): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         $paymentId = $data['vs'] ?? null;
         if ($paymentId === null) {
-            throw new BadRequestException('Variable symbol (vs) is required');
+            throw new BadRequestException('Chybí variabilní symbol platby');
         }
 
         /** @var Payment $payment */
@@ -100,9 +104,9 @@ final class PaymentController extends AbstractController
             $payment->setStatus('canceled');
             $purchase = $payment->getPurchase();
             if ($purchase) {
-                $em->remove($purchase);
+                $this->em->remove($purchase);
             }
-            $em->flush();
+            $this->em->flush();
             $logger->info('Payment canceled', ['payment_id' => $payment->getId()]);
 
             $topic = 'https://my-ticketing-app.com/payments/' . $paymentId;
@@ -114,7 +118,7 @@ final class PaymentController extends AbstractController
         }
 
         return $this->json([
-            'message' => 'Payment canceled',
+            'message' => 'Platba byla zrušena',
             'vs' => $paymentId,
         ], JsonResponse::HTTP_OK);
     }

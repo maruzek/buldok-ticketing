@@ -72,7 +72,7 @@ final class UserController extends AbstractController
         $user = $this->userRepository->findOneBy(['id' => $id]);
 
         if (!$user) {
-            throw new NotFoundHttpException('User not found');
+            throw new NotFoundHttpException('Uživatel nenalezen');
         }
 
         $json = $this->serializer->serialize($user, 'json', [
@@ -100,14 +100,14 @@ final class UserController extends AbstractController
     public function editById(User $user, int $id, Request $request): JsonResponse
     {
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new BadRequestException('Invalid JSON data');
+            throw new BadRequestException('Neplatná data');
         }
 
         // $user = $userRepository->findOneBy(['id' => $id]);
         $data = json_decode($request->getContent(), true);
 
         if (!$user) {
-            throw new NotFoundHttpException('User not found');
+            throw new NotFoundHttpException('Uživatel nenalezen');
         }
 
         $validations = $this->validator->validate($data);
@@ -120,7 +120,7 @@ final class UserController extends AbstractController
                     'message' => $violation->getMessage(),
                 ];
             }
-            throw new BadRequestException('Validation failed: ' . json_encode($errors));
+            throw new BadRequestException('Nastala chyba: ' . json_encode($errors));
         }
 
         $newRoles = $data['roles'] ?? [];
@@ -129,7 +129,7 @@ final class UserController extends AbstractController
         $authUser = $this->getUser();
 
         if (in_array("ROLE_ADMIN", $user->getRoles()) && !in_array("ROLE_ADMIN", $newRoles) && $user->getId() == $authUser->getId()) {
-            throw new ForbiddenOverwriteException('You cannot remove your own admin role');
+            throw new ForbiddenOverwriteException('Nemůžete odebrat svou vlastní roli správce');
         }
 
         if (!in_array("ROLE_USER", $newRoles)) {
@@ -157,7 +157,7 @@ final class UserController extends AbstractController
         try {
             $this->em->flush();
         } catch (\Exception $e) {
-            throw new \Exception('Error updating user', 500);
+            throw new \Exception('Nastala chyba při aktualizaci uživatele: ' . $e->getMessage());
         }
 
         $json = $this->serializer->serialize($user, 'json', [
@@ -189,7 +189,7 @@ final class UserController extends AbstractController
         $authUser = $this->getUser();
 
         if ($user->getId() == $authUser->getId()) {
-            throw new BadRequestException('You cannot remove yourself');
+            throw new BadRequestException('Nemůžete odebrat svou vlastní roli správce');
         }
 
         $user->setStatus(UserStatus::REMOVED);
@@ -197,7 +197,7 @@ final class UserController extends AbstractController
         try {
             $this->em->flush();
         } catch (\Exception $e) {
-            throw new \Exception('Error updating user', 500);
+            throw new \Exception('Nastala chyba při aktualizaci uživatele: ' . $e->getMessage());
         }
 
         $json = $this->serializer->serialize($user, 'json', [
@@ -223,7 +223,7 @@ final class UserController extends AbstractController
     {
         $query = $request->query->get('q');
         if (!$query) {
-            throw new BadRequestException('Query parameter "q" is required');
+            throw new BadRequestException('Parametr dotazu "q" je povinný');
         }
 
         $users = $this->userRepository->searchByEmailOrName($query);
@@ -253,7 +253,7 @@ final class UserController extends AbstractController
         $user = $this->userRepository->find($id);
 
         if (!$user) {
-            throw new NotFoundHttpException('User not found');
+            throw new NotFoundHttpException('Uživatel nenalezen');
         }
 
         $user->setEntrance(null);
@@ -261,7 +261,7 @@ final class UserController extends AbstractController
         try {
             $this->em->flush();
         } catch (\Exception $e) {
-            throw new Exception('Failed to remove entrance from user', 500);
+            throw new Exception('Nastala chyba při odstraňování vstupu z uživatele: ' . $e->getMessage(), 500);
         }
 
         return $this->json(['status' => 'ok'], JsonResponse::HTTP_OK);
@@ -284,19 +284,19 @@ final class UserController extends AbstractController
         $user = $this->userRepository->find($id);
 
         if (!$user) {
-            throw new NotFoundHttpException('User not found');
+            throw new NotFoundHttpException('Uživatel nenalezen');
         }
 
         $data = json_decode($request->getContent(), true);
 
         if (!isset($data['entranceID'])) {
-            throw new BadRequestHttpException('Entrance ID is required');
+            throw new BadRequestHttpException('ID vstupu je povinný');
         }
 
         $entrance = $this->entranceRepository->find($data['entranceID']);
 
         if (!$entrance) {
-            throw new NotFoundHttpException('Entrance not found');
+            throw new NotFoundHttpException('Vstup nenalezen');
         }
 
         $user->setEntrance($entrance);
@@ -304,7 +304,7 @@ final class UserController extends AbstractController
         try {
             $this->em->flush();
         } catch (\Exception $e) {
-            throw new Exception('Failed to change entrance for user', 500);
+            throw new Exception('Nastala chyba při změně vstupu pro uživatele: ' . $e->getMessage(), 500);
         }
 
         return $this->json(['status' => 'ok'], JsonResponse::HTTP_OK);
