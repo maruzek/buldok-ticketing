@@ -23,7 +23,7 @@ RUN apk add --no-cache \
     && rm -rf /var/cache/apk/*
 
 
-FROM composer:2 AS vendor
+FROM composer:2-php8.2 AS vendor
 WORKDIR /app
 COPY composer.json composer.lock ./
 # cache ~/.composer across builds
