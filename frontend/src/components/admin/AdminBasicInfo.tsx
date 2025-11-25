@@ -18,9 +18,10 @@ const AdminBasicInfo = () => {
   const { data: latestMatch } = useQuery<Match | null>({
     queryKey: ["last-active-match"],
     queryFn: () =>
-      fetchData<Match | null>("/admin/matches/last-active-match", {
+      fetchData<Match | null>("/v1/matches/active", {
         method: "GET",
       }),
+    retry: false,
   });
 
   const {

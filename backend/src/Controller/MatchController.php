@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\DTO\CreateMatchDto;
 use App\DTO\MatchStatisticsDto;
 use App\Entity\Game;
 use App\Entity\User;
@@ -17,10 +18,9 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-//TODO: refactor controller to match admin structure
-// TODO: Automatically Fetching Objects (EntityValueResolver)
-// #[Route('/api/match', name: 'app_match_')]
+#[Route('/api/v1/matches', name: 'api_matches_')]
 final class MatchController extends AbstractController
 {
     public function __construct(
@@ -30,7 +30,7 @@ final class MatchController extends AbstractController
         private readonly SeasonRepository $seasonRepository,
     ) {}
 
-    #[Route('/api/admin/match/create', name: 'create', methods: ['POST'])]
+    #[Route('/', name: 'create', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN')]
     /**
      * Create a new match.
@@ -40,44 +40,42 @@ final class MatchController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function createMatch(Request $request, EntityManagerInterface $em): JsonResponse
+    public function createMatch(Request $request, ValidatorInterface $validator): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new BadRequestHttpException('Neplatná data');
+        try {
+            /** @var CreateMatchDto $dto */
+            $dto = $this->serializer->deserialize($request->getContent(), CreateMatchDto::class, 'json');
+        } catch (\Exception $e) {
+            throw new BadRequestHttpException('Neplatný formát JSON');
         }
 
-        if (!isset($data['rival'])) {
-            throw new BadRequestHttpException('Soupeř je povinný');
-        }
-
-        if (!isset($data['matchDate'])) {
-            throw new BadRequestHttpException('Datum zápasu je povinný');
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            $messages = [];
+            foreach ($errors as $error) {
+                $messages[] = $error->getMessage();
+            }
+            throw new BadRequestHttpException(implode('; ', $messages));
         }
 
         $match = new Game();
-        $match->setRival($data['rival']);
+        $match->setRival($dto->rival);
+        $match->setDescription($dto->description);
 
-        try {
-            $date = new \DateTime($data['matchDate']);
-        } catch (\Exception $e) {
-            throw new BadRequestHttpException('Neplatný formát data');
-        }
+        $date = new \DateTime($dto->playedAt);
+        $match->setPlayedAt($date);
 
         $season = $this->seasonRepository->findSeasonByDate($date);
         if (!$season) {
             throw new BadRequestHttpException('Sezóna nenalezena pro dané datum');
         }
 
-        $match->setPlayedAt($date);
-        $match->setDescription($data['description'] ?? null);
         $match->setStatus(MatchStatus::ACTIVE);
         $match->setSeason($season);
 
         try {
-            $em->persist($match);
-            $em->flush();
+            $this->em->persist($match);
+            $this->em->flush();
         } catch (\Exception $e) {
             throw new BadRequestHttpException('Nastala chyba při vytváření zápasu');
         }
@@ -87,7 +85,7 @@ final class MatchController extends AbstractController
         return JsonResponse::fromJsonString($json, JsonResponse::HTTP_CREATED);
     }
 
-    #[Route('/api/matches', name: 'list_matches', methods: ['GET'])]
+    #[Route('/', name: 'list', methods: ['GET'])]
     /**
      * List all matches.
      *
@@ -134,7 +132,36 @@ final class MatchController extends AbstractController
         return JsonResponse::fromJsonString($result, JsonResponse::HTTP_OK);
     }
 
-    #[Route('/api/match/{id}', name: 'get_match', methods: ['GET'])]
+    #[Route('/active', name: 'active', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    /**
+     * Get the currently active match.
+     *
+     * Retrieves the most recent match with ACTIVE status, ordered by play date.
+     * Used for AdminBasicInfo to display current match information.
+     *
+     * @return JsonResponse The active match data with game and purchase information
+     * @throws NotFoundHttpException When no active match exists
+     */
+    public function getActive(): JsonResponse
+    {
+        $match = $this->gameRepository->findLastActiveMatch();
+
+        if (!$match) {
+            throw new NotFoundHttpException('Žádný aktivní zápas nenalezen');
+        }
+
+        $json = $this->serializer->serialize($match, 'json', [
+            'groups' => ['game:admin_dashboard', 'purchase:admin_game_summary'],
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
+
+        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
+    }
+
+    #[Route('/{id}', name: 'get_match', methods: ['GET'], requirements: ['id' => '\d+'])]
     /**
      * Get match by ID.
      *
@@ -144,22 +171,18 @@ final class MatchController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function getMatchById(Game $match, int $id, GameRepository $gameRepository, SerializerInterface $serializer): JsonResponse
+    public function getMatchById(Game $match): JsonResponse
     {
-        if (!$match) {
-            throw new NotFoundHttpException('Zápas nenalezen');
-        }
-
         if ($match->getStatus() === MatchStatus::FINISHED && !in_array("ROLE_ADMIN", $this->getUser()->getRoles())) {
             throw new BadRequestHttpException('Zápas byl zrušen');
         }
 
-        $json = $serializer->serialize($match, 'json', ['groups' => ['match:read']]);
+        $json = $this->serializer->serialize($match, 'json', ['groups' => ['match:read']]);
 
         return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
     }
 
-    #[Route('/api/admin/match/{id}', name: 'edit_match', methods: ['PUT'])]
+    #[Route('/{id}', name: 'edit_match', methods: ['PUT'], requirements: ['id' => '\d+'])]
     #[IsGranted('ROLE_ADMIN')]
     /**
      * Edit a match by ID.
@@ -171,12 +194,8 @@ final class MatchController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function editMatchById(Game $match, Request $request, EntityManagerInterface $em): JsonResponse
+    public function editMatchById(Game $match, Request $request): JsonResponse
     {
-        if (!$match) {
-            throw new NotFoundHttpException('Zápas nenalezen');
-        }
-
         $data = json_decode($request->getContent(), true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new BadRequestHttpException('Neplatná data');
@@ -208,7 +227,7 @@ final class MatchController extends AbstractController
         $match->setDescription($data['description'] ?? $match->getDescription());
 
         try {
-            $em->flush();
+            $this->em->flush();
         } catch (\Exception $e) {
             throw new BadRequestHttpException('Nastala chyba při aktualizaci zápasu');
         }
@@ -218,7 +237,7 @@ final class MatchController extends AbstractController
         return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
     }
 
-    #[Route('/api/admin/match/{id}', name: 'remove_match', methods: ['DELETE'])]
+    #[Route('/{id}', name: 'remove', methods: ['DELETE'], requirements: ['id' => '\d+'])]
     #[IsGranted('ROLE_ADMIN')]
     /**
      * Set a match as removed by ID.
@@ -230,16 +249,12 @@ final class MatchController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function removeMatchById(Game $match, Request $request, EntityManagerInterface $em): JsonResponse
+    public function removeMatchById(Game $match): JsonResponse
     {
-        if (!$match) {
-            throw new NotFoundHttpException('Zápas nenalezen');
-        }
-
         $match->setStatus(MatchStatus::REMOVED);
 
         try {
-            $em->flush();
+            $this->em->flush();
         } catch (\Exception $e) {
             throw new BadRequestHttpException('Nastala chyba při aktualizaci zápasu');
         }
@@ -249,83 +264,43 @@ final class MatchController extends AbstractController
         return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
     }
 
-    // TODO: prehodnotit, co se ma vracet
-    #[Route('/api/admin/matches/last-active-match', name: 'last_active_match', methods: ['GET'])]
-    #[IsGranted('ROLE_ADMIN')]
-    /**
-     * Get the last active match.
-     *
-     * @param GameRepository $gameRepository The repository to fetch the last active match.
-     * @param SerializerInterface $serializer The serializer to format the response.
-     *
-     * @return JsonResponse
-     */
-    public function getLastActiveMatch(GameRepository $gameRepository, SerializerInterface $serializer): JsonResponse
-    {
-        $match = $gameRepository->findLastActiveMatch();
-
-        if (!$match) {
-            throw new NotFoundHttpException('Žádný aktivní zápas nenalezen');
-        }
-
-        $json = $serializer->serialize($match, 'json', [
-            'groups' => ['game:admin_dashboard', 'purchase:admin_game_summary'],
-            'circular_reference_handler' => function ($object) {
-                return $object->getId();
-            },
-        ]);
-
-        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
-    }
-
-    #[Route('/api/matches/{id}/stats', name: 'full_match_stats', methods: ['GET'])]
+    #[Route('/{id}/ticketing', name: 'full_match_stats', methods: ['GET'], requirements: ['id' => '\d+'])]
     #[IsGranted('ROLE_USER')]
     /**
-     * Get full statistics for a match by ID.
+     * Get match details with purchase history for the ticketing page.
      *
      * @param GameRepository $gameRepository The repository to fetch the last active match.
      * @param SerializerInterface $serializer The serializer to format the response.
      *
      * @return JsonResponse
      */
-    public function getFullMatchStats(int $id, GameRepository $gameRepository, SerializerInterface $serializer, Request $request): JsonResponse
+    public function getTicketingDetail(Game $match): JsonResponse
     {
-        $isAdmin = $this->isGranted('ROLE_ADMIN');
         /** @var User $authUser */
         $authUser = $this->getUser();
-
-        $limit = $request->query->get('userEntranceLimit') == 1 ? true : false;
 
         $entrance = $authUser->getEntrance();
         if (!$entrance) {
             throw new BadRequestHttpException('Uživatel nemá přiřazený vstup');
         }
 
-        if ($limit || (!$isAdmin && !$limit)) {
-            $match = $gameRepository->findWithFilteredPurchases($id, $entrance->getId());
-        } else if ($isAdmin && !$limit) {
-            $match = $gameRepository->find($id);
-        }
+        $matchData = $this->gameRepository->findWithFilteredPurchases($match->getId(), $entrance->getId());
 
-        if (!$match) {
+        if (!$matchData) {
             throw new NotFoundHttpException('Zápas nenalezen');
         }
 
-        if ($match->getStatus() === MatchStatus::FINISHED && !$isAdmin) {
-            throw new BadRequestHttpException('Zápas již skončil');
-        }
-
-        $match = $serializer->serialize($match, 'json', [
+        $result = $this->serializer->serialize($matchData, 'json', [
             'groups' => ['game:admin_dashboard', 'purchase:admin_game_summary'],
             'circular_reference_handler' => function ($object) {
                 return $object->getId();
             },
         ]);
 
-        return JsonResponse::fromJsonString($match, JsonResponse::HTTP_OK);
+        return JsonResponse::fromJsonString($result, JsonResponse::HTTP_OK);
     }
 
-    #[Route('/api/matches/{id}/dash-stats', name: 'full_match_dash_stats', methods: ['GET'])]
+    #[Route('/{id}/dashboard', name: 'dashboard', methods: ['GET'], requirements: ['id' => '\d+'])]
     #[IsGranted('ROLE_ADMIN')]
     public function getFullMatchDashboardStats(Game $match): JsonResponse
     {

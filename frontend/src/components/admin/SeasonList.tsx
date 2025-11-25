@@ -31,7 +31,7 @@ const SeasonList = () => {
     queryFn: () => fetchData<Season[]>("/season", { method: "GET" }),
   });
   console.log(seasons);
-
+  // TODO: FATAL delete smeruje na matches a ne na season
   const { mutate: deleteMatch, isPending: isDeleting } = useMutation({
     mutationFn: (id: number) =>
       fetchData(`/admin/match/${id}`, { method: "DELETE" }),

@@ -61,7 +61,7 @@ const EditMatch = () => {
   const { mutate, isPending: isSubmitting } = useMutation({
     mutationFn: (data: FieldValues) => {
       console.log(data);
-      return fetchData<Match>(`/admin/match/${matchID}`, {
+      return fetchData<Match>(`/v1/match/${matchID}`, {
         method: "PUT",
         body: JSON.stringify(data),
       });

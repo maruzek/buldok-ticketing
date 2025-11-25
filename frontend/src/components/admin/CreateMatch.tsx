@@ -46,8 +46,8 @@ const CreateMatch = () => {
       const [hours, minutes, seconds] = data.matchTime.split(":").map(Number);
       dateTime.setHours(hours, minutes, seconds);
 
-      data.matchDate = dateTime;
-      return fetchData<Match>("/admin/match/create", {
+      data.playedAt = dateTime;
+      return fetchData<Match>("/v1/matches/", {
         method: "POST",
         body: JSON.stringify(data),
       });

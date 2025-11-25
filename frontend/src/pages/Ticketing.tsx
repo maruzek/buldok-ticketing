@@ -44,7 +44,7 @@ const Ticketing = () => {
   } = useQuery<Match, ApiError>({
     queryKey: ["match", matchID],
     queryFn: () =>
-      fetchData<Match>(`/matches/${matchID}/stats?userEntranceLimit=1`, {
+      fetchData<Match>(`/v1/matches/${matchID}/ticketing`, {
         method: "GET",
       }),
     enabled: !!matchID,

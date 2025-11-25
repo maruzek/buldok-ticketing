@@ -36,12 +36,12 @@ const MatchList = () => {
     error,
   } = useQuery<Match[], ApiError>({
     queryKey: ["matches"],
-    queryFn: () => fetchData<Match[]>("/matches", { method: "GET" }),
+    queryFn: () => fetchData<Match[]>("/v1/matches", { method: "GET" }),
   });
 
   const { mutate: deleteMatch, isPending: isDeleting } = useMutation({
     mutationFn: (id: number) =>
-      fetchData(`/admin/match/${id}`, { method: "DELETE" }),
+      fetchData(`/v1/matches/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       toast.success("Zápas byl úspěšně smazán.");
       queryClient.invalidateQueries({ queryKey: ["matches"] });

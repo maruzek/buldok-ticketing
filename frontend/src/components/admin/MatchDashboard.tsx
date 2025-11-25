@@ -76,7 +76,7 @@ const MatchDashboard = () => {
   } = useQuery<MatchDashboardStats, ApiError>({
     queryKey: ["match", matchID, "dashboard"],
     queryFn: () =>
-      fetchData<MatchDashboardStats>(`/matches/${matchID}/dash-stats`, {
+      fetchData<MatchDashboardStats>(`/v1/matches/${matchID}/dashboard`, {
         method: "GET",
       }),
     enabled: !!matchID,

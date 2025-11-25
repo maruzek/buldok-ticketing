@@ -20,7 +20,7 @@ const UserMatchList = () => {
   } = useQuery<Match[]>({
     queryKey: ["matches"],
     queryFn: () =>
-      fetchData<Match[]>("/matches?status=active", {
+      fetchData<Match[]>("/v1/matches?status=active", {
         method: "GET",
       }),
   });
