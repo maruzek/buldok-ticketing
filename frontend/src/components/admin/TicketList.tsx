@@ -72,7 +72,7 @@ const TicketList = () => {
 
   const { mutate, isPending: isSaving } = useMutation({
     mutationFn: (data: FieldValues) =>
-      fetchData<{ status: string; message: string }>("/ticket-prices/", {
+      fetchData<{ status: string; message: string }>("/v1/ticket-prices/", {
         method: "PUT",
         body: JSON.stringify({
           fullTicket: data.fullTicket,

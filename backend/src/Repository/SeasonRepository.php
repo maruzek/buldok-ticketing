@@ -8,6 +8,7 @@ use App\Entity\Purchase;
 use App\Entity\PurchaseItem;
 use App\Entity\Season;
 use App\Enum\MatchStatus;
+use App\Enum\SeasonStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
@@ -365,6 +366,19 @@ class SeasonRepository extends ServiceEntityRepository
             'averageAttendance' => $averageAttendance,
             'averageEarningsPerGame' => $averageEarningsPerGame,
         ];
+    }
+
+    /**
+     * @return Season[]
+     */
+    public function findAllExceptRemoved(): array
+    {
+        return $this->createQueryBuilder('s')
+            ->andWhere('s.status != :removedStatus')
+            ->setParameter('removedStatus', SeasonStatus::REMOVED)
+            ->orderBy('s.startAt', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 
     //    /**

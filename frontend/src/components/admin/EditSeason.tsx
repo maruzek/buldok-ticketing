@@ -40,7 +40,8 @@ const EditSeason = () => {
     error,
   } = useQuery<Season, ApiError>({
     queryKey: ["season", seasonID],
-    queryFn: () => fetchData<Season>(`/season/${seasonID}`, { method: "GET" }),
+    queryFn: () =>
+      fetchData<Season>(`/v1/seasons/${seasonID}`, { method: "GET" }),
     retry: false,
   });
 
@@ -74,9 +75,14 @@ const EditSeason = () => {
         });
         throw new Error("Konec sezóny musí být po jejím začátku.");
       }
-      return fetchData(`/season/${seasonID}`, {
+      const payload = {
+        ...data,
+        startAt: format(data.startAt, "yyyy-MM-dd"),
+        endAt: format(data.endAt, "yyyy-MM-dd"),
+      };
+      return fetchData(`/v1/seasons/${seasonID}`, {
         method: "PUT",
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
     },
     onSuccess: () => {

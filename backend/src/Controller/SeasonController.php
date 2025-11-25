@@ -10,12 +10,13 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 
-#[Route('/api/season', name: 'api_')]
+#[Route('/api/v1/seasons', name: 'api_v1_seasons_')]
 #[IsGranted('ROLE_ADMIN')]
 final class SeasonController extends AbstractController
 {
@@ -25,7 +26,7 @@ final class SeasonController extends AbstractController
         private readonly SeasonRepository $seasonRepository,
     ) {}
 
-    #[Route('/', name: 'create_season', methods: ['POST'])]
+    #[Route('/', name: 'create', methods: ['POST'])]
     public function createSeason(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -82,10 +83,10 @@ final class SeasonController extends AbstractController
         return JsonResponse::fromJsonString($json, JsonResponse::HTTP_CREATED);
     }
 
-    #[Route('/', name: 'list_seasons', methods: ['GET'])]
+    #[Route('/', name: 'list', methods: ['GET'])]
     public function listSeasons(): JsonResponse
     {
-        $seasons = $this->seasonRepository->findBy([], ['startAt' => 'DESC']);
+        $seasons = $this->seasonRepository->findAllExceptRemoved();
         $json = $this->serializer->serialize($seasons, 'json', ['groups' => 'season:read']);
         return JsonResponse::fromJsonString($json);
     }
@@ -106,7 +107,7 @@ final class SeasonController extends AbstractController
         return JsonResponse::fromJsonString($json);
     }
 
-    #[Route('/{id}', name: 'get_season_by_id', methods: ['GET'])]
+    #[Route('/{id}', name: 'get_by_id', methods: ['GET'])]
     public function getSeasonById(Season $season): JsonResponse
     {
         $json = $this->serializer->serialize($season, 'json', ['groups' => 'season:read']);
@@ -173,7 +174,34 @@ final class SeasonController extends AbstractController
         return JsonResponse::fromJsonString($json);
     }
 
-    #[Route('/{id}/dash-stats', name: 'season_dashboard_stats', methods: ['GET'])]
+    #[Route('/{id}', name: 'remove', methods: ['DELETE'], requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_ADMIN')]
+    /**
+     * Set a season as removed by ID.
+     *
+     * @param int $id The ID of the season to edit.
+     * @param SeasonRepository $seasonRepository The repository to fetch the season.
+     * @param Request $request The request containing the updated season data.
+     * @param EntityManagerInterface $em The entity manager to persist the changes.
+     *
+     * @return JsonResponse
+     */
+    public function removeById(Season $season): JsonResponse
+    {
+        $season->setStatus(SeasonStatus::REMOVED);
+
+        try {
+            $this->em->flush();
+        } catch (\Exception $e) {
+            throw new BadRequestHttpException('Nastala chyba při aktualizaci sezóny');
+        }
+
+        $json = $this->serializer->serialize($season, 'json', ['groups' => ['season:read']]);
+
+        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
+    }
+
+    #[Route('/{id}/dashboard', name: 'season_dashboard_stats', methods: ['GET'])]
     public function getDashboardStats(int $id, SeasonRepository $seasonRepository): JsonResponse
     {
         $dashboardData = $seasonRepository->getDashboardStats($id);

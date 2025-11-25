@@ -32,7 +32,7 @@ const AdminBasicInfo = () => {
   } = useQuery<SeasonDashboardStats, ApiError>({
     queryKey: ["season"],
     queryFn: () =>
-      fetchData<SeasonDashboardStats>(`/season/current`, {
+      fetchData<SeasonDashboardStats>(`/v1/seasons/current`, {
         method: "GET",
       }),
     retry: false,

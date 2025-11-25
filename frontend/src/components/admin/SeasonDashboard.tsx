@@ -84,35 +84,12 @@ const SeasonDashboard = () => {
   } = useQuery<SeasonDashboardStats, ApiError>({
     queryKey: ["season", seasonID, "dashboard"],
     queryFn: () =>
-      fetchData<SeasonDashboardStats>(`/season/${seasonID}/dash-stats`, {
+      fetchData<SeasonDashboardStats>(`/v1/seasons/${seasonID}/dashboard`, {
         method: "GET",
       }),
     enabled: !!seasonID,
     retry: false,
   });
-  console.log(seasonData);
-
-  //   type LocalizedSalesPoint = {
-  //     time: string;
-  //     sales: number;
-  //   };
-
-  //   const localizedSalesOverTime: LocalizedSalesPoint[] = useMemo(() => {
-  //     const data = seasonData?.salesOverTime ?? [];
-  //     return data.map((point): LocalizedSalesPoint => {
-  //       const [hours, minutes] = point.time.split(":");
-  //       const utcDate = new Date();
-  //       utcDate.setUTCHours(Number(hours), Number(minutes), 0, 0);
-
-  //       return {
-  //         sales: point.sales,
-  //         time: utcDate.toLocaleTimeString("cs-CZ", {
-  //           hour: "2-digit",
-  //           minute: "2-digit",
-  //         }),
-  //       };
-  //     });
-  //   }, [seasonData?.salesOverTime]);
 
   if (!seasonData) {
     return null;
@@ -145,16 +122,6 @@ const SeasonDashboard = () => {
       <h2 className="text-2xl font-bold mb-1">
         Přehled sezóny {season?.years}
       </h2>
-      {/* <p className="text-gray-600">
-        {season?.startedAt &&
-          new Date(season?.startedAt).toLocaleDateString("cs-CZ", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-      </p> */}
       <p className="text-gray-600">
         {season?.startAt &&
           new Date(season?.startAt).toLocaleDateString("cs-CZ", {

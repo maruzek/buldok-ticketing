@@ -60,9 +60,14 @@ const CreateSeason = () => {
         });
         throw new Error("Konec sezóny musí být po jejím začátku.");
       }
-      return fetchData("/season/", {
+      const payload = {
+        ...data,
+        startAt: format(data.startAt, "yyyy-MM-dd"),
+        endAt: format(data.endAt, "yyyy-MM-dd"),
+      };
+      return fetchData("/v1/seasons/", {
         method: "POST",
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
     },
     onSuccess: () => {

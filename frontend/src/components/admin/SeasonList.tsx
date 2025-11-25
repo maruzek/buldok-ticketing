@@ -28,13 +28,13 @@ const SeasonList = () => {
     error,
   } = useQuery<Season[], ApiError>({
     queryKey: ["seasons"],
-    queryFn: () => fetchData<Season[]>("/season", { method: "GET" }),
+    queryFn: () => fetchData<Season[]>("/v1/seasons/", { method: "GET" }),
   });
   console.log(seasons);
   // TODO: FATAL delete smeruje na matches a ne na season
   const { mutate: deleteMatch, isPending: isDeleting } = useMutation({
     mutationFn: (id: number) =>
-      fetchData(`/admin/match/${id}`, { method: "DELETE" }),
+      fetchData(`/v1/seasons/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       toast.success("Sezóna byla úspěšně smazána.");
       queryClient.invalidateQueries({ queryKey: ["seasons"] });
