@@ -50,8 +50,8 @@ export default function QrDialog({
   const paymentMessage = livePaymentState?.message;
   const { mutate: cancelPayment } = useMutation({
     mutationFn: () =>
-      fetchData("/payment/cancel", {
-        method: "POST",
+      fetchData("/v1/payments", {
+        method: "DELETE",
         body: JSON.stringify({ vs: qrData.vs }),
       }),
     onSuccess: (data) => {

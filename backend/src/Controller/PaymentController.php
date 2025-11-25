@@ -18,14 +18,18 @@ use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Mercure\Update;
 
+#[Route('/api/v1/payments', name: 'api_v1_payments_')]
 final class PaymentController extends AbstractController
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
+        private readonly LoggerInterface $logger,
+        private readonly PaymentRepository $paymentRepository,
+        private readonly HubInterface $hub
     ) {}
 
-    #[Route('/api/payment', name: 'app_payment', methods: ['POST'])]
-    public function index(Request $request, VariableSymbolService $vsGenerator, PurchaseRepository $purchaseRepository): JsonResponse
+    #[Route('', name: 'create', methods: ['POST'])]
+    public function create(Request $request, VariableSymbolService $vsGenerator, PurchaseRepository $purchaseRepository): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
@@ -62,34 +66,8 @@ final class PaymentController extends AbstractController
         ]);
     }
 
-    #[Route('/api/payment/test', name: 'app_payment_get', methods: ['GET'])]
-    public function getTest(FioApiService $fioApiService): JsonResponse
-    {
-        $result = $fioApiService->fetchNewTransactions();
-
-        return $this->json($result);
-    }
-
-    #[Route('/api/payment/test-push', name: 'app_payment_get', methods: ['GET'])]
-    public function pushTest(Request $request, HubInterface $hub): JsonResponse
-    {
-        $paymentId = $request->query->get('vs');
-        $payment = $this->em->getRepository(Payment::class)->findOneBy(["variableSymbol" => $paymentId]);
-
-        if ($payment) {
-            $topic = 'https://my-ticketing-app.com/payments/' . $paymentId;
-            $update = new Update(
-                $topic,
-                json_encode(['status' => 'completed'])
-            );
-            $hub->publish($update);
-        }
-
-        return $this->json($paymentId);
-    }
-
-    #[Route('/api/payment/cancel', name: 'app_payment_get', methods: ['POST'])]
-    public function cancelPayment(Request $request, HubInterface $hub, LoggerInterface $logger, PaymentRepository $paymentRepository): JsonResponse
+    #[Route('', name: 'cancel', methods: ['DELETE'])]
+    public function cancel(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         $paymentId = $data['vs'] ?? null;
@@ -98,7 +76,7 @@ final class PaymentController extends AbstractController
         }
 
         /** @var Payment $payment */
-        $payment = $paymentRepository->findOneBy(["variableSymbol" => $paymentId]);
+        $payment = $this->paymentRepository->findOneBy(["variableSymbol" => $paymentId]);
 
         if ($payment) {
             $payment->setStatus('canceled');
@@ -107,14 +85,14 @@ final class PaymentController extends AbstractController
                 $this->em->remove($purchase);
             }
             $this->em->flush();
-            $logger->info('Payment canceled', ['payment_id' => $payment->getId()]);
+            $this->logger->info('Payment canceled', ['payment_id' => $payment->getId()]);
 
             $topic = 'https://my-ticketing-app.com/payments/' . $paymentId;
             $update = new Update(
                 $topic,
                 json_encode(['status' => 'canceled'])
             );
-            $hub->publish($update);
+            $this->hub->publish($update);
         }
 
         return $this->json([

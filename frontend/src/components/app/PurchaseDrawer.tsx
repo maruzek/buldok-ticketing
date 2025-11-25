@@ -207,7 +207,7 @@ function PaymentForm({
     { id: number; amount: number }
   >({
     mutationFn: (data) =>
-      fetchData<PaymentResponse>("/payment", {
+      fetchData<PaymentResponse>("/v1/payments", {
         method: "POST",
         body: JSON.stringify({
           amount: data.amount,
