@@ -104,7 +104,9 @@ class GameRepository extends ServiceEntityRepository
             ->leftJoin('p.soldBy', 'sb')
             ->addSelect('sb')
             ->andWhere('g.id = :matchId')
-            ->setParameter('matchId', $matchId);
+            ->andWhere('g.status = :status')
+            ->setParameter('matchId', $matchId)
+            ->setParameter('status', MatchStatus::ACTIVE->value);
 
         if ($entranceId !== null) {
             $qb->setParameter('entranceId', $entranceId);

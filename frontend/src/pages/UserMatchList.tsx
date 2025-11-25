@@ -18,7 +18,7 @@ const UserMatchList = () => {
     error,
     isPending,
   } = useQuery<Match[]>({
-    queryKey: ["matches"],
+    queryKey: ["matches", "active"],
     queryFn: () =>
       fetchData<Match[]>("/v1/matches?status=active", {
         method: "GET",

@@ -40,7 +40,8 @@ const EditMatch = () => {
     error,
   } = useQuery<Match, ApiError>({
     queryKey: ["match", matchID],
-    queryFn: () => fetchData<Match>(`/match/${matchID}`, { method: "GET" }),
+    queryFn: () =>
+      fetchData<Match>(`/v1/matches/${matchID}`, { method: "GET" }),
     retry: false,
   });
 
@@ -61,7 +62,7 @@ const EditMatch = () => {
   const { mutate, isPending: isSubmitting } = useMutation({
     mutationFn: (data: FieldValues) => {
       console.log(data);
-      return fetchData<Match>(`/v1/match/${matchID}`, {
+      return fetchData<Match>(`/v1/matches/${matchID}`, {
         method: "PUT",
         body: JSON.stringify(data),
       });
