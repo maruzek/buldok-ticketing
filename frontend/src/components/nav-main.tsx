@@ -17,7 +17,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-//TODO: remove component
+
 export function NavMain({
   items,
 }: {

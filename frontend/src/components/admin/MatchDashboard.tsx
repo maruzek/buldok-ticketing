@@ -161,8 +161,6 @@ const MatchDashboard = () => {
     return <MatchError error={error!} matchID={matchID!} />;
   }
 
-  // TODO: use skeleton loader
-  //TODO: pridat tabluku se vsemi nakupy uplne dolu
   return (
     <ContentBoard
       cardAction={
