@@ -40,11 +40,11 @@ class Payment
 
     #[ORM\Column(nullable: true)]
     #[Groups(['purchase:table'])]
-    private ?int $bankAccountNumber = null;
+    private ?string $bankAccountNumber = null;
 
     #[ORM\Column(nullable: true)]
     #[Groups(['purchase:table'])]
-    private ?int $bankCode = null;
+    private ?string $bankCode = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['purchase:table'])]
@@ -155,24 +155,24 @@ class Payment
         return $this;
     }
 
-    public function getBankAccountNumber(): ?int
+    public function getBankAccountNumber(): ?string
     {
         return $this->bankAccountNumber;
     }
 
-    public function setBankAccountNumber(?int $bankAccountNumber): static
+    public function setBankAccountNumber(?string $bankAccountNumber): static
     {
         $this->bankAccountNumber = $bankAccountNumber;
 
         return $this;
     }
 
-    public function getBankCode(): ?int
+    public function getBankCode(): ?string
     {
         return $this->bankCode;
     }
 
-    public function setBankCode(?int $bankCode): static
+    public function setBankCode(?string $bankCode): static
     {
         $this->bankCode = $bankCode;
 
