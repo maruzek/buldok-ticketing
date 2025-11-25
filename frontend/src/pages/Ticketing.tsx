@@ -75,7 +75,6 @@ const Ticketing = () => {
     if (pending.length === 0) {
       return;
     }
-    // console.log("Setting up Mercure connections for:", pending);
 
     const eventSources: EventSource[] = [];
 
@@ -214,14 +213,14 @@ const Ticketing = () => {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="flex flex-col gap-4 text-balance">
-                  <div className="grid grid-cols-2 gap-4 mt-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                    <div>
+                  <div className="grid grid-cols-2  rounded-lg mt-4 gap-3">
+                    <div className="w-full h-full border border-gray-100 p-3 rounded-lg bg-gray-50">
                       <p className="text-gray-500 text-xs font-medium">
                         Hotově
                       </p>
                       <p className="font-bold text-lg text-gray-700">
                         {match?.purchases
-                          ?.filter((p) => !p.payment)
+                          ?.filter((p) => p.paymentType === "cash")
                           .reduce(
                             (acc, cur) =>
                               acc +
@@ -234,13 +233,13 @@ const Ticketing = () => {
                         Kč
                       </p>
                     </div>
-                    <div>
+                    <div className="w-full h-full border border-gray-100 p-3 rounded-lg bg-gray-50">
                       <p className="text-gray-500 text-xs font-medium">
                         QR Platby
                       </p>
                       <p className="font-bold text-lg">
                         {match?.purchases
-                          ?.filter((p) => p.payment)
+                          ?.filter((p) => p.paymentType === "qr")
                           .reduce(
                             (acc, cur) =>
                               acc +

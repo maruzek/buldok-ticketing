@@ -31,7 +31,7 @@ const PurchaseCard = ({ purchase, livePaymentState }: PurchaseCardProps) => {
 
   const { mutate: deletePurchase, isPending: isDeleting } = useMutation({
     mutationFn: (purchaseID: number) =>
-      fetchData(`/purchase/${purchaseID}`, {
+      fetchData(`/v1/purchases/${purchaseID}`, {
         method: "DELETE",
       }),
     onSuccess: () => {

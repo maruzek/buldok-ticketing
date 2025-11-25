@@ -8,6 +8,7 @@ use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\MatchStatus;
 use App\Repository\GameRepository;
+use App\Repository\PurchaseRepository;
 use App\Repository\SeasonRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -16,6 +17,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -28,6 +30,7 @@ final class MatchController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly SerializerInterface $serializer,
         private readonly SeasonRepository $seasonRepository,
+        private readonly PurchaseRepository $purchaseRepository,
     ) {}
 
     #[Route('/', name: 'create', methods: ['POST'])]
@@ -92,42 +95,35 @@ final class MatchController extends AbstractController
      * @param GameRepository $gameRepository
      * @return JsonResponse
      */
-    public function listMatches(GameRepository $gameRepository, Request $request, SerializerInterface $serializer): JsonResponse
+    public function listMatches(Request $request): JsonResponse
     {
         $statuses = [];
 
         if ($this->isGranted("ROLE_ADMIN")) {
             $statusParam = $request->query->get('status');
             if ($statusParam) {
-                if (str_contains($statusParam, ',')) {
-                    $statusParams = explode(',', $statusParam);
-                } else {
-                    $statusParams = [$statusParam];
-                }
-                foreach ($statusParams as $statusParam) {
-                    $statusEnum = MatchStatus::tryFrom($statusParam);
+                $statusParams = str_contains($statusParam, ',')
+                    ? explode(',', $statusParam)
+                    : [$statusParam];
 
+                foreach ($statusParams as $param) {
+                    $statusEnum = MatchStatus::tryFrom($param);
                     if (!$statusEnum) {
-                        throw new BadRequestHttpException('Neplatná hodnota stavu, musí být jednou z: ' . implode(', ', array_column(MatchStatus::cases(), 'value')));
+                        throw new BadRequestHttpException(
+                            'Neplatná hodnota stavu, musí být jednou z: ' .
+                                implode(', ', array_column(MatchStatus::cases(), 'value'))
+                        );
                     }
-
                     $statuses[] = $statusEnum;
                 }
-                $statusEnum = MatchStatus::tryFrom($statusParam);
-
-                if (!$statusEnum) {
-                    throw new BadRequestHttpException('Neplatná hodnota stavu, musí být jednou z: ' . implode(', ', array_column(MatchStatus::cases(), 'value')));
-                }
-
-                $statuses[] = $statusEnum;
             }
         } else {
             $statuses[] = MatchStatus::ACTIVE;
         }
 
-        $matches =  $gameRepository->findByStatuses($statuses);
+        $matches =  $this->gameRepository->findByStatuses($statuses);
 
-        $result = $serializer->serialize($matches, 'json', ['groups' => ['match:admin_list']]);
+        $result = $this->serializer->serialize($matches, 'json', ['groups' => ['match:admin_list']]);
 
         return JsonResponse::fromJsonString($result, JsonResponse::HTTP_OK);
     }
@@ -379,5 +375,18 @@ final class MatchController extends AbstractController
         );
 
         return $this->json($dto, context: ['groups' => ['match:stats']]);
+    }
+
+    #[Route('/{id}/purchases', name: 'match_purchases', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function getPurchasesForMatch(int $id): JsonResponse
+    {
+        $purchases = $this->purchaseRepository->findForMatchDashboard($id);
+
+        $json = $this->serializer->serialize($purchases, 'json', [
+            'groups' => ['purchase:table'],
+        ]);
+
+        return new JsonResponse($json, 200, [], true);
     }
 }

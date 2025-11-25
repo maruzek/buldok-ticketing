@@ -6,6 +6,7 @@ use App\Entity\Entrance;
 use App\Entity\Game;
 use App\Entity\Purchase;
 use App\Entity\User;
+use App\Enum\PurchaseStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -81,6 +82,8 @@ class PurchaseRepository extends ServiceEntityRepository
             ->leftJoin('p.purchaseItems', 'pi')
             ->leftJoin('pi.ticketType', 'tt')
             ->where('p.match = :matchId')
+            ->andWhere('p.status != :removedStatus')
+            ->setParameter('removedStatus', PurchaseStatus::REMOVED->value)
             ->setParameter('matchId', $matchId)
             ->orderBy('p.purchasedAt', 'DESC')
             ->getQuery()

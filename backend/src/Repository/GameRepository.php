@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Game;
 use App\Enum\MatchStatus;
+use App\Enum\PurchaseStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\Query\Expr\Join;
@@ -94,19 +95,22 @@ class GameRepository extends ServiceEntityRepository
             ->leftJoin(
                 'g.purchases',
                 'p',
-                $entranceId !== null ? Join::WITH : null,
-                $entranceId !== null ? 'p.soldBy IN (
-                SELECT u2.id FROM App\Entity\User u2
-                WHERE u2.entrance = :entranceId
-            )' : ''
+                Join::WITH,
+                $entranceId !== null
+                    ? 'p.status != :purchaseStatus AND p.soldBy IN (
+                        SELECT u2.id FROM App\Entity\User u2
+                        WHERE u2.entrance = :entranceId
+                    )'
+                    : 'p.status != :purchaseStatus'
             )
             ->addSelect('p')
             ->leftJoin('p.soldBy', 'sb')
             ->addSelect('sb')
             ->andWhere('g.id = :matchId')
-            ->andWhere('g.status = :status')
+            ->andWhere('g.status = :matchStatus')
             ->setParameter('matchId', $matchId)
-            ->setParameter('status', MatchStatus::ACTIVE->value);
+            ->setParameter('matchStatus', MatchStatus::ACTIVE->value)
+            ->setParameter('purchaseStatus', PurchaseStatus::REMOVED->value);
 
         if ($entranceId !== null) {
             $qb->setParameter('entranceId', $entranceId);

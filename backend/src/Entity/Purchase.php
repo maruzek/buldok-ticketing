@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\PurchaseStatus;
 use App\Repository\PurchaseRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -46,6 +47,9 @@ class Purchase
     #[ORM\Column(length: 20, nullable: true)]
     #[Groups(['purchase:read', 'purchase:admin_game_summary', 'purchase:table'])]
     private ?string $paymentType = null;
+
+    #[ORM\Column(length: 255, enumType: PurchaseStatus::class)]
+    private ?PurchaseStatus $status = PurchaseStatus::COMPLETED;
 
     public function __construct()
     {
@@ -160,6 +164,18 @@ class Purchase
     public function setPaymentType(?string $paymentType): static
     {
         $this->paymentType = $paymentType;
+
+        return $this;
+    }
+
+    public function getStatus(): ?PurchaseStatus
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?PurchaseStatus $status): static
+    {
+        $this->status = $status;
 
         return $this;
     }

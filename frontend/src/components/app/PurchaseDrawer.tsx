@@ -180,7 +180,7 @@ function PaymentForm({
   const [isQrLoading, setIsQrLoading] = useState(false);
   const { mutate: purchase, mutateAsync: purchaseAsync } = useMutation({
     mutationFn: (data: FieldValues) =>
-      fetchData<PurchaseHistory>(`/purchase/mark`, {
+      fetchData<PurchaseHistory>(`/v1/purchases/`, {
         method: "POST",
         body: JSON.stringify({
           fullTickets: data.fullTickets,

@@ -20,7 +20,7 @@ export const PurchaseTable = ({ matchID }: PurchaseTableProps) => {
   const { data: purchases, isPending } = useQuery<Purchase[], ApiError>({
     queryKey: ["match", matchID, "purchases"],
     queryFn: () =>
-      fetchData<Purchase[]>(`/purchase/match/${matchID}/purchases`, {
+      fetchData<Purchase[]>(`/v1/matches/${matchID}/purchases`, {
         method: "GET",
       }),
     enabled: !!matchID,
