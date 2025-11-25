@@ -13,6 +13,13 @@ import MatchError from "../components/errors/MatchError";
 import { toast } from "sonner";
 import { PaymentStateMap } from "@/types/PaymentStateMap";
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
 function beepSuccess() {
   const snd = new Audio("/pay-success.mp3");
   snd.play();
@@ -183,21 +190,74 @@ const Ticketing = () => {
                   minute: "2-digit",
                 })}
             </p>
-            <p className="text-gray-500 font-bold text-sm mt-5">
-              Celkem utrženo
-            </p>
-            <h3 className="font-bold text-3xl">
-              {match?.purchases?.reduce(
-                (acc, cur) =>
-                  acc +
-                  cur.purchaseItems.reduce(
-                    (acc, cur) => acc + Number(cur.priceAtPurchase),
-                    0
-                  ),
-                0
-              ) || 0}
-              {" Kč"}
-            </h3>
+
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="item-1">
+                <AccordionTrigger className="items-center">
+                  <div>
+                    <p className="text-gray-500 font-medium text-sm mt-5">
+                      Celkem utrženo
+                    </p>
+                    <h3 className="font-bold text-3xl">
+                      {match?.purchases?.reduce(
+                        (acc, cur) =>
+                          acc +
+                          cur.purchaseItems.reduce(
+                            (acc, cur) => acc + Number(cur.priceAtPurchase),
+                            0
+                          ),
+                        0
+                      ) || 0}
+                      {" Kč"}
+                    </h3>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="flex flex-col gap-4 text-balance">
+                  <div className="grid grid-cols-2 gap-4 mt-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                    <div>
+                      <p className="text-gray-500 text-xs font-medium">
+                        Hotově
+                      </p>
+                      <p className="font-bold text-lg text-gray-700">
+                        {match?.purchases
+                          ?.filter((p) => !p.payment)
+                          .reduce(
+                            (acc, cur) =>
+                              acc +
+                              cur.purchaseItems.reduce(
+                                (acc, cur) => acc + Number(cur.priceAtPurchase),
+                                0
+                              ),
+                            0
+                          ) || 0}{" "}
+                        Kč
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 text-xs font-medium">
+                        QR Platby
+                      </p>
+                      <p className="font-bold text-lg">
+                        {match?.purchases
+                          ?.filter((p) => p.payment)
+                          .reduce(
+                            (acc, cur) =>
+                              acc +
+                              cur.purchaseItems.reduce(
+                                (acc, cur) => acc + Number(cur.priceAtPurchase),
+                                0
+                              ),
+                            0
+                          ) || 0}{" "}
+                        Kč
+                      </p>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+
+            {/*  */}
           </div>
           {ticketPrices && (
             <PurchaseDrawer

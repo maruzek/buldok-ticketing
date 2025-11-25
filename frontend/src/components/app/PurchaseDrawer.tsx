@@ -98,7 +98,7 @@ export default function PurchaseDrawer({
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer open={open} onOpenChange={setOpen} repositionInputs={false}>
       <DrawerTrigger asChild>
         <div className="mx-4">
           <Button className="w-full">Zaznamenat nákup</Button>
