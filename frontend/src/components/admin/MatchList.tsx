@@ -11,15 +11,7 @@ import { toast } from "sonner";
 import { ApiError } from "@/types/ApiError";
 import { useState } from "react";
 import RemoveConfirmDialog from "../RemoveConfirmDialog";
-
-interface Match {
-  id: number;
-  rival: string;
-  playedAt: string;
-  createdAt: string;
-  description: string;
-  status: string;
-}
+import { Match } from "@/types/Match";
 
 const MatchList = () => {
   const { fetchData } = useApi();
@@ -99,6 +91,14 @@ const MatchList = () => {
     );
   }
 
+  if (!matches || matches.length === 0) {
+    return (
+      <ContentBoard>
+        <p className="text-center">Žádné zápasy nebyly nalezeny.</p>
+      </ContentBoard>
+    );
+  }
+
   return (
     <>
       <ContentBoard
@@ -113,7 +113,6 @@ const MatchList = () => {
           </Button>
         }
       >
-        {/* TODO: implementovat server-side pagination */}
         <DataTable columns={columns(handleOpenDialog)} data={matches} />
       </ContentBoard>
       <RemoveConfirmDialog

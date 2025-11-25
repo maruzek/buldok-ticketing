@@ -51,26 +51,6 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-// TODO: Utrženo celkem
-// TODO: Celkem prodáno lístků
-// TODO: Celkem plné
-// TODO: Celkem poloviční
-// TODO: tabulka zápasů
-// TODO: rozdělení typů vstupenek (plné, poloviční) - koláč
-// TODO: rozdělení vstupů podle prodaných vstupenek - koláč
-// TODO: ? graf průměrného času prodeje od začátku zápasu
-// TODO: rozdělení plateb podle metod - koláč
-// TODO: detail vstupů
-// TODO: graf výdělků za každý zápas
-
-// TODO: Pocet zapasu
-// TODO: Prumerna navstevnost
-// TODO: Nejnavstevovanejsi zapas
-// TODO: Nejmene navstiveny zapas
-// TODO: Prumerne utrzene za zapas
-// TODO: Nejvetsi utrzene za zapas
-// TODO: Nejmensi utrzene za zapas
-
 const SeasonDashboard = () => {
   const { seasonID } = useParams<{ seasonID: string }>();
   const { fetchData } = useApi();
@@ -161,8 +141,6 @@ const SeasonDashboard = () => {
     // return <MatchError error={error!} matchID={matchID!} />;
   }
 
-  // TODO: use skeleton loader
-  //TODO: pridat tabluku se vsemi nakupy uplne dolu
   return (
     <ContentBoard
       cardAction={

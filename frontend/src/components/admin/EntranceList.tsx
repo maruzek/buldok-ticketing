@@ -104,7 +104,6 @@ const EntranceList = () => {
 
   return (
     <>
-      {/* TODO: Add button to create new entrance */}
       <ContentBoard
         cardAction={
           <Button>

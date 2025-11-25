@@ -20,7 +20,6 @@ final class CheckPaymentsSchedule implements ScheduleProviderInterface
     {
         return (new Schedule())
             ->add(
-                // @TODO - Modify the frequency to suite your needs
                 RecurringMessage::every('31 seconds', new CheckPaymentsMessage()),
             )
             ->stateful($this->cache)

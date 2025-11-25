@@ -81,7 +81,6 @@ export function LoginForm({ className }: React.ComponentProps<"form">) {
   useEffect(() => {
     if (!auth.user) return;
 
-    // TODO: je toto userfriendly?
     if (location.state?.from) {
       navigate(location.state.from.pathname);
       return;
