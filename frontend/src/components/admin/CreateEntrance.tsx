@@ -26,7 +26,7 @@ const CreateEntrance = () => {
 
   const { mutate, isPending: isSaving } = useMutation({
     mutationFn: (data: FieldValues) =>
-      fetchData("/api/v1/entrances/", {
+      fetchData("/v1/entrances/", {
         method: "POST",
         body: JSON.stringify(data),
       }),

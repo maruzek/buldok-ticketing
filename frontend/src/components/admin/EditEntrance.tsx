@@ -70,7 +70,7 @@ const EditEntrance = () => {
           try {
             setIsSearchingUser(true);
             const data = await fetchData<User[]>(
-              `/admin/users/search?q=${userSearchQuery}`,
+              `/v1/users/search?q=${userSearchQuery}`,
               {
                 method: "GET",
               }
@@ -96,7 +96,7 @@ const EditEntrance = () => {
 
   const { mutate } = useMutation({
     mutationFn: (data: FieldValues) =>
-      fetchData<Entrance>(`/api/v1/entrances/${6666}`, {
+      fetchData<Entrance>(`/v1/entrances/${entranceID}`, {
         method: "PUT",
         body: JSON.stringify({
           ...editedEntrance,
@@ -124,7 +124,7 @@ const EditEntrance = () => {
 
   const { mutate: handleUserAdd } = useMutation({
     mutationFn: (user: User) =>
-      fetchData(`/admin/users/user/${user.id}/change-entrance`, {
+      fetchData(`/v1/users/${user.id}`, {
         method: "PUT",
         body: JSON.stringify({
           entranceID: editedEntrance?.id,
@@ -136,7 +136,6 @@ const EditEntrance = () => {
       toast.success(
         `Uživatel ${variables.fullName} byl úspěšně přidán ke vstupu.`
       );
-      console.log(res);
     },
     onError: (error: any) => {
       form.setError("root", {
@@ -149,8 +148,11 @@ const EditEntrance = () => {
 
   const { mutate: handleUserRemove } = useMutation({
     mutationFn: (user: User) =>
-      fetchData<User>(`/admin/users/user/${user.id}/remove-entrance`, {
+      fetchData<User>(`/v1/users/${user.id}`, {
         method: "PUT",
+        body: JSON.stringify({
+          entranceID: null,
+        }),
       }),
     onSuccess: (res, variables) => {
       toast.success(

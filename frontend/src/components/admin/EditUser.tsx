@@ -20,6 +20,8 @@ import { Checkbox } from "../ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import ComboboxPicker from "./ComboboxPicker";
 import { Entrance } from "@/types/Entrance";
+import BasicError from "../errors/BasicError";
+import { Frown } from "lucide-react";
 
 type UserData = Omit<User, "registeredAt">;
 
@@ -32,11 +34,10 @@ const EditUser = () => {
     data: editedUser,
     isPending: isUserPending,
     isError,
-    error,
   } = useQuery({
     queryKey: ["user", userID],
     queryFn: () =>
-      fetchData<UserData>(`/admin/users/user/${userID}`, { method: "GET" }),
+      fetchData<UserData>(`/v1/users/${userID}`, { method: "GET" }),
     retry: false,
   });
   console.log(editedUser);
@@ -61,10 +62,9 @@ const EditUser = () => {
 
   const { mutate, isPending: isSubmitting } = useMutation({
     mutationFn: (data: FieldValues) => {
-      return fetchData<User>(`/admin/users/user/${userID}`, {
+      return fetchData<User>(`/v1/users/${userID}`, {
         method: "PUT",
         body: JSON.stringify({
-          // ...editedUser,
           roles: data.admin
             ? [...(editedUser?.roles || []), "ROLE_ADMIN"]
             : (editedUser?.roles || []).filter((role) => role !== "ROLE_ADMIN"),
@@ -107,18 +107,15 @@ const EditUser = () => {
 
   if (isError) {
     return (
-      <Card className="w-full lg:max-w-2/5 h-screen lg:max-h-2/5 mx-auto flex justify-center items-center">
-        <CardContent className="flex justify-center items-center">
-          <p className="text-red-500">
-            {error?.message || "Nastala chyba při načítání uživatele."}
-          </p>
-        </CardContent>
-      </Card>
+      <BasicError
+        title="Nastala chyba při načítání uživatele"
+        icon={<Frown />}
+      />
     );
   }
-  // TODO: pridat vyber entrance
+
   return (
-    <Card className="w-full lg:max-w-1/3 mx-auto">
+    <Card className="w-full lg:max-w-1/3 mx-auto md:max-w-3/5">
       <CardHeader>
         <CardTitle>
           Upravit uživatele {`${editedUser?.fullName} (${editedUser?.email})`}

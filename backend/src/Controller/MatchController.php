@@ -20,7 +20,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-#[Route('/api/v1/matches', name: 'api_matches_')]
+#[Route('/api/v1/matches', name: 'api_v1_matches_')]
 final class MatchController extends AbstractController
 {
     public function __construct(

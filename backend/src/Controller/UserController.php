@@ -20,7 +20,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-#[Route('/api/admin/users', name: 'api_users_')]
+#[Route('/api/v1/users', name: 'api_v1_users_')]
 #[IsGranted('ROLE_ADMIN')]
 /**
  * UserController handles user management operations.
@@ -36,7 +36,7 @@ final class UserController extends AbstractController
         private readonly UserRepository $userRepository
     ) {}
 
-    #[Route('/all', name: 'all', methods: ['GET'])]
+    #[Route('/', name: 'all', methods: ['GET'])]
     /**
      * Fetch all users.
      *
@@ -44,9 +44,9 @@ final class UserController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function index(UserRepository $userRepository): JsonResponse
+    public function list(): JsonResponse
     {
-        $users = $userRepository->findByStatuses();
+        $users = $this->userRepository->findByStatuses();
 
         $json = $this->serializer->serialize($users, 'json', [
             'groups' => ['user:read'],
@@ -58,7 +58,7 @@ final class UserController extends AbstractController
         return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
     }
 
-    #[Route('/user/{id}', name: 'get_by_id', methods: ['GET'])]
+    #[Route('/{id}', name: 'get_by_id', methods: ['GET'], requirements: ['id' => '\d+'])]
     /**
      * Get a user by ID.
      *
@@ -67,14 +67,8 @@ final class UserController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function getById(int $id): JsonResponse
+    public function getById(User $user): JsonResponse
     {
-        $user = $this->userRepository->findOneBy(['id' => $id]);
-
-        if (!$user) {
-            throw new NotFoundHttpException('Uživatel nenalezen');
-        }
-
         $json = $this->serializer->serialize($user, 'json', [
             'groups' => ['user:read'],
             'circular_reference_handler' => function ($object) {
@@ -85,7 +79,7 @@ final class UserController extends AbstractController
         return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
     }
 
-    #[Route('/user/{id}', name: 'edit_by_id', methods: ['PUT'])]
+    #[Route('/{id}', name: 'edit', methods: ['PUT', 'PATCH'], requirements: ['id' => '\d+'])]
     /**
      * Edit a user by ID.
      *
@@ -97,18 +91,13 @@ final class UserController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function editById(User $user, int $id, Request $request): JsonResponse
+    public function editById(User $user, Request $request): JsonResponse
     {
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new BadRequestException('Neplatná data');
         }
 
-        // $user = $userRepository->findOneBy(['id' => $id]);
         $data = json_decode($request->getContent(), true);
-
-        if (!$user) {
-            throw new NotFoundHttpException('Uživatel nenalezen');
-        }
 
         $validations = $this->validator->validate($data);
 
@@ -123,36 +112,37 @@ final class UserController extends AbstractController
             throw new BadRequestException('Nastala chyba: ' . json_encode($errors));
         }
 
-        $newRoles = $data['roles'] ?? [];
+        if (array_key_exists('roles', $data)) {
+            $newRoles = $data['roles'];
+            /** @var User|null $authUser */
+            $authUser = $this->getUser();
 
-        /** @var User|null $authUser */
-        $authUser = $this->getUser();
-
-        if (in_array("ROLE_ADMIN", $user->getRoles()) && !in_array("ROLE_ADMIN", $newRoles) && $user->getId() == $authUser->getId()) {
-            throw new ForbiddenOverwriteException('Nemůžete odebrat svou vlastní roli správce');
+            if (in_array("ROLE_ADMIN", $user->getRoles()) && !in_array("ROLE_ADMIN", $newRoles) && $user->getId() == $authUser->getId()) {
+                throw new ForbiddenOverwriteException('Nemůžete odebrat svou vlastní roli správce');
+            }
+            if (!in_array("ROLE_USER", $newRoles)) {
+                $newRoles[] = 'ROLE_USER';
+            }
+            $user->setRoles($newRoles);
         }
 
-        if (!in_array("ROLE_USER", $newRoles)) {
-            $newRoles += ['ROLE_USER'];
+        if (array_key_exists('entranceId', $data)) {
+            $entranceId = $data['entranceId'];
+
+            if ($entranceId === null) {
+                $user->setEntrance(null);
+            } else {
+                $newEntrance = $this->entranceRepository->find($entranceId);
+                if (!$newEntrance) {
+                    throw new NotFoundHttpException('Vstup s tímto ID neexistuje');
+                }
+                $user->setEntrance($newEntrance);
+            }
         }
 
-        $newEntrance = null;
-
-        if (isset($data['entranceId'])) {
-            $newEntrance = $this->entranceRepository->findOneBy(['id' => $data['entranceId']]);
-        } else if ($data['entranceId'] === null && $user->getEntrance()) {
-            $newEntrance = $user->getEntrance();
-        } else {
-            $newEntrance = null;
-        }
-
-        if (isset($data['status'])) {
+        if (array_key_exists('status', $data)) {
             $user->setStatus(UserStatus::from($data['status']));
         }
-
-        $user->setRoles($newRoles ?? $user->getRoles());
-        $user->setEntrance($newEntrance);
-        $user->setStatus($data['status'] ? UserStatus::from($data['status']) : $user->getStatus());
 
         try {
             $this->em->flush();
@@ -170,7 +160,9 @@ final class UserController extends AbstractController
         return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
     }
 
-    #[Route('/user/{id}', name: 'remove_by_id', methods: ['DELETE'])]
+
+
+    #[Route('/{id}', name: 'remove_by_id', methods: ['DELETE'], requirements: ['id' => '\d+'])]
     #[IsGranted('ROLE_ADMIN')]
     /**
      * Remove a user by ID.
@@ -181,10 +173,6 @@ final class UserController extends AbstractController
      */
     public function removeById(User $user): JsonResponse
     {
-        if (!$user) {
-            throw new NotFoundHttpException('User not found');
-        }
-
         /** @var User|null $authUser */
         $authUser = $this->getUser();
 
@@ -210,7 +198,7 @@ final class UserController extends AbstractController
         return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
     }
 
-    #[Route('/search', name: 'searchUser', methods: ['GET'])]
+    #[Route('/search', name: 'searchUser', methods: ['GET'], requirements: ['q' => '.+'])]
     /**
      * Search for users by email or name.
      *
@@ -219,7 +207,7 @@ final class UserController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function searchUser(Request $request): JsonResponse
+    public function search(Request $request): JsonResponse
     {
         $query = $request->query->get('q');
         if (!$query) {
@@ -236,77 +224,5 @@ final class UserController extends AbstractController
         ]);
 
         return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
-    }
-
-    #[Route('/user/{id}/remove-entrance', name: 'remove_entrance', methods: ['PUT'])]
-    /**
-     * Remove the entrance from a user.
-     *
-     * @param int $id The ID of the user.
-     * @param UserRepository $userRepository Repository to fetch the user.
-     * @param EntityManagerInterface $em The entity manager to handle database operations.
-     *
-     * @return JsonResponse
-     */
-    public function removeEntrance(int $id): JsonResponse
-    {
-        $user = $this->userRepository->find($id);
-
-        if (!$user) {
-            throw new NotFoundHttpException('Uživatel nenalezen');
-        }
-
-        $user->setEntrance(null);
-
-        try {
-            $this->em->flush();
-        } catch (\Exception $e) {
-            throw new Exception('Nastala chyba při odstraňování vstupu z uživatele: ' . $e->getMessage(), 500);
-        }
-
-        return $this->json(['status' => 'ok'], JsonResponse::HTTP_OK);
-    }
-
-    #[Route('/user/{id}/change-entrance', name: 'change_entrance', methods: ['PUT'])]
-    /**
-     * Change the entrance of a user.
-     *
-     * @param int $id The ID of the user.
-     * @param UserRepository $userRepository Repository to fetch the user.
-     * @param EntranceRepository $entranceRepository Repository to fetch entrances.
-     * @param EntityManagerInterface $em The entity manager to handle database operations.
-     * @param Request $request The request containing the new entrance ID.
-     *
-     * @return JsonResponse
-     */
-    public function changeEntrance(int $id, Request $request): JsonResponse
-    {
-        $user = $this->userRepository->find($id);
-
-        if (!$user) {
-            throw new NotFoundHttpException('Uživatel nenalezen');
-        }
-
-        $data = json_decode($request->getContent(), true);
-
-        if (!isset($data['entranceID'])) {
-            throw new BadRequestHttpException('ID vstupu je povinný');
-        }
-
-        $entrance = $this->entranceRepository->find($data['entranceID']);
-
-        if (!$entrance) {
-            throw new NotFoundHttpException('Vstup nenalezen');
-        }
-
-        $user->setEntrance($entrance);
-
-        try {
-            $this->em->flush();
-        } catch (\Exception $e) {
-            throw new Exception('Nastala chyba při změně vstupu pro uživatele: ' . $e->getMessage(), 500);
-        }
-
-        return $this->json(['status' => 'ok'], JsonResponse::HTTP_OK);
     }
 }

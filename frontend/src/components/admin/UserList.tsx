@@ -18,14 +18,14 @@ const UserList = () => {
 
   const { data: users, isPending } = useQuery<User[]>({
     queryKey: ["users"],
-    queryFn: () => fetchData<User[]>("/admin/users/all", { method: "GET" }),
+    queryFn: () => fetchData<User[]>("/v1/users/", { method: "GET" }),
   });
 
   const queryClient = useQueryClient();
 
   const { mutate: deleteUser, isPending: isDeleting } = useMutation({
     mutationFn: (id: number) =>
-      fetchData(`/admin/users/user/${id}`, { method: "DELETE" }),
+      fetchData(`/v1/users/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       toast.success("Uživatel byl úspěšně smazán.");
       queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -55,6 +55,14 @@ const UserList = () => {
       <div className="flex justify-center items-center h-full rounded-md">
         <Spinner />
       </div>
+    );
+  }
+
+  if (!users || users.length === 0) {
+    return (
+      <ContentBoard>
+        <p className="text-center">Žádní uživatelé nebyli nalezeni.</p>
+      </ContentBoard>
     );
   }
 
