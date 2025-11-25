@@ -27,15 +27,14 @@ const EntranceList = () => {
     error,
   } = useQuery<Entrance[], ApiError>({
     queryKey: ["entrances"],
-    queryFn: () =>
-      fetchData<Entrance[]>("/admin/entrances/", { method: "GET" }),
+    queryFn: () => fetchData<Entrance[]>("/v1/entrances/", { method: "GET" }),
   });
 
   const queryClient = useQueryClient();
 
   const { mutate: deleteMatch, isPending: isDeleting } = useMutation({
     mutationFn: (id: number) =>
-      fetchData(`/admin/entrances/${id}`, { method: "DELETE" }),
+      fetchData(`/v1/entrances/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       toast.success("Vstup byl úspěšně smazán.");
       queryClient.invalidateQueries({ queryKey: ["entrances"] });

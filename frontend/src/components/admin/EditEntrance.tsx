@@ -44,7 +44,7 @@ const EditEntrance = () => {
   } = useQuery<Entrance, ApiError>({
     queryKey: ["entrances", entranceID],
     queryFn: () =>
-      fetchData<Entrance>(`/admin/entrances/${entranceID}`, {
+      fetchData<Entrance>(`/v1/entrances/${entranceID}`, {
         method: "GET",
       }),
     retry: false,
@@ -96,7 +96,7 @@ const EditEntrance = () => {
 
   const { mutate } = useMutation({
     mutationFn: (data: FieldValues) =>
-      fetchData<Entrance>(`/admin/entrances/${entranceID}`, {
+      fetchData<Entrance>(`/api/v1/entrances/${6666}`, {
         method: "PUT",
         body: JSON.stringify({
           ...editedEntrance,

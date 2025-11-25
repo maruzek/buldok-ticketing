@@ -45,8 +45,7 @@ const EditUser = () => {
     Entrance[]
   >({
     queryKey: ["entrances"],
-    queryFn: () =>
-      fetchData<Entrance[]>("/admin/entrances/", { method: "GET" }),
+    queryFn: () => fetchData<Entrance[]>("/v1/entrances/", { method: "GET" }),
   });
 
   const form = useForm({

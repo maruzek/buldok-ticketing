@@ -16,15 +16,16 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 
-#[Route('/api/admin/entrances', name: 'api_entrance_')]
+#[Route('/api/v1/entrances', name: 'api_v1_entrances_')]
 final class EntranceController extends AbstractController
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
-        private readonly SerializerInterface $serializer
+        private readonly SerializerInterface $serializer,
+        private readonly EntranceRepository $entranceRepository,
     ) {}
 
-    #[Route('/create', name: 'create', methods: ['POST'])]
+    #[Route('/', name: 'create', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN')]
     /**
      * Create a new entrance.
@@ -34,7 +35,7 @@ final class EntranceController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function index(Request $request, EntityManagerInterface $em): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
@@ -46,7 +47,7 @@ final class EntranceController extends AbstractController
             throw new BadRequestHttpException('Name is required');
         }
 
-        if ($em->getRepository(Entrance::class)->findOneBy(['name' => $data['name']])) {
+        if ($this->entranceRepository->findOneBy(['name' => $data['name']])) {
             throw new BadRequestHttpException('Vstup s tímto názvem již existuje');
         }
 
@@ -55,8 +56,8 @@ final class EntranceController extends AbstractController
         $entrance->setName($data['name']);
 
         try {
-            $em->persist($entrance);
-            $em->flush();
+            $this->em->persist($entrance);
+            $this->em->flush();
         } catch (\Exception $e) {
             throw new Exception('Failed to create entrance', 500);
         }
@@ -71,7 +72,7 @@ final class EntranceController extends AbstractController
         return JsonResponse::fromJsonString($json, JsonResponse::HTTP_CREATED);
     }
 
-    #[Route('/', name: 'list_all', methods: ['GET'])]
+    #[Route('/', name: 'list', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN')]
     /**
      * Get all entrances with their users.
@@ -80,9 +81,9 @@ final class EntranceController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function all(EntranceRepository $entranceRepository): JsonResponse
+    public function all(): JsonResponse
     {
-        $entrances = $entranceRepository->findByStatuses();
+        $entrances = $this->entranceRepository->findByStatuses();
 
         $json = $this->serializer->serialize($entrances, 'json', [
             'groups' => ['entrance:read'],
@@ -105,15 +106,13 @@ final class EntranceController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function getById(int $id, EntranceRepository $entranceRepository): JsonResponse
+    public function getById(int $id): JsonResponse
     {
-        $entrance = $entranceRepository->findOneBy(['id' => $id]);
+        $entrance = $this->entranceRepository->findOneBy(['id' => $id]);
 
         if (!$entrance) {
             throw new NotFoundHttpException('Vstup nenalezen');
         }
-
-        $users = [];
 
         $json = $this->serializer->serialize($entrance, 'json', [
             'groups' => ['entrance:read'],
@@ -137,12 +136,8 @@ final class EntranceController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function editById(Entrance $entrance, Request $request, EntityManagerInterface $em): JsonResponse
+    public function editById(Entrance $entrance, Request $request): JsonResponse
     {
-        if (!$entrance) {
-            throw new NotFoundHttpException('Vstup nenalezen');
-        }
-
         $data = json_decode($request->getContent(), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
@@ -153,7 +148,7 @@ final class EntranceController extends AbstractController
         $entrance->setStatus(isset($data['status']) ? EntranceStatus::from($data['status']) : $entrance->getStatus());
 
         try {
-            $em->flush();
+            $this->em->flush();
         } catch (\Exception $e) {
             throw new Exception('Nastala chyba při aktualizaci vstupu', 500);
         }
@@ -177,16 +172,12 @@ final class EntranceController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function removeById(Entrance $entrance, EntityManagerInterface $em): JsonResponse
+    public function removeById(Entrance $entrance): JsonResponse
     {
-        if (!$entrance) {
-            throw new NotFoundHttpException('Vstup nenalezen');
-        }
-
         $entrance->setStatus(EntranceStatus::REMOVED);
 
         try {
-            $em->flush();
+            $this->em->flush();
         } catch (\Exception $e) {
             throw new Exception('Nastala chyba při aktualizaci vstupu' . $e->getMessage(), 500);
         }
