@@ -5,16 +5,12 @@ namespace App\Controller;
 use App\DTO\RegisterUserDto;
 use App\Entity\User;
 use App\Enum\UserStatus;
-use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-// use Symfony\Component\ObjectMapper\ObjectMapperInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -30,8 +26,6 @@ final class AuthController extends AbstractController
         private readonly UserPasswordHasherInterface $hasher,
         private readonly EntityManagerInterface $em,
         private readonly ValidatorInterface $validator,
-        // private readonly ObjectMapperInterface $mapper,
-        private readonly UserRepository $userRepository
     ) {}
 
     #[Route('/register', name: 'register', methods: ['POST'])]
@@ -45,7 +39,7 @@ final class AuthController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function register(Request $request, #[MapRequestPayload()] RegisterUserDto $dto): JsonResponse
+    public function register(#[MapRequestPayload()] RegisterUserDto $dto): JsonResponse
     {
         $user = new User();
         $user->setEmail($dto->email);
