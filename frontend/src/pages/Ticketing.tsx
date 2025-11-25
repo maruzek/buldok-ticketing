@@ -53,7 +53,8 @@ const Ticketing = () => {
 
   const { data: ticketPrices } = useQuery<TicketPrices>({
     queryKey: ["ticket-prices"],
-    queryFn: () => fetchData<TicketPrices>("/ticket-prices", { method: "GET" }),
+    queryFn: () =>
+      fetchData<TicketPrices>("/v1/ticket-prices", { method: "GET" }),
   });
 
   useEffect(() => {
