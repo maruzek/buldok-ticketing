@@ -69,7 +69,7 @@ const EditUser = () => {
             ? [...(editedUser?.roles || []), "ROLE_ADMIN"]
             : (editedUser?.roles || []).filter((role) => role !== "ROLE_ADMIN"),
           status: data.status,
-          entranceId: data.entranceId ? parseInt(data.entranceId) : null,
+          entranceID: data.entranceId ? parseInt(data.entranceId) : null,
         }),
       });
     },

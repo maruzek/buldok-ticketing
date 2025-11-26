@@ -154,13 +154,13 @@ final class UserController extends AbstractController
             $user->setRoles($newRoles);
         }
 
-        if (array_key_exists('entranceId', $data)) {
-            $entranceId = $data['entranceId'];
+        if (array_key_exists('entranceID', $data)) {
+            $entranceID = $data['entranceID'];
 
-            if ($entranceId === null) {
+            if ($entranceID === null) {
                 $user->setEntrance(null);
             } else {
-                $newEntrance = $this->entranceRepository->find($entranceId);
+                $newEntrance = $this->entranceRepository->find($entranceID);
                 if (!$newEntrance) {
                     throw new NotFoundHttpException('Vstup s tímto ID neexistuje');
                 }
