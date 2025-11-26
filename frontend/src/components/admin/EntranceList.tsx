@@ -4,7 +4,7 @@ import useApi from "../../hooks/useApi";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { EntrancesDataTable } from "./EntranceTable/data-table";
 import { columns } from "./EntranceTable/columns";
-import { ApiError } from "@/types/ApiError";
+import { ApiError } from "@/types/api/ApiError";
 import BasicError from "../errors/BasicError";
 import { Frown, Plus, ShieldBan } from "lucide-react";
 import ContentBoard from "./ContentBoard";

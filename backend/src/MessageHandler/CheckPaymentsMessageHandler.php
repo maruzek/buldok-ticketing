@@ -11,6 +11,7 @@ use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Mercure\Update;
 use App\Entity\Payment;
+use App\Enum\PaymentStatus;
 
 #[AsMessageHandler]
 final class CheckPaymentsMessageHandler
@@ -87,7 +88,7 @@ final class CheckPaymentsMessageHandler
 
             $this->logger->info('HANDLER: Found matching payment in DB!', ['payment_id' => $payment->getId()]);
 
-            $payment->setStatus('paid');
+            $payment->setStatus(PaymentStatus::PAID);
             $payment->setPaidAt(new \DateTimeImmutable());
             $payment->setBankAccountName($transaction['column10']['value'] ?? null);
             $payment->setBankUserIdentification($transaction['column7']['value'] ?? null);
@@ -104,7 +105,7 @@ final class CheckPaymentsMessageHandler
             $topic = 'https://buldok.app/payments/' . $payment->getVariableSymbol();
             $update = new Update(
                 $topic,
-                json_encode(['status' => 'completed'])
+                json_encode(['status' => PaymentStatus::PAID->value])
             );
             $this->hub->publish($update);
 

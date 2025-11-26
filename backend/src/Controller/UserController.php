@@ -58,6 +58,34 @@ final class UserController extends AbstractController
         return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
     }
 
+    #[Route('/search', name: 'searchUser', methods: ['GET'], requirements: ['q' => '.+'])]
+    /**
+     * Search for users by email or name.
+     *
+     * @param UserRepository $userRepository Repository to search users.
+     * @param Request $request The request containing the search query.
+     *
+     * @return JsonResponse
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $query = $request->query->get('q');
+        if (!$query) {
+            throw new BadRequestException('Parametr dotazu "q" je povinný');
+        }
+
+        $users = $this->userRepository->searchByEmailOrName($query);
+
+        $json = $this->serializer->serialize($users, 'json', [
+            'groups' => ['user:search'],
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
+
+        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
+    }
+
     #[Route('/{id}', name: 'get_by_id', methods: ['GET'], requirements: ['id' => '\d+'])]
     /**
      * Get a user by ID.
@@ -190,34 +218,6 @@ final class UserController extends AbstractController
 
         $json = $this->serializer->serialize($user, 'json', [
             'groups' => ['user:read'],
-            'circular_reference_handler' => function ($object) {
-                return $object->getId();
-            },
-        ]);
-
-        return JsonResponse::fromJsonString($json, JsonResponse::HTTP_OK);
-    }
-
-    #[Route('/search', name: 'searchUser', methods: ['GET'], requirements: ['q' => '.+'])]
-    /**
-     * Search for users by email or name.
-     *
-     * @param UserRepository $userRepository Repository to search users.
-     * @param Request $request The request containing the search query.
-     *
-     * @return JsonResponse
-     */
-    public function search(Request $request): JsonResponse
-    {
-        $query = $request->query->get('q');
-        if (!$query) {
-            throw new BadRequestException('Parametr dotazu "q" je povinný');
-        }
-
-        $users = $this->userRepository->searchByEmailOrName($query);
-
-        $json = $this->serializer->serialize($users, 'json', [
-            'groups' => ['user:search'],
             'circular_reference_handler' => function ($object) {
                 return $object->getId();
             },

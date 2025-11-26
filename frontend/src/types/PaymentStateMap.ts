@@ -1,5 +1,7 @@
+import { PaymentStatus } from "./enums/PaymentStatus";
+
 export type PaymentState = {
-  status: "pending" | "paid" | "failed" | "canceled";
+  status: PaymentStatus;
   message?: string;
 };
 

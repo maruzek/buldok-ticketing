@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import useAuth from "./useAuth";
-import { ApiError } from "@/types/ApiError";
+import { ApiError } from "@/types/api/ApiError";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 

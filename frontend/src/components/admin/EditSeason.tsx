@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 import useApi from "@/hooks/useApi";
 import { useNavigate, useParams } from "react-router";
 import { Season } from "@/types/Season";
-import { ApiError } from "@/types/ApiError";
+import { ApiError } from "@/types/api/ApiError";
 import Spinner from "../Spinner";
 import BasicError from "../errors/BasicError";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";

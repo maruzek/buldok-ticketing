@@ -105,7 +105,6 @@ final class PurchaseController extends AbstractController
             throw new \RuntimeException('Nastala chyba při vytváření nákupu: ' . $e->getMessage());
         }
 
-
         $newPurchase = $this->purchaseRepository->findLastPurchaseWithDetailsByMatchAndEntrance($this->gameRepository->findOneBy(['id' => $data['matchID']]), $authUser->getEntrance());
 
         $jsonContent = $this->serializer->serialize($newPurchase, 'json', [

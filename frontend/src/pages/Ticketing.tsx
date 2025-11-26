@@ -8,10 +8,11 @@ import { TicketPrices } from "../types/TicketPrices";
 import PurchaseDrawer from "@/components/app/PurchaseDrawer";
 import PurchaseCard from "@/components/app/PurchaseCard";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ApiError } from "@/types/ApiError";
+import { ApiError } from "@/types/api/ApiError";
 import MatchError from "../components/errors/MatchError";
 import { toast } from "sonner";
 import { PaymentStateMap } from "@/types/PaymentStateMap";
+import { PaymentStatus } from "@/types/enums/PaymentStatus";
 
 import {
   Accordion,
@@ -69,7 +70,7 @@ const Ticketing = () => {
 
   useEffect(() => {
     const pending = Object.keys(paymentStates).filter(
-      (vs) => paymentStates[vs].status === "pending"
+      (vs) => paymentStates[vs].status === PaymentStatus.PENDING
     );
 
     if (pending.length === 0) {
@@ -100,12 +101,12 @@ const Ticketing = () => {
         eventSource.onmessage = (event) => {
           const data = JSON.parse(event.data);
           console.log("Mercure message:", data);
-          if (data.status === "completed") {
+          if (data.status === "paid") {
             toast.success(`Platba pro VS ${vs} byla přijata!`);
             beepSuccess();
             setPaymentStates((prev) => ({
               ...prev,
-              [vs]: { status: "paid" },
+              [vs]: { status: PaymentStatus.PAID },
             }));
             queryClient.invalidateQueries({ queryKey: ["match", matchID] });
             eventSource.close();
@@ -117,14 +118,17 @@ const Ticketing = () => {
               setPaymentStates((prev) => ({
                 ...prev,
                 [vs]: {
-                  status: "failed",
+                  status: PaymentStatus.FAILED,
                   message: "Nesouhlasí částka platby.",
                 },
               }));
             } else {
               setPaymentStates((prev) => ({
                 ...prev,
-                [vs]: { status: "failed", message: "Zkuste to prosím znovu." },
+                [vs]: {
+                  status: PaymentStatus.FAILED,
+                  message: "Zkuste to prosím znovu.",
+                },
               }));
               toast.error("Platba selhala. Zkuste to prosím znovu.");
             }
@@ -149,7 +153,10 @@ const Ticketing = () => {
   }, [queryClient, matchID, fetchData, paymentStates]);
 
   const handleNewQrPayment = (vs: string) => {
-    setPaymentStates((prev) => ({ ...prev, [vs]: { status: "pending" } }));
+    setPaymentStates((prev) => ({
+      ...prev,
+      [vs]: { status: PaymentStatus.PENDING },
+    }));
   };
 
   if (isMatchDataLoading) {

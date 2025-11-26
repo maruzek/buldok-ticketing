@@ -1,7 +1,7 @@
 import useApi from "@/hooks/useApi";
 import { useQuery } from "@tanstack/react-query";
 import { Purchase } from "@/types/Purchase";
-import { ApiError } from "@/types/ApiError";
+import { ApiError } from "@/types/api/ApiError";
 import { DataTable } from "./data-table";
 import { columns } from "./columns";
 import Spinner from "@/components/Spinner";

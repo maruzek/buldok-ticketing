@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\PaymentStatus;
 use App\Repository\PaymentRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -17,15 +18,15 @@ class Payment
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     #[Groups(['purchase:table'])]
-    private ?\DateTimeInterface $paid_at = null;
+    private ?\DateTimeInterface $paidAt = null;
 
     #[ORM\Column]
     #[Groups(['purchase:table'])]
     private ?float $amount = null;
 
-    #[ORM\Column(length: 20)]
+    #[ORM\Column(length: 20, enumType: PaymentStatus::class)]
     #[Groups(['purchase:read', 'purchase:admin_game_summary', 'purchase:table'])]
-    private ?string $status = null;
+    private ?PaymentStatus $status = PaymentStatus::PENDING;
 
     #[ORM\Column(length: 255)]
     #[Groups(['purchase:read', 'purchase:admin_game_summary', 'purchase:table'])]
@@ -85,12 +86,12 @@ class Payment
 
     public function getPaidAt(): ?\DateTimeInterface
     {
-        return $this->paid_at;
+        return $this->paidAt;
     }
 
-    public function setPaidAt(?\DateTimeInterface $paid_at): static
+    public function setPaidAt(?\DateTimeInterface $paidAt): static
     {
-        $this->paid_at = $paid_at;
+        $this->paidAt = $paidAt;
 
         return $this;
     }
@@ -107,12 +108,12 @@ class Payment
         return $this;
     }
 
-    public function getStatus(): ?string
+    public function getStatus(): ?PaymentStatus
     {
         return $this->status;
     }
 
-    public function setStatus(string $status): static
+    public function setStatus(PaymentStatus $status): static
     {
         $this->status = $status;
 

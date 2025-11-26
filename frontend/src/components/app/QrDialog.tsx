@@ -13,23 +13,25 @@ import { QRCodeSVG } from "qrcode.react";
 import Spinner from "../Spinner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import useApi from "@/hooks/useApi";
-// import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "sonner";
 import { Check, CircleX, Coins, QrCode } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { PaymentState } from "@/types/PaymentStateMap";
+// import { PaymentResponse } from "@/types/PaymentResponse";
+import { PaymentCreateResponse } from "@/types/Payment";
+import { PaymentStatus } from "@/types/enums/PaymentStatus";
 
 type QrDialogProps = {
   fullPrice: number;
   onQrRequest?: () => void;
-  qrData: any;
+  qrData: PaymentCreateResponse | null;
   isQrLoading?: boolean;
   triggerDisabled?: boolean;
   setPurchaseFormOpened?: (open: boolean) => void;
   isTriggerIcon?: boolean;
-  paymentStatus?: string;
-  livePaymentState?: PaymentState;
+  paymentStatus?: PaymentStatus;
+  livePaymentState?: PaymentState | null;
 };
 
 export default function QrDialog({
@@ -50,9 +52,8 @@ export default function QrDialog({
   const paymentMessage = livePaymentState?.message;
   const { mutate: cancelPayment } = useMutation({
     mutationFn: () =>
-      fetchData("/v1/payments", {
+      fetchData(`/v1/payments/${qrData?.id}`, {
         method: "DELETE",
-        body: JSON.stringify({ vs: qrData.vs }),
       }),
     onSuccess: (data) => {
       console.log(data);
@@ -100,7 +101,8 @@ export default function QrDialog({
             Cena celkem: <strong>{fullPrice} Kč</strong>
           </DialogDescription>
           <DialogDescription>
-            Variabilní symbol: <strong>{qrData && qrData.vs}</strong>
+            Variabilní symbol:{" "}
+            <strong>{qrData && qrData.variableSymbol}</strong>
           </DialogDescription>
         </DialogHeader>
         <div className="flex items-center gap-2 mx-auto my-4 flex-col">
@@ -108,7 +110,7 @@ export default function QrDialog({
           {!isQrLoading && qrData && status === "pending" && (
             <div className="flex flex-col items-center">
               <QRCodeSVG
-                value={`SPD*1.0*ACC:CZ4120100000002803306141*AM:${fullPrice}*CC:CZK*X-VS:${qrData.vs}*MSG:Vstupenky Buldok`}
+                value={`SPD*1.0*ACC:CZ4120100000002803306141*AM:${fullPrice}*CC:CZK*X-VS:${qrData.variableSymbol}*MSG:Vstupenky Buldok`}
                 size={200}
                 bgColor={"#ffffff"}
                 fgColor={"#000000"}

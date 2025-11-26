@@ -5,14 +5,14 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Purchase } from "@/types/Purchase";
 import { Separator } from "../ui/separator";
 import { Check } from "lucide-react";
+import { Payment } from "@/types/Payment";
 
 type PaymentDetailsDialogProps = {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  payment: Purchase["payment"];
+  payment: Payment;
 };
 
 export const PaymentDetailsDialog = ({
@@ -66,7 +66,7 @@ export const PaymentDetailsDialog = ({
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <span className="text-right font-semibold">Termín platby</span>
-            <span className="col-span-3">{formatDate(payment.paid_at)}</span>
+            <span className="col-span-3">{formatDate(payment.paidAt)}</span>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <span className="text-right font-semibold">Částka</span>
@@ -121,7 +121,7 @@ export const PaymentDetailsDialog = ({
           <div className="grid grid-cols-4 items-center gap-4">
             <span className="text-right font-semibold">Měna</span>
             <span className="col-span-3">
-              {payment.bankPaymentCurrancy ?? "?"}
+              {payment.bankPaymentCurrency ?? "?"}
             </span>
           </div>
         </div>

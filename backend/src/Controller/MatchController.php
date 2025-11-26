@@ -218,8 +218,11 @@ final class MatchController extends AbstractController
             }
         }
 
+        if (isset($data['playedAt'])) {
+            $match->setPlayedAt(new \DateTime($data['playedAt']));
+        }
+
         $match->setRival($data['rival'] ?? $match->getRival());
-        $match->setPlayedAt(new \DateTime($data['matchDate'] ?? $match->getPlayedAt()));
         $match->setDescription($data['description'] ?? $match->getDescription());
 
         try {

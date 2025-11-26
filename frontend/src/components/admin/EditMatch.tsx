@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Textarea } from "../ui/textarea";
-import { ApiError } from "@/types/ApiError";
+import { ApiError } from "@/types/api/ApiError";
 import MatchError from "../errors/MatchError";
 
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
@@ -61,10 +61,15 @@ const EditMatch = () => {
 
   const { mutate, isPending: isSubmitting } = useMutation({
     mutationFn: (data: FieldValues) => {
-      console.log(data);
+      const playedAt = new Date(data.matchDate);
+      const [hours, minutes, seconds] = data.matchTime.split(":").map(Number);
+      playedAt.setHours(hours, minutes, seconds || 0);
       return fetchData<Match>(`/v1/matches/${matchID}`, {
         method: "PUT",
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          playedAt: playedAt.toISOString(),
+        }),
       });
     },
     onSuccess: (res, variables) => {

@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Payment;
+use App\Enum\PaymentStatus;
+use App\Enum\PurchaseStatus;
 use App\Repository\PaymentRepository;
 use App\Repository\PurchaseRepository;
 use App\Service\FioApiService;
@@ -52,7 +54,7 @@ final class PaymentController extends AbstractController
         $payment = new Payment();
         $payment->setAmount($data['amount'] ?? 0);
         $payment->setVariableSymbol($vs);
-        $payment->setStatus('pending');
+        $payment->setStatus(PaymentStatus::PENDING);
         $payment->setPaidAt(null);
         $payment->setGeneratedAt(new \DateTimeImmutable());
         $payment->setPurchase($purchase);
@@ -63,41 +65,33 @@ final class PaymentController extends AbstractController
         return $this->json([
             'message' => 'Platba byla úspěšně zpracována!',
             'vs' => $vs,
-        ]);
+            'paymentId' => $payment->getId(),
+        ], JsonResponse::HTTP_CREATED);
     }
 
-    #[Route('', name: 'cancel', methods: ['DELETE'])]
-    public function cancel(Request $request): JsonResponse
+    #[Route('/{id}', name: 'cancel', methods: ['DELETE'])]
+    public function cancel(Payment $payment): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-        $paymentId = $data['vs'] ?? null;
-        if ($paymentId === null) {
-            throw new BadRequestException('Chybí variabilní symbol platby');
+        $paymentId = $payment->getId();
+        $payment->setStatus(PaymentStatus::CANCELED);
+        $purchase = $payment->getPurchase();
+        if ($purchase) {
+            $purchase->setStatus(PurchaseStatus::REMOVED);
         }
+        $this->em->flush();
+        $this->logger->info('Payment canceled', ['payment_id' => $payment->getId()]);
 
-        /** @var Payment $payment */
-        $payment = $this->paymentRepository->findOneBy(["variableSymbol" => $paymentId]);
-
-        if ($payment) {
-            $payment->setStatus('canceled');
-            $purchase = $payment->getPurchase();
-            if ($purchase) {
-                $this->em->remove($purchase);
-            }
-            $this->em->flush();
-            $this->logger->info('Payment canceled', ['payment_id' => $payment->getId()]);
-
-            $topic = 'https://my-ticketing-app.com/payments/' . $paymentId;
-            $update = new Update(
-                $topic,
-                json_encode(['status' => 'canceled'])
-            );
-            $this->hub->publish($update);
-        }
+        $topic = 'https://my-ticketing-app.com/payments/' . $paymentId;
+        $update = new Update(
+            $topic,
+            json_encode(['status' => 'canceled'])
+        );
+        $this->hub->publish($update);
 
         return $this->json([
             'message' => 'Platba byla zrušena',
-            'vs' => $paymentId,
+            'vs' => $payment->getVariableSymbol(),
+            'paymentId' => $paymentId,
         ], JsonResponse::HTTP_OK);
     }
 }

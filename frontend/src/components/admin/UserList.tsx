@@ -8,7 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import RemoveConfirmDialog from "../RemoveConfirmDialog";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ApiError } from "@/types/ApiError";
+import { ApiError } from "@/types/api/ApiError";
 
 const UserList = () => {
   const { fetchData } = useApi();

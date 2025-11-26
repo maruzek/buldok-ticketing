@@ -1,4 +1,5 @@
 import { Entrance } from "./Entrance";
+import { UserStatus } from "./enums/UserStatus";
 
 export type User = {
   id: number;
@@ -8,5 +9,5 @@ export type User = {
   entrance: Entrance | null;
   registeredAt: string;
   verified: boolean;
-  status: "active" | "pending" | "suspended" | "removed";
+  status: UserStatus;
 };

@@ -21,7 +21,7 @@ import {
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
-import { ApiError } from "@/types/ApiError";
+import { ApiError } from "@/types/api/ApiError";
 import BasicError from "../errors/BasicError";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 

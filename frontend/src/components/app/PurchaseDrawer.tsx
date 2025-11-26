@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/drawer";
 import QrDialog from "./QrDialog";
 import { FieldValues, useForm } from "react-hook-form";
-import { PurchaseHistory } from "@/types/PurchaseHistory";
+// import { PurchaseHistory } from "@/types/PurchaseHistory";
 import { TicketPrices } from "@/types/TicketPrices";
 import useApi from "@/hooks/useApi";
 import { Label } from "../ui/label";
@@ -37,17 +37,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+// import { PaymentResponse } from "@/types/PaymentResponse";
+import { PaymentCreateResponse } from "@/types/Payment";
+import { Purchase } from "@/types/Purchase";
 
 type PurchaseDrawerProps = {
   matchID: string | undefined;
   ticketPrices: TicketPrices | null;
   onNewQrPayment: (vs: string) => void;
   paymentStates: PaymentStateMap;
-};
-
-type PaymentResponse = {
-  id: number;
-  vs: string;
 };
 
 export default function PurchaseDrawer({
@@ -176,23 +174,45 @@ function PaymentForm({
   const { fetchData } = useApi();
 
   const queryClient = useQueryClient();
-  const [qrData, setQrData] = useState<PaymentResponse | null>(null);
+  const [qrData, setQrData] = useState<PaymentCreateResponse | null>(null);
   const [isQrLoading, setIsQrLoading] = useState(false);
-  const { mutate: purchase, mutateAsync: purchaseAsync } = useMutation({
+
+  // const { mutate: purchase, mutateAsync: purchaseAsync } = useMutation({
+  //   mutationFn: (data: FieldValues) =>
+  //     fetchData<Purchase>(`/v1/purchases/`, {
+  //       method: "POST",
+  //       body: JSON.stringify({
+  //         fullTickets: data.fullTickets,
+  //         halfTickets: data.halfTickets,
+  //         matchID: matchID,
+  //         paymentType: data.paymentType || "cash",
+  //       }),
+  //     }),
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries({
+  //       queryKey: ["match", matchID],
+  //     });
+  //     toast.success("Nákup byl úspěšně zaznamenán.");
+  //   },
+  //   onError: (error) => {
+  //     toast.error("Chyba při zaznamenávání nákupu.");
+  //     console.error("Error purchasing tickets:", error);
+  //   },
+  // });
+
+  const { mutate: purchaseCash } = useMutation({
     mutationFn: (data: FieldValues) =>
-      fetchData<PurchaseHistory>(`/v1/purchases/`, {
+      fetchData<Purchase>(`/v1/purchases/`, {
         method: "POST",
         body: JSON.stringify({
           fullTickets: data.fullTickets,
           halfTickets: data.halfTickets,
           matchID: matchID,
-          paymentType: data.paymentType || "cash",
+          paymentType: "cash",
         }),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["match", matchID],
-      });
+      queryClient.invalidateQueries({ queryKey: ["match", matchID] });
       toast.success("Nákup byl úspěšně zaznamenán.");
     },
     onError: (error) => {
@@ -201,13 +221,32 @@ function PaymentForm({
     },
   });
 
+  // CHANGED: Separate mutation for QR purchases (WITHOUT onSuccess invalidation)
+  const { mutateAsync: purchaseQrAsync } = useMutation({
+    mutationFn: (data: FieldValues) =>
+      fetchData<Purchase>(`/v1/purchases/`, {
+        method: "POST",
+        body: JSON.stringify({
+          fullTickets: data.fullTickets,
+          halfTickets: data.halfTickets,
+          matchID: matchID,
+          paymentType: "qr",
+        }),
+      }),
+    // NO onSuccess here - we'll invalidate after payment is created
+    onError: (error) => {
+      toast.error("Chyba při zaznamenávání nákupu.");
+      console.error("Error purchasing tickets:", error);
+    },
+  });
+
   const { mutateAsync: paymentAsync } = useMutation<
-    PaymentResponse,
+    PaymentCreateResponse,
     any,
     { id: number; amount: number }
   >({
     mutationFn: (data) =>
-      fetchData<PaymentResponse>("/v1/payments", {
+      fetchData<PaymentCreateResponse>("/v1/payments", {
         method: "POST",
         body: JSON.stringify({
           amount: data.amount,
@@ -216,7 +255,7 @@ function PaymentForm({
       }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({
-        queryKey: ["payment"],
+        queryKey: ["match", matchID],
       });
       toast.success("Platba byla úspěšně vytvořena.");
       console.log("Payment created:", data);
@@ -248,14 +287,12 @@ function PaymentForm({
 
     try {
       setIsQrLoading(true);
-      const { id, paymentType } = await purchaseAsync({
+      const { id } = await purchaseQrAsync({
         fullTickets: fullTicketsValue,
         halfTickets: halfTicketsValue,
         matchID,
         paymentType: "qr",
       });
-      console.log("id", id);
-      console.log("paymentType", paymentType);
       const payment = await paymentAsync({
         id,
         amount:
@@ -263,9 +300,8 @@ function PaymentForm({
           halfTicketsValue * ticketPrices.halfTicket,
       });
       setQrData(payment);
-      if (payment.vs) {
-        console.log("vs", payment);
-        onNewQrPayment(payment.vs);
+      if (payment.variableSymbol) {
+        onNewQrPayment(payment.variableSymbol);
       }
     } catch (error) {
       console.error("Error creating payment:", error);
@@ -280,7 +316,7 @@ function PaymentForm({
   return (
     <form
       className="flex flex-col gap-4"
-      onSubmit={handleSubmit((data) => purchase(data))}
+      onSubmit={handleSubmit((data) => purchaseCash(data))}
     >
       <div className="px-5">
         <div className="flex flex-col gap-3">
@@ -347,7 +383,7 @@ function PaymentForm({
           isQrLoading={isQrLoading}
           triggerDisabled={fullTicketsValue + halfTicketsValue === 0}
           setPurchaseFormOpened={setPurchaseFormOpened}
-          livePaymentState={paymentStates[qrData?.vs as string]}
+          livePaymentState={paymentStates[qrData?.variableSymbol as string]}
         />
         <DrawerClose asChild>
           <Button variant="outline">Zrušit</Button>

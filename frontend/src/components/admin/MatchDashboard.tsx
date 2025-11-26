@@ -33,7 +33,7 @@ import { toast } from "sonner";
 import MatchError from "../errors/MatchError";
 import useApi from "@/hooks/useApi";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ApiError } from "@/types/ApiError";
+import { ApiError } from "@/types/api/ApiError";
 import { MatchDashboardStats } from "@/types/MatchDashboardStats";
 import { useMemo } from "react";
 import {

@@ -8,7 +8,7 @@ import { columns } from "./MatchTable/columns";
 import { Button } from "../ui/button";
 import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ApiError } from "@/types/ApiError";
+import { ApiError } from "@/types/api/ApiError";
 import { useState } from "react";
 import RemoveConfirmDialog from "../RemoveConfirmDialog";
 import { Match } from "@/types/Match";

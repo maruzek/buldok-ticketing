@@ -1,4 +1,4 @@
-import { ApiError } from "@/types/ApiError";
+import { ApiError } from "@/types/api/ApiError";
 import { Frown, ShieldBan, ShieldCheck, TriangleAlert } from "lucide-react";
 import BasicError from "./BasicError";
 

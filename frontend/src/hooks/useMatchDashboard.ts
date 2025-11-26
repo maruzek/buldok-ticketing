@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import useApi from "@/hooks/useApi";
 import { Match } from "@/types/Match";
-import { ApiError } from "@/types/ApiError";
+import { ApiError } from "@/types/api/ApiError";
 
 export function useMatchDashboard(matchID: string) {
   const { fetchData } = useApi();

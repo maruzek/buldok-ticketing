@@ -27,7 +27,7 @@ import Spinner from "../Spinner";
 import { toast } from "sonner";
 import useApi from "@/hooks/useApi";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ApiError } from "@/types/ApiError";
+import { ApiError } from "@/types/api/ApiError";
 import {
   Accordion,
   AccordionContent,

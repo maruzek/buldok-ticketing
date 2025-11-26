@@ -8,7 +8,7 @@ import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import BasicStatsCards from "./BasicStatsCards";
 import { SeasonDashboardStats } from "@/types/SeasonDashboardStats";
-import { ApiError } from "@/types/ApiError";
+import { ApiError } from "@/types/api/ApiError";
 import MatchSalesChart from "./SeasonDashboard/MatchSalesChart";
 import BasicError from "../errors/BasicError";
 
