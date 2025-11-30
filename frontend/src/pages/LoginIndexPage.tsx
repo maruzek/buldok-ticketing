@@ -1,6 +1,6 @@
 import { LoginForm } from "@/components/login-form";
 import logo from "../assets/logo-buldok-transparent.png";
-import loginImage from "../assets/login-image.jpg";
+import loginImage from "../assets/login-image.webp";
 
 const LoginIndexPage = () => {
   return (

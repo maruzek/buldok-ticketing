@@ -51,20 +51,6 @@ const useApi = (): ApiHook => {
         return fetch(`${BASE_URL}${endpoint}`, requestOptions);
       };
       try {
-        // const fetchOptions: RequestInit = {
-        //   ...options,
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //     Accept: "application/json",
-        //     ...options.headers,
-        //   },
-        //   credentials: "include",
-        // };
-
-        // const response: Response = await fetch(
-        //   `${BASE_URL}${endpoint}`,
-        //   fetchOptions
-        // );
         let response = await makeRequest();
 
         if (response.status === 401 && !skipAuthRefresh) {
