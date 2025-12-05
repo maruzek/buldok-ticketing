@@ -89,21 +89,31 @@ const MatchDashboard = () => {
     sales: number;
   };
 
+  // const localizedSalesOverTime: LocalizedSalesPoint[] = useMemo(() => {
+  //   const data = matchData?.salesOverTime ?? [];
+  //   return data.map((point): LocalizedSalesPoint => {
+  //     const [hours, minutes] = point.time.split(":");
+  //     const utcDate = new Date();
+  //     utcDate.setUTCHours(Number(hours), Number(minutes), 0, 0);
+
+  //     return {
+  //       sales: point.sales,
+  //       time: utcDate.toLocaleTimeString("cs-CZ", {
+  //         hour: "2-digit",
+  //         minute: "2-digit",
+  //       }),
+  //     };
+  //   });
+  // }, [matchData?.salesOverTime]);
+
   const localizedSalesOverTime: LocalizedSalesPoint[] = useMemo(() => {
     const data = matchData?.salesOverTime ?? [];
-    return data.map((point): LocalizedSalesPoint => {
-      const [hours, minutes] = point.time.split(":");
-      const utcDate = new Date();
-      utcDate.setUTCHours(Number(hours), Number(minutes), 0, 0);
-
-      return {
+    return data.map(
+      (point): LocalizedSalesPoint => ({
         sales: point.sales,
-        time: utcDate.toLocaleTimeString("cs-CZ", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
-    });
+        time: point.time,
+      })
+    );
   }, [matchData?.salesOverTime]);
 
   if (!matchData) {

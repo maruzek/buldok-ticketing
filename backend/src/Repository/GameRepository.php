@@ -125,7 +125,14 @@ class GameRepository extends ServiceEntityRepository
 
         $sql = "
             SELECT
-                DATE_FORMAT(FROM_UNIXTIME(FLOOR(UNIX_TIMESTAMP(p.purchased_at) / 300) * 300), '%H:%i') as time_interval,
+                DATE_FORMAT(
+                        CONVERT_TZ(
+                            FROM_UNIXTIME(FLOOR(UNIX_TIMESTAMP(p.purchased_at) / 300) * 300),
+                            '+00:00',
+                            'Europe/Prague'
+                        ),
+                    '%H:%i'
+                ) as time_interval,
                 SUM(pi.quantity) as sales
             FROM purchase p
             JOIN purchase_item pi ON p.id = pi.purchase_id

@@ -177,29 +177,6 @@ function PaymentForm({
   const [qrData, setQrData] = useState<PaymentCreateResponse | null>(null);
   const [isQrLoading, setIsQrLoading] = useState(false);
 
-  // const { mutate: purchase, mutateAsync: purchaseAsync } = useMutation({
-  //   mutationFn: (data: FieldValues) =>
-  //     fetchData<Purchase>(`/v1/purchases/`, {
-  //       method: "POST",
-  //       body: JSON.stringify({
-  //         fullTickets: data.fullTickets,
-  //         halfTickets: data.halfTickets,
-  //         matchID: matchID,
-  //         paymentType: data.paymentType || "cash",
-  //       }),
-  //     }),
-  //   onSuccess: () => {
-  //     queryClient.invalidateQueries({
-  //       queryKey: ["match", matchID],
-  //     });
-  //     toast.success("Nákup byl úspěšně zaznamenán.");
-  //   },
-  //   onError: (error) => {
-  //     toast.error("Chyba při zaznamenávání nákupu.");
-  //     console.error("Error purchasing tickets:", error);
-  //   },
-  // });
-
   const { mutate: purchaseCash } = useMutation({
     mutationFn: (data: FieldValues) =>
       fetchData<Purchase>(`/v1/purchases/`, {
@@ -221,7 +198,6 @@ function PaymentForm({
     },
   });
 
-  // CHANGED: Separate mutation for QR purchases (WITHOUT onSuccess invalidation)
   const { mutateAsync: purchaseQrAsync } = useMutation({
     mutationFn: (data: FieldValues) =>
       fetchData<Purchase>(`/v1/purchases/`, {
@@ -233,7 +209,6 @@ function PaymentForm({
           paymentType: "qr",
         }),
       }),
-    // NO onSuccess here - we'll invalidate after payment is created
     onError: (error) => {
       toast.error("Chyba při zaznamenávání nákupu.");
       console.error("Error purchasing tickets:", error);

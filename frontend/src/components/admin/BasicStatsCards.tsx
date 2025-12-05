@@ -116,7 +116,7 @@ const BasicStatsCards = ({
           <CardHeader>
             <CardDescription>Počet zápasů</CardDescription>
             <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl">
-              {numberOfGames ? numberOfGames : 0} ks
+              {numberOfGames ? numberOfGames : 0}
             </CardTitle>
           </CardHeader>
         </Card>

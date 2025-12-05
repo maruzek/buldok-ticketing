@@ -17,6 +17,13 @@ class RegisterUserDto
     #[Map(target: 'password')]
     #[Assert\NotBlank(message: 'Heslo je povinný údaj.')]
     #[Assert\Length(min: 8, minMessage: 'Heslo musí mít alespoň {{ limit }} znaků.')]
+    #[Assert\PasswordStrength(
+        minScore: Assert\PasswordStrength::STRENGTH_MEDIUM,
+        message: 'Heslo je příliš slabé. Zkuste přidat velká písmena, čísla nebo speciální znaky.'
+    )]
+    #[Assert\NotCompromisedPassword(
+        message: 'Toto heslo bylo nalezeno v databázi uniklých hesel. Použijte prosím jiné heslo.'
+    )]
     public string $password;
 
     #[Assert\NotBlank(message: 'Potvrzení hesla je povinné.')]

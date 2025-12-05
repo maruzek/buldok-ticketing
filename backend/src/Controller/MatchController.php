@@ -14,6 +14,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
@@ -43,24 +44,9 @@ final class MatchController extends AbstractController
      *
      * @return JsonResponse
      */
-    public function createMatch(Request $request, ValidatorInterface $validator): JsonResponse
+    // public function createMatch(Request $request, ValidatorInterface $validator): JsonResponse
+    public function createMatch(#[MapRequestPayload()] CreateMatchDto $dto, ValidatorInterface $validator): JsonResponse
     {
-        try {
-            /** @var CreateMatchDto $dto */
-            $dto = $this->serializer->deserialize($request->getContent(), CreateMatchDto::class, 'json');
-        } catch (\Exception $e) {
-            throw new BadRequestHttpException('Neplatný formát JSON');
-        }
-
-        $errors = $validator->validate($dto);
-        if (count($errors) > 0) {
-            $messages = [];
-            foreach ($errors as $error) {
-                $messages[] = $error->getMessage();
-            }
-            throw new BadRequestHttpException(implode('; ', $messages));
-        }
-
         $match = new Game();
         $match->setRival($dto->rival);
         $match->setDescription($dto->description);

@@ -27,11 +27,13 @@ final class PaymentController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly LoggerInterface $logger,
         private readonly PaymentRepository $paymentRepository,
-        private readonly HubInterface $hub
+        private readonly HubInterface $hub,
+        private readonly PurchaseRepository $purchaseRepository,
+        private readonly VariableSymbolService $vsGenerator
     ) {}
 
     #[Route('', name: 'create', methods: ['POST'])]
-    public function create(Request $request, VariableSymbolService $vsGenerator, PurchaseRepository $purchaseRepository): JsonResponse
+    public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
@@ -43,13 +45,13 @@ final class PaymentController extends AbstractController
             throw new BadRequestException('Částka musí být větší než nula');
         }
 
-        $purchase = $purchaseRepository->find($data['purchaseId'] ?? 0);
+        $purchase = $this->purchaseRepository->find($data['purchaseId'] ?? 0);
 
         if (!$purchase) {
             throw new NotFoundHttpException('Nákup nenalezen');
         }
 
-        $vs = $vsGenerator->generateUnique();
+        $vs = $this->vsGenerator->generateUnique();
 
         $payment = new Payment();
         $payment->setAmount($data['amount'] ?? 0);
