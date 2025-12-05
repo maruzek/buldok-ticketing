@@ -40,6 +40,7 @@ import {
 // import { PaymentResponse } from "@/types/PaymentResponse";
 import { PaymentCreateResponse } from "@/types/Payment";
 import { Purchase } from "@/types/Purchase";
+import { ScrollArea } from "../ui/scroll-area";
 
 type PurchaseDrawerProps = {
   matchID: string | undefined;
@@ -103,21 +104,23 @@ export default function PurchaseDrawer({
         </div>
       </DrawerTrigger>
       <DrawerContent>
-        <DrawerHeader className="text-left">
-          <DrawerTitle>Zaznamenat nákup</DrawerTitle>
-        </DrawerHeader>
-        {ticketPrices && (
-          <>
-            <TicketPricesDisplay ticketPrices={ticketPrices} />
-            <PaymentForm
-              ticketPrices={ticketPrices}
-              matchID={matchID}
-              setPurchaseFormOpened={setOpen}
-              onNewQrPayment={onNewQrPayment}
-              paymentStates={paymentStates}
-            />
-          </>
-        )}
+        <ScrollArea className="overflow-auto">
+          <DrawerHeader className="text-left">
+            <DrawerTitle>Zaznamenat nákup</DrawerTitle>
+          </DrawerHeader>
+          {ticketPrices && (
+            <>
+              <TicketPricesDisplay ticketPrices={ticketPrices} />
+              <PaymentForm
+                ticketPrices={ticketPrices}
+                matchID={matchID}
+                setPurchaseFormOpened={setOpen}
+                onNewQrPayment={onNewQrPayment}
+                paymentStates={paymentStates}
+              />
+            </>
+          )}
+        </ScrollArea>
       </DrawerContent>
     </Drawer>
   );
