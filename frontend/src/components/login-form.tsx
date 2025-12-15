@@ -143,12 +143,12 @@ export function LoginForm({ className }: React.ComponentProps<"form">) {
               <FormItem>
                 <div className="flex items-center">
                   <FormLabel>Heslo</FormLabel>
-                  <a
+                  {/* <a
                     href="#"
                     className="ml-auto text-sm underline-offset-4 hover:underline"
                   >
                     Zapomenuté heslo?
-                  </a>
+                  </a> */}
                 </div>
                 <FormControl>
                   <Input

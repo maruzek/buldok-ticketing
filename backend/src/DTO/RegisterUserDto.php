@@ -18,8 +18,8 @@ class RegisterUserDto
     #[Assert\NotBlank(message: 'Heslo je povinný údaj.')]
     #[Assert\Length(min: 8, minMessage: 'Heslo musí mít alespoň {{ limit }} znaků.')]
     #[Assert\PasswordStrength(
-        minScore: Assert\PasswordStrength::STRENGTH_MEDIUM,
-        message: 'Heslo je příliš slabé. Zkuste přidat velká písmena, čísla nebo speciální znaky.'
+        minScore: Assert\PasswordStrength::STRENGTH_WEAK,
+        message: 'Heslo je příliš slabé. Zkuste použít delší heslo nebo více různých znaků.'
     )]
     #[Assert\NotCompromisedPassword(
         message: 'Toto heslo bylo nalezeno v databázi uniklých hesel. Použijte prosím jiné heslo.'
