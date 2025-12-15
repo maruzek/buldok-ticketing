@@ -15,39 +15,6 @@ export const usePasswordStrength = (password: string): PasswordStrength => {
     };
   }
 
-  // let score = 0;
-
-  // if (password.length >= 8) score += 1;
-  // if (password.length >= 12) score += 1;
-
-  // const hasLower = /[a-z]/.test(password);
-  // const hasUpper = /[A-Z]/.test(password);
-  // const hasNumber = /[0-9]/.test(password);
-  // const hasSpecial = /[^a-zA-Z0-9]/.test(password);
-
-  // if (hasLower) score += 1;
-  // if (hasUpper) score += 1;
-  // if (hasNumber) score += 1;
-  // if (hasSpecial) score += 1;
-
-  // const commonPatterns = [
-  //   /^123/,
-  //   /password/i,
-  //   /qwerty/i,
-  //   /(.)\1{2,}/,
-  //   /^[a-z]+$/i,
-  //   /^[0-9]+$/,
-  // ];
-
-  // for (const pattern of commonPatterns) {
-  //   if (pattern.test(password)) {
-  //     score = Math.max(0, score - 2);
-  //     break;
-  //   }
-  // }
-
-  // score = Math.min(5, Math.max(0, score));
-
   const length = password.length;
   const uniqueChars = new Set(password).size;
 
