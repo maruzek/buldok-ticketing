@@ -117,14 +117,14 @@ export default function QrDialog({
                 level={"M"}
                 marginSize={3}
                 className="rounded-lg"
-                // imageSettings={
-                //   {
-                //     src: "../../public/logo-buldok-transparent.png",
-                //     height: 50,
-                //     width: 50,
-                //     excavate: true,
-                //   } as any
-                // }
+              // imageSettings={
+              //   {
+              //     src: "../../public/logo-buldok-transparent.png",
+              //     height: 50,
+              //     width: 50,
+              //     excavate: true,
+              //   } as any
+              // }
               />
               {status === "pending" && (
                 <Alert className="flex flex-row justify-center items-center text-center gap-3 mt-3">
