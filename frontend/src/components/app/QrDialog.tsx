@@ -55,13 +55,12 @@ export default function QrDialog({
       fetchData(`/v1/payments/${qrData?.id}`, {
         method: "DELETE",
       }),
-    onSuccess: (data) => {
-      console.log(data);
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["match", matchID] });
-      console.log("Payment cancelled");
       toast.error("Nákup i QR platba byly zrušeny.");
     },
     onError: (error) => {
+      toast.error("Chyba při rušení platby.");
       console.error("Error cancelling payment:", error);
     },
   });

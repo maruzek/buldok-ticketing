@@ -67,7 +67,7 @@ final class PaymentController extends AbstractController
         return $this->json([
             'message' => 'Platba byla úspěšně zpracována!',
             'variableSymbol' => $vs,
-            'paymentId' => $payment->getId(),
+            'id' => $payment->getId(),
         ], JsonResponse::HTTP_CREATED);
     }
 
