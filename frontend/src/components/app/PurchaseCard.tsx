@@ -50,18 +50,18 @@ const PurchaseCard = ({ purchase, livePaymentState }: PurchaseCardProps) => {
 
   const amount = purchase.purchaseItems.reduce(
     (acc, cur) => acc + Number(cur.priceAtPurchase),
-    0
+    0,
   );
 
   const isQrPayment = purchase.paymentType === "qr";
   const hasPaymentDetails = purchase.payment !== null;
 
-  if (isQrPayment && !hasPaymentDetails) {
-    console.warn(
-      `[PurchaseCard] QR purchase #${purchase.id} missing payment details!`,
-      { paymentType: purchase.paymentType, payment: purchase.payment }
-    );
-  }
+  // if (isQrPayment && !hasPaymentDetails) {
+  //   console.warn(
+  //     `[PurchaseCard] QR purchase #${purchase.id} missing payment details!`,
+  //     { paymentType: purchase.paymentType, payment: purchase.payment },
+  //   );
+  // }
 
   const qrData: PaymentCreateResponse | null = hasPaymentDetails
     ? {

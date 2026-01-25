@@ -1,6 +1,5 @@
 import {
   ChevronsUpDown,
-  Cog,
   LayoutDashboard,
   LogOut,
   Volleyball,
@@ -87,10 +86,10 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <Link to="/settings">
-                <DropdownMenuItem>
+                {/* <DropdownMenuItem>
                   <Cog />
                   Nastavení
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
               </Link>
               <Link to="/app">
                 <DropdownMenuItem>
@@ -110,7 +109,7 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => logout()}>
               <LogOut />
-              Log out
+              Odhlásit se
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

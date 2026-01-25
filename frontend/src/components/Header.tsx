@@ -1,4 +1,4 @@
-import { Cog, LayoutDashboard, LogOut, User, Volleyball } from "lucide-react";
+import { LayoutDashboard, LogOut, User, Volleyball } from "lucide-react";
 import useAuth from "../hooks/useAuth";
 import { Link } from "react-router";
 import logo from "../assets/logo-buldok-transparent.png";
@@ -43,10 +43,10 @@ const Header = ({ children, color }: HeaderProps) => {
                 <User className="w-full h-full m-0 p-0 bg-gray-300 rounded-full text-gray-600 hover:bg-gray-400 transition-colors" />
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem>
+                {/* <DropdownMenuItem>
                   <Cog />
                   Nastavení
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 {isAdmin && (
                   <>
                     <Link to="/admin">

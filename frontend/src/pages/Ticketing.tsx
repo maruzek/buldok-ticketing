@@ -70,7 +70,7 @@ const Ticketing = () => {
 
   useEffect(() => {
     const pending = Object.keys(paymentStates).filter(
-      (vs) => paymentStates[vs].status === PaymentStatus.PENDING
+      (vs) => paymentStates[vs].status === PaymentStatus.PENDING,
     );
 
     if (pending.length === 0) {
@@ -211,9 +211,9 @@ const Ticketing = () => {
                           acc +
                           cur.purchaseItems.reduce(
                             (acc, cur) => acc + Number(cur.priceAtPurchase),
-                            0
+                            0,
                           ),
-                        0
+                        0,
                       ) || 0}
                       {" Kč"}
                     </h3>
@@ -233,9 +233,9 @@ const Ticketing = () => {
                               acc +
                               cur.purchaseItems.reduce(
                                 (acc, cur) => acc + Number(cur.priceAtPurchase),
-                                0
+                                0,
                               ),
-                            0
+                            0,
                           ) || 0}{" "}
                         Kč
                       </p>
@@ -252,9 +252,9 @@ const Ticketing = () => {
                               acc +
                               cur.purchaseItems.reduce(
                                 (acc, cur) => acc + Number(cur.priceAtPurchase),
-                                0
+                                0,
                               ),
-                            0
+                            0,
                           ) || 0}{" "}
                         Kč
                       </p>
@@ -263,8 +263,6 @@ const Ticketing = () => {
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-
-            {/*  */}
           </div>
           {ticketPrices && (
             <PurchaseDrawer

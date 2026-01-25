@@ -52,12 +52,12 @@ export default function QrDialog({
   const paymentMessage = livePaymentState?.message;
   const { mutate: cancelPayment } = useMutation({
     mutationFn: () =>
-      fetchData(`/v1/payments/${qrData?.id}`, {
+      fetchData(`/v1/payments/${qrData?.id ?? qrData?.paymentId}`, {
         method: "DELETE",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["match", matchID] });
-      toast.error("Nákup i QR platba byly zrušeny.");
+      toast.success("Nákup i QR platba byly zrušeny.");
     },
     onError: (error) => {
       toast.error("Chyba při rušení platby.");
@@ -116,14 +116,14 @@ export default function QrDialog({
                 level={"M"}
                 marginSize={3}
                 className="rounded-lg"
-              // imageSettings={
-              //   {
-              //     src: "../../public/logo-buldok-transparent.png",
-              //     height: 50,
-              //     width: 50,
-              //     excavate: true,
-              //   } as any
-              // }
+                // imageSettings={
+                //   {
+                //     src: "../../public/logo-buldok-transparent.png",
+                //     height: 50,
+                //     width: 50,
+                //     excavate: true,
+                //   } as any
+                // }
               />
               {status === "pending" && (
                 <Alert className="flex flex-row justify-center items-center text-center gap-3 mt-3">
